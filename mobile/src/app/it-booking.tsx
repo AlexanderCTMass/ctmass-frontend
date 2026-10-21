@@ -24,10 +24,12 @@ import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { successFeedback } from "@/lib/haptics";
-import { type InquirySource, buildCalendlyUrl } from "@/lib/it-inquiry";
+import {
+  INQUIRY_SOURCES,
+  type InquirySource,
+  buildCalendlyUrl,
+} from "@/lib/it-inquiry";
 import { toHref } from "@/lib/navigation";
-
-const SOURCES: InquirySource[] = ["app", "app-onboarding", "app-shop"];
 
 const CALENDLY_BRIDGE = `
   (function () {
@@ -65,7 +67,7 @@ export default function ItBookingScreen() {
     source?: string;
   }>();
   const rawSource = asParam(params.source) as InquirySource;
-  const source: InquirySource = SOURCES.includes(rawSource) ? rawSource : "app";
+  const source: InquirySource = INQUIRY_SOURCES.includes(rawSource) ? rawSource : "app";
 
   const url = useMemo(
     () =>

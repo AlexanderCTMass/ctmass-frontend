@@ -7,6 +7,7 @@ import {
     Card,
     Chip,
     CircularProgress,
+    Divider,
     Stack,
     TextField,
     Typography,
@@ -17,6 +18,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CheckIcon from '@mui/icons-material/Check';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import ScheduleIcon from '@mui/icons-material/Schedule';
+import { alpha } from '@mui/material/styles';
 import { useFormik } from 'formik';
 import toast from 'react-hot-toast';
 import * as Yup from 'yup';
@@ -29,6 +31,7 @@ import { useSearchParams } from 'src/hooks/use-search-params';
 export const BOOKING_SECTION_ID = 'book-consultation';
 
 const CALENDLY_SCRIPT_SRC = 'https://assets.calendly.com/assets/external/widget.js';
+const CALENDLY_HEIGHT = { xs: 860, md: 720 };
 
 const STEP = {
     FORM: 'form',
@@ -72,7 +75,7 @@ const CalendlyInline = ({ prefill, source, onScheduled }) => {
                 if (cancelled || !containerRef.current || !window.Calendly) return;
                 containerRef.current.innerHTML = '';
                 window.Calendly.initInlineWidget({
-                    url: `${CALENDLY_URL}?hide_gdpr_banner=1`,
+                    url: `${CALENDLY_URL}?hide_gdpr_banner=1&hide_event_type_details=1`,
                     parentElement: containerRef.current,
                     prefill: {
                         name: prefill.name,
@@ -115,13 +118,20 @@ const CalendlyInline = ({ prefill, source, onScheduled }) => {
     }
 
     return (
-        <Box sx={{ position: 'relative', minHeight: 700 }}>
+        <Box sx={{ position: 'relative', width: '100%' }}>
             {status === 'loading' && (
                 <Stack alignItems="center" justifyContent="center" sx={{ position: 'absolute', inset: 0 }}>
                     <CircularProgress />
                 </Stack>
             )}
-            <Box ref={containerRef} sx={{ minWidth: 320, height: 700 }} />
+            <Box
+                ref={containerRef}
+                sx={{
+                    minWidth: 300,
+                    height: CALENDLY_HEIGHT,
+                    '& iframe': { display: 'block', width: '100%', height: '100%', border: 0 }
+                }}
+            />
         </Box>
     );
 };
@@ -250,7 +260,13 @@ export const ConsultationBooking = () => {
                 </Stack>
             </Stack>
 
-            <Card sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 3 }}>
+            <Card
+                sx={{
+                    p: step === STEP.CALENDAR ? { xs: 1.5, md: 3 } : { xs: 2.5, md: 4 },
+                    borderRadius: 3,
+                    overflow: 'hidden'
+                }}
+            >
                 {step === STEP.FORM && (
                     <Stack spacing={3}>
                         {error && <Alert severity="error">{error}</Alert>}
@@ -348,15 +364,83 @@ export const ConsultationBooking = () => {
                 )}
 
                 {step === STEP.CALENDAR && prefill && (
-                    <Stack spacing={2}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center" gap={2}>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                                Pick a time for your call
-                            </Typography>
-                            <Button size="small" onClick={() => setStep(STEP.FORM)}>
-                                Edit details
-                            </Button>
-                        </Stack>
+                    <Stack spacing={{ xs: 1, md: 0 }}>
+                        <Box
+                            sx={{
+                                p: { xs: 2, md: 2.5 },
+                                borderRadius: 2,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05)
+                            }}
+                        >
+                            <Stack
+                                direction={{ xs: 'column', md: 'row' }}
+                                spacing={{ xs: 2, md: 3 }}
+                                alignItems={{ xs: 'flex-start', md: 'center' }}
+                                divider={<Divider flexItem orientation="vertical" sx={{ display: { xs: 'none', md: 'block' } }} />}
+                            >
+                                <Box sx={{ flexShrink: 0 }}>
+                                    <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, lineHeight: 1.6 }}>
+                                        CTMASS IT Team
+                                    </Typography>
+                                    <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                                        Free IT Consultation
+                                    </Typography>
+                                </Box>
+                                <Stack spacing={0.75} sx={{ flexShrink: 0 }}>
+                                    {PERKS.map((perk) => (
+                                        <Stack
+                                            key={perk.label}
+                                            direction="row"
+                                            spacing={1}
+                                            alignItems="center"
+                                            sx={{ color: 'text.secondary' }}
+                                        >
+                                            {perk.icon}
+                                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                                {perk.label}
+                                            </Typography>
+                                        </Stack>
+                                    ))}
+                                </Stack>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                                        {prefill.name}
+                                        <Typography component="span" variant="body2" color="text.secondary">
+                                            {' · '}{prefill.email}
+                                        </Typography>
+                                    </Typography>
+                                    {prefill.details && (
+                                        <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                            sx={{
+                                                mt: 0.5,
+                                                whiteSpace: 'pre-line',
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden'
+                                            }}
+                                        >
+                                            {prefill.details}
+                                        </Typography>
+                                    )}
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                        Times are shown in your local time zone.
+                                    </Typography>
+                                </Box>
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={() => setStep(STEP.FORM)}
+                                    sx={{ flexShrink: 0 }}
+                                >
+                                    Edit details
+                                </Button>
+                            </Stack>
+                        </Box>
                         <CalendlyInline prefill={prefill} source={source} onScheduled={handleScheduled} />
                     </Stack>
                 )}

@@ -17,6 +17,7 @@ const SOURCE_LABELS = {
   app: "the CTMASS mobile app",
   "app-onboarding": "the CTMASS mobile app (onboarding)",
   "app-shop": "the CTMASS mobile app (shop)",
+  "app-profile": "the CTMASS mobile app (Our IT Services)",
   web: "ctmass.com (IT Solutions page)",
   "web-shop": "ctmass.com (shop)",
 };

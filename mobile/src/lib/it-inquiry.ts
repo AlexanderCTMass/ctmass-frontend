@@ -7,7 +7,18 @@ const FUNCTIONS_REGION = "us-central1";
 export const CALENDLY_URL =
   "https://calendly.com/ctmass-support/cutting-edge-software-development";
 
-export type InquirySource = "app" | "app-onboarding" | "app-shop";
+export type InquirySource =
+  | "app"
+  | "app-onboarding"
+  | "app-shop"
+  | "app-profile";
+
+export const INQUIRY_SOURCES: InquirySource[] = [
+  "app",
+  "app-onboarding",
+  "app-shop",
+  "app-profile",
+];
 
 export type ServiceInquiry = {
   email: string;
