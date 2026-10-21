@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
 const useStyles = makeStyles((t) => ({
   card: {
     borderRadius: Radius.lg,
-    backgroundColor: t.colors.background,
+    backgroundColor: t.colors.card,
   },
   underlay: {
     borderRadius: Radius.lg,

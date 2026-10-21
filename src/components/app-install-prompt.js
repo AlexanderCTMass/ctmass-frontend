@@ -11,6 +11,7 @@ const SNOOZE_KEY = 'appInstallSnoozedUntil';
 const LEGACY_KEYS = ['pwaInstallCompleted', 'pwaInstallSnoozedUntil', 'pwaInstallDismissed'];
 const DISMISS_SNOOZE_MS = 60 * 60 * 1000;
 const STORE_SNOOZE_MS = 30 * 24 * 60 * 60 * 1000;
+const FLOATING_OVERLAP_MAX_WIDTH = 599.95;
 
 const readStorage = (key) => {
     try {
@@ -67,14 +68,21 @@ export const AppInstallPrompt = () => {
             root.style.removeProperty('--ctmass-floating-offset');
             return undefined;
         }
+        const narrow = window.matchMedia(`(max-width: ${FLOATING_OVERLAP_MAX_WIDTH}px)`);
         const update = () => {
+            if (!narrow.matches) {
+                root.style.removeProperty('--ctmass-floating-offset');
+                return;
+            }
             root.style.setProperty('--ctmass-floating-offset', `${Math.ceil(node.getBoundingClientRect().height) + 30}px`);
         };
         update();
         const observer = new ResizeObserver(update);
         observer.observe(node);
+        narrow.addEventListener('change', update);
         return () => {
             observer.disconnect();
+            narrow.removeEventListener('change', update);
             root.style.removeProperty('--ctmass-floating-offset');
         };
     }, [open]);

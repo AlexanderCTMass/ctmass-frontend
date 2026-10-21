@@ -16,6 +16,7 @@ import {
   ArrowRightIcon,
   BellIcon,
   CameraIcon,
+  CodeBadgeIcon,
   MailIcon,
   QrCodeIcon,
   ShareIcon,
@@ -339,6 +340,12 @@ export default function ProfileTab() {
               icon={<UsersIcon size={20} color={colors.accent} />}
               label="Friends"
               onPress={() => go("/friends", "friends")}
+            />
+            <View style={styles.itemDivider} />
+            <ProfileItem
+              icon={<CodeBadgeIcon size={20} color={colors.accent} />}
+              label="Our IT Services"
+              onPress={() => go("/it-services", "it_services")}
             />
             <View style={styles.itemDivider} />
             <ProfileItem

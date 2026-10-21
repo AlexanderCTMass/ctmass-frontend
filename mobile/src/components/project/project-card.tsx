@@ -24,7 +24,7 @@ import type { ProjectDetail } from "@/lib/projects";
 
 export type CardBadge = { label: string; tint: string; bg: string };
 
-const MAX_TILES = 4;
+const COVER_SIZE = 92;
 
 export function shortPlace(placeName: string): string {
   const parts = placeName
@@ -37,35 +37,25 @@ export function shortPlace(placeName: string): string {
   return state ? `${city}, ${state}` : city;
 }
 
-function PhotoStrip({ photos }: { photos: string[] }) {
+function CoverPhoto({ photos }: { photos: string[] }) {
   const styles = useStyles();
-  if (photos.length === 0) return null;
-  const visible = photos.slice(0, MAX_TILES);
-  const extra = photos.length - visible.length;
+  const uri = photos[0];
+  if (!uri) return null;
+  const extra = photos.length - 1;
   return (
-    <View style={styles.photos}>
-      {visible.map((uri, index) => {
-        const showExtra = extra > 0 && index === visible.length - 1;
-        return (
-          <View key={uri} style={styles.photoTile}>
-            <Image
-              source={{ uri }}
-              style={styles.photo}
-              contentFit="cover"
-              transition={150}
-              recyclingKey={uri}
-            />
-            {showExtra ? (
-              <View style={styles.photoMore}>
-                <Text style={styles.photoMoreText}>+{extra + 1}</Text>
-              </View>
-            ) : null}
-          </View>
-        );
-      })}
-      {Array.from({ length: MAX_TILES - visible.length }).map((_, index) => (
-        <View key={`spacer-${index}`} style={styles.photoSpacer} />
-      ))}
+    <View style={styles.cover}>
+      <Image
+        source={{ uri }}
+        style={styles.photo}
+        contentFit="cover"
+        transition={150}
+        recyclingKey={uri}
+      />
+      {extra > 0 ? (
+        <View style={styles.coverMore}>
+          <Text style={styles.coverMoreText}>+{extra}</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -133,25 +123,24 @@ export function ProjectCard({
   return (
     <PressableScale accessibilityLabel={project.title} onPress={onPress}>
       <View style={[styles.card, highlighted && styles.cardHighlighted]}>
-        <View style={styles.header}>
-          <View style={styles.headerText}>
-            <Text style={styles.title} numberOfLines={2}>
-              {project.title}
-            </Text>
-            {project.specialtyLabel &&
-            project.specialtyLabel !== project.title ? (
-              <Text style={styles.specialty} numberOfLines={1}>
-                {project.specialtyLabel}
+        <View style={styles.topRow}>
+          <View style={styles.metaRow}>
+            {badge ? (
+              <View style={[styles.badge, { backgroundColor: badge.bg }]}>
+                <Text
+                  style={[styles.badgeText, { color: badge.tint }]}
+                  numberOfLines={1}
+                >
+                  {badge.label}
+                </Text>
+              </View>
+            ) : null}
+            {posted ? (
+              <Text style={styles.posted} numberOfLines={1}>
+                {posted}
               </Text>
             ) : null}
           </View>
-          {badge ? (
-            <View style={[styles.badge, { backgroundColor: badge.bg }]}>
-              <Text style={[styles.badgeText, { color: badge.tint }]}>
-                {badge.label}
-              </Text>
-            </View>
-          ) : null}
           {onToggleLike ? (
             <LikeButton liked={Boolean(liked)} onPress={onToggleLike} />
           ) : null}
@@ -171,14 +160,28 @@ export function ProjectCard({
           ) : null}
         </View>
 
-        {placeLine ? (
-          <View style={styles.placeRow}>
-            <MapPinIcon size={15} color={colors.accent} />
-            <Text style={styles.place} numberOfLines={1}>
-              {placeLine}
+        <View style={styles.header}>
+          <CoverPhoto photos={project.photos} />
+          <View style={styles.headerText}>
+            <Text style={styles.title} numberOfLines={2}>
+              {project.title}
             </Text>
+            {project.specialtyLabel &&
+            project.specialtyLabel !== project.title ? (
+              <Text style={styles.specialty} numberOfLines={1}>
+                {project.specialtyLabel}
+              </Text>
+            ) : null}
+            {placeLine ? (
+              <View style={styles.placeRow}>
+                <MapPinIcon size={15} color={colors.accent} />
+                <Text style={styles.place} numberOfLines={2}>
+                  {placeLine}
+                </Text>
+              </View>
+            ) : null}
           </View>
-        ) : null}
+        </View>
 
         {project.description ? (
           <Text style={styles.description} numberOfLines={3}>
@@ -186,9 +189,7 @@ export function ProjectCard({
           </Text>
         ) : null}
 
-        <PhotoStrip photos={project.photos} />
-
-        {start || bestTime || posted ? (
+        {start || bestTime ? (
           <View style={styles.infoList}>
             {start ? (
               <InfoRow
@@ -202,13 +203,6 @@ export function ProjectCard({
                 icon={<ClockIcon size={15} color={iconColor} />}
                 label="Best time"
                 value={bestTime}
-              />
-            ) : null}
-            {posted ? (
-              <InfoRow
-                icon={<ResponsesIcon size={15} color={iconColor} />}
-                label="Posted"
-                value={posted}
               />
             ) : null}
           </View>
@@ -261,23 +255,61 @@ const useStyles = makeStyles((t) => ({
   card: {
     padding: Spacing.base,
     borderRadius: Radius.lg,
-    backgroundColor: t.isDark ? t.colors.surface : t.colors.backgroundElevated,
+    backgroundColor: t.colors.card,
     borderWidth: 1,
     borderColor: t.colors.border,
     gap: Spacing.md,
   },
   cardHighlighted: {
     borderColor: "rgba(22,179,100,0.45)",
-    backgroundColor: t.isDark ? "rgba(22,179,100,0.08)" : "#F7FCF9",
+    backgroundColor: t.colors.cardHighlighted,
+  },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  metaRow: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  posted: {
+    flexShrink: 1,
+    color: t.colors.textMuted,
+    fontSize: 12.5,
+    fontWeight: "600",
   },
   header: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: Spacing.sm,
+    alignItems: "center",
+    gap: Spacing.md,
   },
   headerText: {
     flex: 1,
-    gap: 2,
+    gap: 4,
+  },
+  cover: {
+    width: COVER_SIZE,
+    height: COVER_SIZE,
+    borderRadius: Radius.md,
+    overflow: "hidden",
+    backgroundColor: t.colors.surfaceStrong,
+  },
+  coverMore: {
+    position: "absolute",
+    right: 6,
+    bottom: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: Radius.pill,
+    backgroundColor: "rgba(5,7,12,0.65)",
+  },
+  coverMoreText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "800",
   },
   title: {
     color: t.colors.text,
@@ -291,6 +323,7 @@ const useStyles = makeStyles((t) => ({
     fontWeight: "600",
   },
   badge: {
+    flexShrink: 1,
     paddingHorizontal: Spacing.md,
     paddingVertical: 5,
     borderRadius: Radius.pill,
@@ -331,7 +364,7 @@ const useStyles = makeStyles((t) => ({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    marginTop: -4,
+    marginTop: 2,
   },
   place: {
     flex: 1,
@@ -344,38 +377,9 @@ const useStyles = makeStyles((t) => ({
     fontSize: 14.5,
     lineHeight: 21,
   },
-  photos: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-  },
-  photoTile: {
-    flex: 1,
-    aspectRatio: 1,
-    borderRadius: Radius.sm,
-    overflow: "hidden",
-    backgroundColor: t.colors.surfaceStrong,
-  },
-  photoSpacer: {
-    flex: 1,
-  },
   photo: {
     width: "100%",
     height: "100%",
-  },
-  photoMore: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(5,7,12,0.55)",
-  },
-  photoMoreText: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "800",
   },
   infoList: {
     gap: 7,

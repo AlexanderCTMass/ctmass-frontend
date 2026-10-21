@@ -25,6 +25,7 @@ import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
 import {
+  INQUIRY_SOURCES,
   type InquirySource,
   buildProjectDetails,
   sendServiceInquiry,
@@ -38,8 +39,6 @@ const IT_SERVICES = DEFAULT_SHOP_ITEMS.filter(
 ).map((feature) => feature.displayName);
 
 const SUPPORT_EMAIL = "support@ctmass.com";
-
-const SOURCES: InquirySource[] = ["app", "app-onboarding", "app-shop"];
 
 const schema = z.object({
   name: z.string().trim().min(1, "Enter your name"),
@@ -83,13 +82,17 @@ export default function ItInquiryScreen() {
   const storeName = useAuthStore((state) => state.user?.name ?? "");
   const params = useLocalSearchParams<{ source?: string; service?: string }>();
   const rawSource = typeof params.source === "string" ? params.source : "";
-  const source: InquirySource = SOURCES.includes(rawSource as InquirySource)
+  const source: InquirySource = INQUIRY_SOURCES.includes(rawSource as InquirySource)
     ? (rawSource as InquirySource)
     : "app";
   const initialService =
-    typeof params.service === "string" && IT_SERVICES.includes(params.service)
-      ? params.service
+    typeof params.service === "string" && params.service.trim()
+      ? params.service.trim()
       : null;
+  const serviceOptions =
+    initialService && !IT_SERVICES.includes(initialService)
+      ? [initialService, ...IT_SERVICES]
+      : IT_SERVICES;
 
   const [selected, setSelected] = useState<string[]>(
     initialService ? [initialService] : [],
@@ -242,7 +245,7 @@ export default function ItInquiryScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Services</Text>
               <View style={styles.chips}>
-                {IT_SERVICES.map((service) => {
+                {serviceOptions.map((service) => {
                   const active = selected.includes(service);
                   return (
                     <Pressable

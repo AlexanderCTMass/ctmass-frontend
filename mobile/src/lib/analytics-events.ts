@@ -971,6 +971,9 @@ export const analyticsEvents = {
     "it_booking_load_failed",
   ),
   shopBookCallTapped: define<{ feature_key: string }>("shop_book_call_tapped"),
+  itServicesViewed: define<{ services_count: number }>("it_services_viewed"),
+  itServicesBookTapped: define<{ service: string }>("it_services_book_tapped"),
+  itServicesShopTapped: define("it_services_shop_tapped"),
 
   adBannerImpression: define<{
     banner_id: string;
