@@ -518,6 +518,20 @@ export const analyticsEvents = {
   }>("compare_toggled"),
   compareOpened: define<{ count: number }>("compare_opened"),
   compareRemoved: define<{ trade_id: string; count: number }>("compare_removed"),
+  compareSwiped: define<{
+    trade_id: string;
+    action: "keep" | "drop";
+    method: "swipe" | "button";
+    position: number;
+    count: number;
+  }>("compare_swiped"),
+  compareUndone: define<{ trade_id: string; action: "keep" | "drop" }>(
+    "compare_undone",
+  ),
+  compareModeChanged: define<{ mode: "cards" | "side_by_side"; count: number }>(
+    "compare_mode_changed",
+  ),
+  compareSwapped: define<{ trade_id: string; count: number }>("compare_swapped"),
   compareCleared: define<{ count: number }>("compare_cleared"),
   compareDifferencesToggled: define<{ enabled: boolean; count: number }>(
     "compare_differences_toggled",

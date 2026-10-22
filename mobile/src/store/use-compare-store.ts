@@ -11,6 +11,7 @@ type CompareState = {
   tradeIds: string[];
   toggle: (tradeId: string) => CompareToggleResult;
   remove: (tradeId: string) => void;
+  insert: (tradeId: string, index: number) => void;
   clear: () => void;
 };
 
@@ -30,6 +31,13 @@ export const useCompareStore = create<CompareState>()(
       },
       remove: (tradeId) =>
         set({ tradeIds: get().tradeIds.filter((id) => id !== tradeId) }),
+      insert: (tradeId, index) => {
+        const current = get().tradeIds.filter((id) => id !== tradeId);
+        if (current.length >= MAX_COMPARE) return;
+        const next = [...current];
+        next.splice(Math.max(0, Math.min(index, next.length)), 0, tradeId);
+        set({ tradeIds: next });
+      },
       clear: () => set({ tradeIds: [] }),
     }),
     {
