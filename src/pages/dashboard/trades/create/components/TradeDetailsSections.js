@@ -36,7 +36,7 @@ import {
     tierBadgeLabel,
     tierFor
 } from 'src/constants/trade-options';
-import { findTrade, siblingTrades } from 'src/constants/trade-taxonomy';
+import { servicesForTrade } from 'src/constants/trade-services';
 
 export const MAX_SERVICES = 12;
 
@@ -114,11 +114,7 @@ function MoneyField({ label, value, onChange, error, helperText }) {
 }
 
 export function TradeServicesExperienceCard({ specialtyLabel, details, onChange, errors = {} }) {
-    const trade = findTrade(specialtyLabel);
-    const suggestions = useMemo(
-        () => (trade ? siblingTrades(trade).map((item) => item.label) : []),
-        [trade]
-    );
+    const suggestions = useMemo(() => servicesForTrade(specialtyLabel), [specialtyLabel]);
     const years = details.experienceYears;
     const tier = years === null ? null : tierFor(years);
 

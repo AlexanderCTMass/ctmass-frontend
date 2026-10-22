@@ -40,7 +40,7 @@ import { useAuthStore } from "@/store/use-auth-store";
 import { useTradeDraftStore } from "@/store/use-trade-draft-store";
 
 const STEPS = [
-  { name: "trade", title: "What's your trade?", subtitle: "One trade per profile. You can add more trades later." },
+  { name: "trade", title: "What's your trade?", subtitle: "Start with one trade. You can add more trades to your profile later." },
   { name: "services", title: "Services & experience", subtitle: "Experience counts only for this trade." },
   { name: "pricing", title: "Pricing", subtitle: "Clear pricing helps homeowners compare. Amounts are optional." },
   { name: "area", title: "Where & when you work", subtitle: "Homeowners see your city, radius and schedule." },

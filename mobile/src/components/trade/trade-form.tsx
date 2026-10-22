@@ -45,11 +45,8 @@ import {
   defaultBasisFor,
   modelTakesRate,
 } from "@/constants/trade-options";
-import {
-  OTHER_TRADE_LABEL,
-  findTrade,
-  siblingTrades,
-} from "@/constants/trade-taxonomy";
+import { servicesForTrade } from "@/constants/trade-services";
+import { OTHER_TRADE_LABEL, findTrade } from "@/constants/trade-taxonomy";
 import type { GeoPlace } from "@/lib/mapbox";
 import {
   type TradeDetails,
@@ -331,7 +328,7 @@ export function IdentitySection({ control, errors, setValue }: SectionProps) {
       </FormSection>
       <FormSection
         label="Primary trade"
-        hint="One trade per profile. Add your other trades as separate profiles."
+        hint="Each trade gets its own page with its own experience, prices and reviews. Add your other trades later."
         error={errors.specialty?.message ?? errors.customSpecialty?.message}
       >
         <Controller
@@ -383,8 +380,7 @@ function ServicesField({
 }) {
   const parts = useFormPartStyles();
   const [custom, setCustom] = useState("");
-  const trade = findTrade(specialty);
-  const suggestions = trade ? siblingTrades(trade).map((item) => item.label) : [];
+  const suggestions = servicesForTrade(specialty);
   const own = value.filter((item) => !suggestions.includes(item));
   const options = [...suggestions, ...own].map((item) => ({
     value: item,
@@ -408,7 +404,7 @@ function ServicesField({
         onChangeText={setCustom}
         onSubmitEditing={add}
         onBlur={add}
-        placeholder="Add your own, e.g. Panel upgrades"
+        placeholder="Add your own service"
         returnKeyType="done"
         maxLength={40}
         blurOnSubmit={false}
@@ -430,7 +426,7 @@ export function ServicesSection({ control, errors }: SectionProps) {
     <>
       <FormSection
         label="Services you offer"
-        hint="Specific jobs under this trade. Homeowners search for these."
+        hint="Specific jobs you take on in this trade. Homeowners see them on your card."
         error={errors.services?.message}
       >
         <Controller

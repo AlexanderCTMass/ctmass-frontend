@@ -93,7 +93,7 @@ function TradePrimaryDetails({
                                         error={Boolean(tradeError)}
                                         helperText={tradeError || (values.primarySpecialtyLabel && !known
                                             ? 'Custom trade. It will be listed under Other.'
-                                            : 'One trade per profile. Add your other trades as separate trades.')}
+                                            : 'Each trade gets its own page with its own experience, prices and reviews.')}
                                     />
                                 )}
                             />
