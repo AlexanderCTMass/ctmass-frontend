@@ -74,6 +74,8 @@ export const credentialsPayload = (credentials) => ({
 
 export const credentialsChanged = (before, after) => JSON.stringify(before) !== JSON.stringify(after);
 
+const isBadMonth = (month) => Boolean(month) && monthToDate(month) === null;
+
 const isPast = (month) => {
     const date = monthToDate(month);
     return Boolean(date && date.getTime() < Date.now());
@@ -96,7 +98,9 @@ export const validateTradeForm = (values, strict) => {
         if (credentials.license.type.trim().length < 2) {
             errors.licenseType = 'Enter the license type.';
         }
-        if (isPast(credentials.license.expiry)) {
+        if (isBadMonth(credentials.license.expiry)) {
+            errors.licenseExpiry = 'Use the YYYY-MM format.';
+        } else if (isPast(credentials.license.expiry)) {
             errors.licenseExpiry = 'This date has passed.';
         }
     }
@@ -104,7 +108,9 @@ export const validateTradeForm = (values, strict) => {
         if (!credentials.insurance.type) {
             errors.insuranceType = 'Choose the insurance type.';
         }
-        if (isPast(credentials.insurance.expiry)) {
+        if (isBadMonth(credentials.insurance.expiry)) {
+            errors.insuranceExpiry = 'Use the YYYY-MM format.';
+        } else if (isPast(credentials.insurance.expiry)) {
             errors.insuranceExpiry = 'This date has passed.';
         }
     }

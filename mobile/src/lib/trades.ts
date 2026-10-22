@@ -502,13 +502,19 @@ export type CreateTradeInput = TradeIdentity & {
   details: TradeDetailsInput;
 };
 
-function identityFields(input: TradeIdentity) {
+function identityFields(input: TradeIdentity, previous?: TradeProfile) {
   const label = input.primarySpecialtyLabel.trim();
   const known = findTrade(label);
-  return {
+  const base = {
     title: input.title || "My Trade",
-    subtitle: known?.label ?? label,
     description: input.about || "",
+  };
+  if (!known && previous && previous.specialtyLabel.trim() === label) {
+    return base;
+  }
+  return {
+    ...base,
+    subtitle: known?.label ?? label,
     primarySpecialtyId: known?.id ?? "",
     primarySpecialtyLabel: known?.label ?? label,
     primarySpecialtyPath: known ? "" : label,
@@ -597,7 +603,7 @@ export async function updateTrade(
   await updateDoc(
     doc(db, COLLECTION, trade.tradeId),
     stripUndefined({
-      ...identityFields(input),
+      ...identityFields(input, trade),
       "contact.businessName": input.title || "",
       "story.about": input.about || "",
       ...location,

@@ -192,6 +192,9 @@ export default function SetupProfileScreen() {
     try {
       await updateEditableProfile(uid, patch);
       void queryClient.invalidateQueries({ queryKey: ["profile", uid] });
+      void queryClient.invalidateQueries({ queryKey: ["trade"] });
+      void queryClient.invalidateQueries({ queryKey: ["owner-trades"] });
+      void queryClient.invalidateQueries({ queryKey: ["public-profile", uid] });
       analyticsEvents.profileSetupSaved();
       router.back();
     } catch (error) {

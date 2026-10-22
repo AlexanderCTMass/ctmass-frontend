@@ -90,6 +90,7 @@ export default function ContractorTradeCompletedScreen() {
         void queryClient.invalidateQueries({ queryKey: ["trade"] });
         void queryClient.invalidateQueries({ queryKey: ["specialists"] });
         void queryClient.invalidateQueries({ queryKey: ["specialist-pool"] });
+        void queryClient.invalidateQueries({ queryKey: ["owner-trades"] });
         successFeedback();
         setCreating(false);
       })

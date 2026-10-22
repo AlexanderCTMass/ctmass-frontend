@@ -468,7 +468,7 @@ function CreateTradePage() {
                 subtitle: knownTrade?.label || tradeLabel || 'Specialty',
                 description: formValues.shortDescription || formValues.about || '',
                 avatarUrl: formValues.avatarUrl || '',
-                primarySpecialtyId: knownTrade?.id || '',
+                primarySpecialtyId: knownTrade?.id || dictionarySpecialty?.id || (isEditMode ? formValues.primarySpecialty || '' : ''),
                 primarySpecialtyLabel: knownTrade?.label || tradeLabel,
                 primarySpecialtyPath: dictionarySpecialty?.path || (knownTrade ? '' : tradeLabel),
                 other: !knownTrade,

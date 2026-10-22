@@ -44,6 +44,7 @@ import {
     preferredContactError
 } from 'src/sections/dashboard/profile/business-details-fields';
 import { EMPTY_BUSINESS, isValidWebsite } from 'src/utils/business-profile';
+import { roles } from 'src/roles';
 import { DiversityModal } from './modals/diversity-modal';
 import { AiAvatarModal } from './modals/ai-avatar-modal';
 import { InviteDialog } from 'src/pages/cabinet/profiles/my/Connections/InviteDialog';
@@ -351,7 +352,7 @@ const ProfileInformationPage = () => {
             return;
         }
 
-        const businessError = foundedYearError(formValues.business?.foundedYear)
+        const businessError = user.role !== roles.WORKER ? '' : foundedYearError(formValues.business?.foundedYear)
             || (isValidWebsite(formValues.business?.website) ? '' : 'Enter a valid website.')
             || preferredContactError(formValues.contactSettings, Boolean(formValues.phoneNumber));
         if (businessError) {
@@ -904,6 +905,7 @@ const ProfileInformationPage = () => {
                                         onChange={handleFieldChange('shortBio')}
                                     />
                                 </Box>
+                                {user?.role === roles.WORKER ? (
                                 <BusinessDetailsFields
                                     business={formValues.business || EMPTY_BUSINESS}
                                     contact={formValues.contactSettings || { showPhone: true, showEmail: false, preferred: 'message' }}
@@ -911,6 +913,7 @@ const ProfileInformationPage = () => {
                                     onBusinessChange={(business) => setFormValues((prev) => ({ ...prev, business }))}
                                     onContactChange={(contactSettings) => setFormValues((prev) => ({ ...prev, contactSettings }))}
                                 />
+                                ) : null}
                             </Stack>
                         </CardContent>
                     </Card>

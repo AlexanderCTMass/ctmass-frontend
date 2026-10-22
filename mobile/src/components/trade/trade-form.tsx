@@ -193,7 +193,7 @@ export function tradeToFormSource(trade: {
   details: TradeDetails;
 }): TradeFormSource {
   return {
-    title: trade.name,
+    title: trade.name === "Specialist" ? "" : trade.name,
     specialtyLabel: trade.specialtyLabel,
     about: trade.about,
     location: toGeoPlace(trade.addressLocation, trade.center),
