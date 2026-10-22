@@ -266,6 +266,14 @@ export default function TradeProfileScreen() {
     router.push(toHref(`/trade-edit/${encodeURIComponent(trade.tradeId)}`));
   };
 
+  const openCredentials = () => {
+    if (!trade) return;
+    tapFeedback();
+    router.push(
+      toHref(`/trade-credentials/${encodeURIComponent(trade.tradeId)}?source=trade_page`),
+    );
+  };
+
   const runDelete = async () => {
     if (!trade || deleting) return;
     setDeleting(true);
@@ -556,8 +564,18 @@ export default function TradeProfileScreen() {
             />
           </View>
 
-          <Section icon={<ShieldCheckIcon size={18} color={colors.accent} />} title="License & insurance">
-            <CredentialsPanel details={details} />
+          <Section
+            icon={<ShieldCheckIcon size={18} color={colors.accent} />}
+            title="License & insurance"
+            action={
+              isOwner ? (
+                <Pressable accessibilityRole="button" hitSlop={8} onPress={openCredentials}>
+                  <Text style={styles.sectionLink}>Edit</Text>
+                </Pressable>
+              ) : null
+            }
+          >
+            <CredentialsPanel details={details} isOwner={isOwner} />
             {linkedCertificates.length > 0 ? (
               <View style={styles.list}>
                 {linkedCertificates.map((cert) => (

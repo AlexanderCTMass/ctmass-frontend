@@ -612,3 +612,28 @@ export async function deleteTrade(tradeId: string): Promise<void> {
   const db = getDb();
   await deleteDoc(doc(db, COLLECTION, tradeId));
 }
+
+export type CredentialInput = {
+  state: string;
+  type: string;
+  number: string;
+  expiresAt: Date | null;
+  documentUrl: string;
+};
+
+export async function updateTradeCredentials(
+  tradeId: string,
+  credentials: {
+    license: CredentialInput | null;
+    insurance: CredentialInput | null;
+  },
+): Promise<void> {
+  if (!tradeId) return;
+  await updateDoc(doc(getDb(), COLLECTION, tradeId), {
+    "credentials.license": credentials.license,
+    "credentials.insurance": credentials.insurance,
+    "credentials.updatedAt": serverTimestamp(),
+    "credentials.source": "contractor",
+    updatedAt: serverTimestamp(),
+  });
+}

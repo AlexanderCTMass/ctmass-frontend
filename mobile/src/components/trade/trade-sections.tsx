@@ -74,10 +74,12 @@ function CredentialBlock({
   title,
   credential,
   details,
+  showDocument,
 }: {
   title: string;
   credential: TradeCredential | null;
   details: string[];
+  showDocument: boolean;
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
@@ -102,7 +104,7 @@ function CredentialBlock({
               </Text>
             ))
           : null}
-        {credential?.documentUrl ? (
+        {showDocument && credential?.documentUrl ? (
           <Pressable
             accessibilityRole="link"
             hitSlop={6}
@@ -116,7 +118,13 @@ function CredentialBlock({
   );
 }
 
-export function CredentialsPanel({ details }: { details: TradeDetails }) {
+export function CredentialsPanel({
+  details,
+  isOwner = false,
+}: {
+  details: TradeDetails;
+  isOwner?: boolean;
+}) {
   const styles = useStyles();
   const license = details.license;
   const insurance = details.insurance;
@@ -125,6 +133,7 @@ export function CredentialsPanel({ details }: { details: TradeDetails }) {
       <CredentialBlock
         title="License"
         credential={license}
+        showDocument={isOwner}
         details={[
           [license?.state, license?.type].filter(Boolean).join(" · "),
           license?.number ? `No. ${license.number}` : "",
@@ -135,6 +144,7 @@ export function CredentialsPanel({ details }: { details: TradeDetails }) {
       <CredentialBlock
         title="Insurance"
         credential={insurance}
+        showDocument={isOwner}
         details={[
           insurance?.type ?? "",
           insurance?.expiresAt ? `Valid through ${shortDate(insurance.expiresAt)}` : "",

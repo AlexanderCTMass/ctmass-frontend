@@ -27,14 +27,17 @@ import {
   tradeFormSchema,
   tradeToFormSource,
 } from "@/components/trade/trade-form";
+import { ShieldCheckIcon } from "@/components/icons";
 import { BackButton } from "@/components/ui/back-button";
+import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
-import { errorFeedback, successFeedback } from "@/lib/haptics";
+import { errorFeedback, successFeedback, tapFeedback } from "@/lib/haptics";
+import { toHref } from "@/lib/navigation";
 import { type TradeProfile, updateTrade } from "@/lib/trades";
 import { useTradeById } from "@/queries/use-trade";
 
@@ -51,6 +54,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 }
 
 function EditForm({ trade }: { trade: TradeProfile }) {
+  const { colors } = useTheme();
   const styles = useStyles();
   const queryClient = useQueryClient();
   const {
@@ -139,6 +143,28 @@ function EditForm({ trade }: { trade: TradeProfile }) {
         showsVerticalScrollIndicator={false}
       >
         <TradeCompleteness trade={trade} />
+        <PressableScale
+          accessibilityLabel="License and insurance"
+          onPress={() => {
+            tapFeedback();
+            router.push(
+              toHref(`/trade-credentials/${encodeURIComponent(trade.tradeId)}?source=trade_edit`),
+            );
+          }}
+        >
+          <View style={styles.linkRow}>
+            <ShieldCheckIcon size={20} color={colors.accent} />
+            <View style={styles.linkBody}>
+              <Text style={styles.linkTitle}>License & insurance</Text>
+              <Text style={styles.linkHint}>
+                {trade.details.license || trade.details.insurance
+                  ? "Provided — tap to update"
+                  : "Not provided — add to build trust"}
+              </Text>
+            </View>
+            <Text style={styles.linkChevron}>›</Text>
+          </View>
+        </PressableScale>
         <Group title="Trade">
           <IdentitySection {...sectionProps} />
         </Group>
@@ -247,6 +273,35 @@ const useStyles = makeStyles((t) => ({
   },
   group: {
     marginTop: Spacing.lg,
+  },
+  linkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    marginTop: Spacing.md,
+    padding: Spacing.base,
+    borderRadius: Radius.lg,
+    backgroundColor: t.colors.card,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+  },
+  linkBody: {
+    flex: 1,
+    gap: 2,
+  },
+  linkTitle: {
+    color: t.colors.text,
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  linkHint: {
+    color: t.colors.textSecondary,
+    fontSize: 13,
+  },
+  linkChevron: {
+    color: t.colors.textMuted,
+    fontSize: 26,
+    fontWeight: "300",
   },
   groupTitle: {
     color: t.colors.accent,

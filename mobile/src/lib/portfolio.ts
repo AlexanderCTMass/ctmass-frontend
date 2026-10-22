@@ -33,6 +33,9 @@ export type PortfolioItem = {
   isPublic: boolean;
   isFavorite: boolean;
   order: number;
+  projectType: string;
+  costRange: string;
+  duration: string;
 };
 
 export type PortfolioInput = {
@@ -44,6 +47,9 @@ export type PortfolioInput = {
   tags: string[];
   beforeUri: string | null;
   afterUri: string;
+  projectType: string;
+  costRange: string;
+  duration: string;
 };
 
 type Raw = Record<string, unknown>;
@@ -109,6 +115,9 @@ function mapItem(ownerId: string, id: string, data: Raw): PortfolioItem {
     isPublic: data.public !== false,
     isFavorite: data.isFavorite === true,
     order: typeof data.order === "number" ? data.order : 0,
+    projectType: str(data.projectType),
+    costRange: str(data.costRange),
+    duration: str(data.duration),
   };
 }
 
@@ -219,6 +228,9 @@ function baseFields(input: PortfolioInput) {
     shortDescription: input.shortDescription.trim(),
     specialtyId: input.specialtyId,
     tags: input.tags.map(normalizeTag).filter(Boolean).slice(0, MAX_PORTFOLIO_TAGS),
+    projectType: input.projectType,
+    costRange: input.costRange,
+    duration: input.duration,
   };
 }
 

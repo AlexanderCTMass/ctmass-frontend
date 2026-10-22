@@ -510,6 +510,19 @@ export const analyticsEvents = {
     "trade_update_failed",
   ),
   tradeDeleted: define<{ trade_id: string }>("trade_deleted"),
+  tradeCredentialsOpened: define<{ trade_id: string; source: string }>(
+    "trade_credentials_opened",
+  ),
+  tradeCredentialsSaved: define<{
+    trade_id: string;
+    has_license: boolean;
+    has_insurance: boolean;
+    license_state: string | null;
+    has_documents: boolean;
+  }>("trade_credentials_saved"),
+  tradeCredentialsSaveFailed: define<{ trade_id: string; error_message: string }>(
+    "trade_credentials_save_failed",
+  ),
   tradeDeleteFailed: define<{ trade_id: string; error_message: string }>(
     "trade_delete_failed",
   ),

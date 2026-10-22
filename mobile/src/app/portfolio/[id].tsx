@@ -18,6 +18,7 @@ import {
   EyeIcon,
   MapPinIcon,
   ReviewIcon,
+  ToolsIcon,
   TrashIcon,
 } from "@/components/icons";
 import { BeforeAfterSlider } from "@/components/portfolio/before-after-slider";
@@ -26,6 +27,11 @@ import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import {
+  projectCostLabel,
+  projectDurationLabel,
+  projectTypeLabel,
+} from "@/constants/trade-options";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
@@ -63,6 +69,15 @@ export default function PortfolioItemScreen() {
 
   const isOwner = Boolean(uid && ownerId && uid === ownerId);
   const mediaHeight = Math.round((width - Spacing.base * 2) * 0.78);
+  const projectFacts = item
+    ? [
+        projectTypeLabel(item.projectType),
+        projectCostLabel(item.costRange),
+        projectDurationLabel(item.duration),
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : "";
 
   const refresh = (next: PortfolioItem | null) => {
     if (!item) return;
@@ -235,7 +250,7 @@ export default function PortfolioItemScreen() {
 
               <Text style={styles.title}>{item.title}</Text>
 
-              {item.location || item.date ? (
+              {item.location || item.date || projectFacts ? (
                 <View style={styles.metaList}>
                   {item.location ? (
                     <View style={styles.metaRow}>
@@ -247,6 +262,14 @@ export default function PortfolioItemScreen() {
                     <View style={styles.metaRow}>
                       <CalendarIcon size={15} color={colors.textSecondary} />
                       <Text style={styles.metaText}>{formatDate(item.date)}</Text>
+                    </View>
+                  ) : null}
+                  {projectFacts ? (
+                    <View style={styles.metaRow}>
+                      <ToolsIcon size={15} color={colors.textSecondary} />
+                      <Text style={styles.metaText}>
+                        {projectFacts} · Provided by contractor
+                      </Text>
                     </View>
                   ) : null}
                 </View>

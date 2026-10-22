@@ -293,6 +293,29 @@ export const US_STATE_CODES = [
   "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
 ] as const;
 
+export const PROJECT_COST_RANGES: Option[] = [
+  { value: "under_1k", label: "Under $1,000" },
+  { value: "1k_5k", label: "$1,000–$5,000" },
+  { value: "5k_15k", label: "$5,000–$15,000" },
+  { value: "15k_50k", label: "$15,000–$50,000" },
+  { value: "50k_plus", label: "$50,000+" },
+];
+
+export const projectCostLabel = (value: string) =>
+  labelOf(PROJECT_COST_RANGES, value);
+
+export const PROJECT_DURATIONS: Option[] = [
+  { value: "1d", label: "1 day" },
+  { value: "2_3d", label: "2–3 days" },
+  { value: "1w", label: "About a week" },
+  { value: "2_4w", label: "2–4 weeks" },
+  { value: "1_3m", label: "1–3 months" },
+  { value: "3m_plus", label: "3+ months" },
+];
+
+export const projectDurationLabel = (value: string) =>
+  labelOf(PROJECT_DURATIONS, value);
+
 export const PRICE_DISCLAIMER =
   "Prices are provided by the contractor. The final price may change after a site visit, scope, access, parts, permits or hidden conditions.";
 
