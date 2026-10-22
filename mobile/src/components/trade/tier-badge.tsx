@@ -3,18 +3,24 @@ import { Text, View } from "react-native";
 import { TierIcon } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { tierBadgeLabel, tierFor } from "@/constants/trade-options";
-import { Radius, makeStyles } from "@/constants/theme";
+import { Radius, makeStyles, useTheme } from "@/constants/theme";
 
 export function TierBadge({ years }: { years: number }) {
   const styles = useStyles();
+  const { isDark } = useTheme();
   const tier = tierFor(years);
+  const ink = isDark ? tier.color : "#04170D";
   return (
     <View
-      style={[styles.badge, { borderColor: tier.color }]}
+      style={[
+        styles.badge,
+        { borderColor: tier.color },
+        !isDark && { backgroundColor: tier.color },
+      ]}
       accessibilityLabel={`${tier.label}, ${years} years in this trade`}
     >
-      <TierIcon tierId={tier.id} size={14} color={tier.color} strokeWidth={2.2} />
-      <Text style={[styles.badgeText, { color: tier.color }]}>
+      <TierIcon tierId={tier.id} size={14} color={ink} strokeWidth={2.2} />
+      <Text style={[styles.badgeText, { color: ink }]}>
         {tierBadgeLabel(years)}
       </Text>
     </View>
