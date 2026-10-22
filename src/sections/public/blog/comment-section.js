@@ -112,6 +112,7 @@ export const PublicCommentSection = ({ postId }) => {
                 setComments(post.comments || []);
             } catch (error) {
                 console.error('Error loading comments:', error);
+                setComments([]);
             } finally {
                 setLoading(false);
             }
