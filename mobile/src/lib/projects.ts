@@ -22,6 +22,7 @@ import {
   type ProjectStartType,
   START_OPTIONS,
 } from "@/constants/project-request";
+import { canonicalTradeLabel, findTrade } from "@/constants/trade-taxonomy";
 import {
   notifyCompletionRequested,
   notifyProjectCancelled,
@@ -82,6 +83,7 @@ export type ProjectDetail = ProjectItem & {
   archivedBy: string[];
   hiddenBy: string[];
   declinedBy: string[];
+  tradeId: string;
 };
 
 export type ReviewInput = { rating: number; message: string };
@@ -215,6 +217,7 @@ function mapProjectDetail(
   return {
     ...mapProject(id, data),
     userId: str(data.userId),
+    tradeId: str(data.tradeId),
     description: stripHtml(str(data.description)),
     attach,
     requestId: str(data.requestId),
@@ -379,6 +382,7 @@ export type CreateProjectInput = {
   customerMail: string;
   attach?: string[];
   proposerUserId?: string | null;
+  tradeId?: string | null;
 };
 
 export type RequestDraftDetails = {
@@ -450,6 +454,7 @@ export async function createProject(
     requestId: input.requestId,
     proposerUserId,
     directed: Boolean(proposerUserId),
+    tradeId: input.tradeId ?? null,
     source: "mobile",
     createdAt: new Date(),
   });
@@ -577,6 +582,36 @@ export async function contractorMarkComplete(
   );
 }
 
+async function resolveContractorTradeId(
+  contractorId: string,
+  specialtyLabel: string,
+): Promise<string | null> {
+  const snapshot = await getDocs(
+    query(collection(getDb(), "trades"), where("ownerId", "==", contractorId)),
+  ).catch(() => null);
+  const trades = (snapshot?.docs ?? []).map((docSnap) => {
+    const data = asRecord(docSnap.data());
+    return {
+      id: docSnap.id,
+      label: str(data.primarySpecialtyLabel) || str(data.subtitle),
+      services: toStringList(data.services),
+    };
+  });
+  if (trades.length === 0) return null;
+  const target = findTrade(specialtyLabel);
+  const wanted = target?.label ?? specialtyLabel;
+  const exact = trades.find(
+    (trade) => canonicalTradeLabel(trade.label) === wanted,
+  );
+  if (exact) return exact.id;
+  const byService = trades.find((trade) => trade.services.includes(wanted));
+  if (byService) return byService.id;
+  const sameGroup = target
+    ? trades.find((trade) => findTrade(trade.label)?.groupId === target.groupId)
+    : null;
+  return (sameGroup ?? trades[0]).id;
+}
+
 // Customer confirms completion and leaves a review of the contractor
 // (mirrors web completeProject: state -> completed + addReview on contractor).
 export async function customerCompleteWithReview(
@@ -592,12 +627,16 @@ export async function customerCompleteWithReview(
     customerCompleteReview: { rating: review.rating, message: review.message },
     completedAt: new Date(),
   });
+  const tradeId =
+    project.tradeId ||
+    (await resolveContractorTradeId(contractorId, project.specialtyLabel));
   await addReview(
     contractorId,
     project.id,
     review.message,
     review.rating,
     customerId,
+    tradeId,
   );
   await sendMessage(threadId, customerId, "The project is completed.", [
     customerId,

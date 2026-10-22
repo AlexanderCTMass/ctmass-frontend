@@ -12,9 +12,20 @@ import {
   where,
 } from "@react-native-firebase/firestore";
 
-import { SPECIALTIES } from "@/constants/specialties";
+import { findTrade } from "@/constants/trade-taxonomy";
+import {
+  type OwnerPublic,
+  readOwnerPublic,
+} from "@/lib/business-profile";
 import { getDb } from "@/lib/firebase";
-import { fetchOwnerRating } from "@/lib/reviews";
+import { type Review, fetchReviews, reviewSummary } from "@/lib/reviews";
+import {
+  type TradeDetails,
+  type TradeDetailsInput,
+  readTradeDetails,
+  stripUndefined,
+  tradeDetailsPayload,
+} from "@/lib/trade-details";
 
 const COLLECTION = "trades";
 const MAX_IN = 10;
@@ -35,6 +46,11 @@ export type Specialist = {
   createdAtSeconds: number;
   lat: number | null;
   lng: number | null;
+  primarySpecialtyId: string;
+  coverUrl: string;
+  completedProjects: number;
+  details: TradeDetails;
+  owner: OwnerPublic | null;
 };
 
 function str(value: unknown, fallback = ""): string {
@@ -98,7 +114,47 @@ function mapTrade(id: string, data: Record<string, unknown>): Specialist {
     createdAtSeconds: num(asRecord(data.createdAt).seconds),
     lat: coords.lat,
     lng: coords.lng,
+    primarySpecialtyId: str(data.primarySpecialtyId),
+    coverUrl: firstImage(data.attach),
+    completedProjects: num(data.completedProjects),
+    details: readTradeDetails(data),
+    owner: null,
   };
+}
+
+function firstImage(value: unknown): string {
+  if (!Array.isArray(value)) return "";
+  const url = value.find(
+    (item): item is string => typeof item === "string" && item.startsWith("http"),
+  );
+  return url ?? "";
+}
+
+export type RatingSummary = { average: number; count: number };
+
+export function tradeRating(
+  reviews: Review[],
+  tradeId: string,
+): RatingSummary & { scope: "trade" | "all" } {
+  const own = reviews.filter((review) => review.tradeId === tradeId);
+  if (own.length > 0) return { ...reviewSummary(own), scope: "trade" };
+  return { ...reviewSummary(reviews), scope: "all" };
+}
+
+type OwnerData = { reviews: Review[]; owner: OwnerPublic | null };
+
+async function fetchOwnerData(ownerId: string): Promise<OwnerData> {
+  const [reviews, owner] = await Promise.all([
+    fetchReviews(ownerId).catch(() => [] as Review[]),
+    getDoc(doc(getDb(), "profiles", ownerId))
+      .then((snapshot) =>
+        snapshot.exists()
+          ? readOwnerPublic(ownerId, asRecord(snapshot.data()))
+          : null,
+      )
+      .catch(() => null),
+  ]);
+  return { reviews, owner };
 }
 
 function keepSpecialist(
@@ -111,24 +167,27 @@ function keepSpecialist(
   return true;
 }
 
-// Overrides the stored trades.rating with a live rating computed from each
-// owner's reviews subcollection (deduped by owner), matching the web search.
 async function withRatings(list: Specialist[]): Promise<Specialist[]> {
   const owners = [...new Set(list.map((item) => item.ownerId).filter(Boolean))];
   if (owners.length === 0) return list;
   const entries = await Promise.all(
-    owners.map(
-      async (id) =>
-        [id, await fetchOwnerRating(id).catch(() => null)] as const,
-    ),
+    owners.map(async (id) => [id, await fetchOwnerData(id)] as const),
   );
   const byOwner = new Map(entries);
   return list.map((item) => {
-    const summary = byOwner.get(item.ownerId);
-    if (summary && summary.count > 0) {
-      return { ...item, rating: summary.average, reviews: summary.count };
-    }
-    return item;
+    const data = byOwner.get(item.ownerId);
+    if (!data) return item;
+    const summary = tradeRating(data.reviews, item.tradeId);
+    const rated =
+      summary.count > 0
+        ? { rating: summary.average, reviews: summary.count }
+        : {};
+    return {
+      ...item,
+      ...rated,
+      avatarUrl: item.avatarUrl || data.owner?.avatar || "",
+      owner: data.owner,
+    };
   });
 }
 
@@ -143,6 +202,25 @@ export async function fetchSpecialistsByLabels(
     where("primarySpecialtyLabel", "in", labels.slice(0, MAX_IN)),
   );
   const snapshot = await getDocs(q);
+  const list = snapshot.docs
+    .map((docSnap) => mapTrade(docSnap.id, asRecord(docSnap.data())))
+    .filter((specialist) => keepSpecialist(specialist, excludeOwnerId));
+  return withRatings(list);
+}
+
+export async function fetchSpecialistsByService(
+  label: string,
+  excludeOwnerId?: string,
+): Promise<Specialist[]> {
+  if (!label) return [];
+  const db = getDb();
+  const snapshot = await getDocs(
+    query(
+      collection(db, COLLECTION),
+      where("services", "array-contains", label),
+      limit(POOL_LIMIT),
+    ),
+  );
   const list = snapshot.docs
     .map((docSnap) => mapTrade(docSnap.id, asRecord(docSnap.data())))
     .filter((specialist) => keepSpecialist(specialist, excludeOwnerId));
@@ -262,6 +340,7 @@ export type TradeProfile = {
   specialtyLabel: string;
   rating: number;
   reviews: number;
+  ratingScope: "trade" | "all";
   placeName: string;
   about: string;
   avatarUrl: string;
@@ -269,6 +348,7 @@ export type TradeProfile = {
   price: string;
   gallery: string[];
   center: [number, number] | null;
+  addressLocation: Record<string, unknown> | null;
   primarySpecialtyId: string;
   businessName: string;
   professionalRole: string;
@@ -280,6 +360,8 @@ export type TradeProfile = {
   status: string;
   completedProjects: number;
   createdAt: Date | null;
+  details: TradeDetails;
+  owner: OwnerPublic | null;
 };
 
 function timestampToDate(value: unknown): Date | null {
@@ -306,6 +388,7 @@ function mapTradeProfile(
     specialtyLabel: str(data.primarySpecialtyLabel) || str(data.subtitle),
     rating: num(data.rating),
     reviews: num(data.reviews),
+    ratingScope: "all",
     placeName: str(addressLocation.place_name) || str(location.address),
     about: str(story.about) || str(data.description),
     avatarUrl: str(data.avatarUrl),
@@ -313,6 +396,10 @@ function mapTradeProfile(
     price: str(pricing.amount),
     gallery,
     center: tradeCenter(addressLocation),
+    addressLocation:
+      location.addressLocation && typeof location.addressLocation === "object"
+        ? addressLocation
+        : null,
     primarySpecialtyId: str(data.primarySpecialtyId),
     businessName: str(contact.businessName),
     professionalRole: str(contact.professionalRole),
@@ -324,17 +411,24 @@ function mapTradeProfile(
     status: str(data.status, "on_review"),
     completedProjects: num(data.completedProjects),
     createdAt: timestampToDate(data.createdAt),
+    details: readTradeDetails(data),
+    owner: null,
   };
 }
 
-async function withProfileRating(
-  profile: TradeProfile,
-): Promise<TradeProfile> {
-  const summary = await fetchOwnerRating(profile.ownerId).catch(() => null);
-  if (summary && summary.count > 0) {
-    return { ...profile, rating: summary.average, reviews: summary.count };
-  }
-  return profile;
+async function withOwnerData(profile: TradeProfile): Promise<TradeProfile> {
+  if (!profile.ownerId) return profile;
+  const data = await fetchOwnerData(profile.ownerId);
+  const summary = tradeRating(data.reviews, profile.tradeId);
+  return {
+    ...profile,
+    ...(summary.count > 0
+      ? { rating: summary.average, reviews: summary.count }
+      : {}),
+    ratingScope: summary.scope,
+    avatarUrl: profile.avatarUrl || data.owner?.avatar || "",
+    owner: data.owner,
+  };
 }
 
 export async function fetchTradeByOwner(
@@ -349,7 +443,7 @@ export async function fetchTradeByOwner(
   const snapshot = await getDocs(q);
   const docSnap = snapshot.docs[0];
   if (!docSnap) return null;
-  return withProfileRating(mapTradeProfile(docSnap.id, asRecord(docSnap.data())));
+  return withOwnerData(mapTradeProfile(docSnap.id, asRecord(docSnap.data())));
 }
 
 export async function fetchTradeById(
@@ -359,7 +453,7 @@ export async function fetchTradeById(
   const db = getDb();
   const snapshot = await getDoc(doc(db, COLLECTION, tradeId));
   if (!snapshot.exists()) return null;
-  return withProfileRating(mapTradeProfile(snapshot.id, asRecord(snapshot.data())));
+  return withOwnerData(mapTradeProfile(snapshot.id, asRecord(snapshot.data())));
 }
 
 export async function fetchTradesByOwner(
@@ -372,15 +466,7 @@ export async function fetchTradesByOwner(
   const list = snapshot.docs
     .map((docSnap) => mapTrade(docSnap.id, asRecord(docSnap.data())))
     .filter((specialist) => specialist.status !== "rejected");
-  const summary = await fetchOwnerRating(ownerId).catch(() => null);
-  if (summary && summary.count > 0) {
-    return list.map((item) => ({
-      ...item,
-      rating: summary.average,
-      reviews: summary.count,
-    }));
-  }
-  return list;
+  return withRatings(list);
 }
 
 export type TradeLocation = {
@@ -390,16 +476,30 @@ export type TradeLocation = {
   commuteDuration: number;
 };
 
-export type CreateTradeInput = {
+export type TradeIdentity = {
   title: string;
-  primarySpecialtyId: string;
   primarySpecialtyLabel: string;
   about: string;
-  priceType: string;
-  price: string;
-  phone: string;
-  location: TradeLocation;
 };
+
+export type CreateTradeInput = TradeIdentity & {
+  location: TradeLocation;
+  details: TradeDetailsInput;
+};
+
+function identityFields(input: TradeIdentity) {
+  const label = input.primarySpecialtyLabel.trim();
+  const known = findTrade(label);
+  return {
+    title: input.title || "My Trade",
+    subtitle: known?.label ?? label,
+    description: input.about || "",
+    primarySpecialtyId: known?.id ?? "",
+    primarySpecialtyLabel: known?.label ?? label,
+    primarySpecialtyPath: known ? "" : label,
+    other: !known && label.length > 0,
+  };
+}
 
 const SAVE_ACK_TIMEOUT_MS = 4000;
 
@@ -409,59 +509,50 @@ export async function createTrade(
 ): Promise<string> {
   const db = getDb();
   const now = serverTimestamp();
-  const isCustomSpecialty =
-    input.primarySpecialtyLabel.length > 0 &&
-    !(SPECIALTIES as readonly string[]).includes(input.primarySpecialtyLabel);
   const docRef = doc(collection(db, COLLECTION));
-  const write = setDoc(docRef, {
-    ownerId,
-    title: input.title || "My Trade",
-    subtitle: input.primarySpecialtyLabel || "",
-    description: input.about || "",
-    avatarUrl: "",
-    rating: 0,
-    views: 0,
-    viewsThisWeek: 0,
-    reviews: 0,
-    completedProjects: 0,
-    projectsInProgress: 0,
-    status: "on_review",
-    statusDetails: "",
-    statusUpdatedAt: now,
-    newOrders: 0,
-    primarySpecialtyId: input.primarySpecialtyId || "",
-    primarySpecialtyLabel: input.primarySpecialtyLabel || "",
-    primarySpecialtyPath: isCustomSpecialty ? input.primarySpecialtyLabel : "",
-    other: isCustomSpecialty,
-    contact: {
-      businessName: input.title || "",
-      professionalRole: "",
-      phone: input.phone || "",
-      useProfilePhone: !input.phone,
-    },
-    location: {
-      address: input.location.address || "",
-      addressLocation: input.location.addressLocation ?? null,
-      commuteMode: input.location.commuteMode || "driving",
-      commuteDuration: input.location.commuteDuration || 20,
-    },
-    pricing: {
-      type: input.priceType || "",
-      amount: input.price || "",
-    },
-    story: {
-      about: input.about || "",
-      shortDescription: "",
-    },
-    metrics: {
+  const write = setDoc(
+    docRef,
+    stripUndefined({
+      ownerId,
+      ...identityFields(input),
+      avatarUrl: "",
+      rating: 0,
+      views: 0,
       viewsThisWeek: 0,
-      totalViews: 0,
+      reviews: 0,
+      completedProjects: 0,
+      projectsInProgress: 0,
+      status: "on_review",
+      statusDetails: "",
+      statusUpdatedAt: now,
+      newOrders: 0,
+      contact: {
+        businessName: input.title || "",
+        professionalRole: "",
+        phone: "",
+        useProfilePhone: true,
+      },
+      location: {
+        address: input.location.address || "",
+        addressLocation: input.location.addressLocation ?? null,
+        commuteMode: input.location.commuteMode || "driving",
+        commuteDuration: input.location.commuteDuration || 20,
+      },
+      story: {
+        about: input.about || "",
+        shortDescription: "",
+      },
+      metrics: {
+        viewsThisWeek: 0,
+        totalViews: 0,
+        updatedAt: now,
+      },
+      ...tradeDetailsPayload(input.details, now),
+      source: "mobile",
+      createdAt: now,
       updatedAt: now,
-    },
-    source: "mobile",
-    createdAt: now,
-    updatedAt: now,
-  });
+    }),
+  );
   write.catch(() => undefined);
   await Promise.race([
     write,
@@ -470,38 +561,35 @@ export async function createTrade(
   return docRef.id;
 }
 
-export type UpdateTradeInput = {
-  title: string;
-  primarySpecialtyId: string;
-  primarySpecialtyLabel: string;
-  about: string;
-  priceType: string;
-  price: string;
+export type UpdateTradeInput = TradeIdentity & {
+  location: TradeLocation | null;
+  details: TradeDetailsInput;
 };
 
 export async function updateTrade(
-  tradeId: string,
+  trade: TradeProfile,
   input: UpdateTradeInput,
 ): Promise<void> {
-  if (!tradeId) return;
+  if (!trade.tradeId) return;
   const db = getDb();
-  const isCustomSpecialty =
-    input.primarySpecialtyLabel.length > 0 &&
-    !(SPECIALTIES as readonly string[]).includes(input.primarySpecialtyLabel);
-  await updateDoc(doc(db, COLLECTION, tradeId), {
-    title: input.title || "My Trade",
-    subtitle: input.primarySpecialtyLabel || "",
-    description: input.about || "",
-    primarySpecialtyId: input.primarySpecialtyId || "",
-    primarySpecialtyLabel: input.primarySpecialtyLabel || "",
-    primarySpecialtyPath: isCustomSpecialty ? input.primarySpecialtyLabel : "",
-    other: isCustomSpecialty,
-    "contact.businessName": input.title || "",
-    "pricing.type": input.priceType || "",
-    "pricing.amount": input.price || "",
-    "story.about": input.about || "",
-    updatedAt: serverTimestamp(),
-  });
+  const now = serverTimestamp();
+  const location = input.location
+    ? {
+        "location.address": input.location.address || "",
+        "location.addressLocation": input.location.addressLocation ?? null,
+      }
+    : {};
+  await updateDoc(
+    doc(db, COLLECTION, trade.tradeId),
+    stripUndefined({
+      ...identityFields(input),
+      "contact.businessName": input.title || "",
+      "story.about": input.about || "",
+      ...location,
+      ...tradeDetailsPayload(input.details, now, trade.details),
+      updatedAt: now,
+    }),
+  );
 }
 
 export async function deleteTrade(tradeId: string): Promise<void> {

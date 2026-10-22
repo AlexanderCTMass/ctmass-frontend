@@ -13,6 +13,7 @@ export type Review = {
   rating: number;
   authorId: string;
   projectId: string;
+  tradeId: string;
   createdAt: Date | null;
 };
 
@@ -44,6 +45,7 @@ export async function addReview(
   text: string,
   rating: number,
   authorId: string,
+  tradeId?: string | null,
 ): Promise<void> {
   if (!targetProfileId) return;
   const db = getDb();
@@ -52,6 +54,7 @@ export async function addReview(
     rating,
     authorId,
     projectId: projectId ?? null,
+    tradeId: tradeId ?? null,
     date: serverTimestamp(),
     source: "mobile",
   });
@@ -70,6 +73,7 @@ export async function fetchReviews(userId: string): Promise<Review[]> {
         rating: num(data.rating),
         authorId: str(data.authorId),
         projectId: str(data.projectId),
+        tradeId: str(data.tradeId),
         createdAt: toDate(data.date),
       };
     })

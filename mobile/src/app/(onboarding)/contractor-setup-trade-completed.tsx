@@ -15,6 +15,7 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
+import { groupOfTrade } from "@/constants/trade-taxonomy";
 import {
   analyticsEvents,
   errorMessage,
@@ -22,6 +23,7 @@ import {
 } from "@/lib/analytics-events";
 import { successFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
+import { emptyDetailsInput } from "@/lib/trade-details";
 import { createTrade } from "@/lib/trades";
 import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
@@ -32,13 +34,6 @@ const perks = [
   "Portfolio and reviews for each trade",
   "More leads with a complete profile",
 ];
-
-function specialtyId(label: string): string {
-  return label
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
 
 export default function ContractorTradeCompletedScreen() {
   const { colors } = useTheme();
@@ -67,27 +62,28 @@ export default function ContractorTradeCompletedScreen() {
     const location = draft.location;
     if (!specialty || !location) return;
 
+    const details = draft.details ?? emptyDetailsInput(groupOfTrade(specialty));
+
     void createTrade(uid, {
       title: draft.title,
-      primarySpecialtyId: specialtyId(specialty),
       primarySpecialtyLabel: specialty,
       about: draft.about,
-      priceType: draft.priceType,
-      price: draft.price,
-      phone: "",
       location: {
         address: location.place_name,
         addressLocation: location,
         commuteMode: "driving",
-        commuteDuration: draft.commuteDuration,
+        commuteDuration: 20,
       },
+      details,
     })
       .then((tradeId) => {
         analyticsEvents.tradeCreated({
           trade_id: tradeId,
           specialty,
-          commute_minutes: draft.commuteDuration,
-          price_type: draft.priceType,
+          trade_group: details.groupId,
+          pricing_model: details.rates.model,
+          experience_years: details.experienceYears,
+          radius_miles: details.radiusMiles,
           ...locationProps(location),
         });
         setCreatedTradeId(tradeId);
@@ -113,9 +109,7 @@ export default function ContractorTradeCompletedScreen() {
     draft.specialty,
     draft.location,
     draft.about,
-    draft.priceType,
-    draft.price,
-    draft.commuteDuration,
+    draft.details,
     canCreate,
     setCreatedTradeId,
     queryClient,

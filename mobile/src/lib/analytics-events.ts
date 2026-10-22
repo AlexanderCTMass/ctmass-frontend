@@ -257,23 +257,23 @@ export const analyticsEvents = {
   ),
 
   tradeSetupViewed: define("trade_setup_viewed"),
-  tradeSetupFieldCompleted: define<{
-    field: string;
-    value: string;
-    value_length: number;
-  }>("trade_setup_field_completed"),
-  tradeSetupOptionSelected: define<{
-    field: "specialty" | "commute_minutes" | "price_type";
-    value: string;
-  }>("trade_setup_option_selected"),
+  tradeSetupStepCompleted: define<{
+    step: number;
+    step_name: string;
+  }>("trade_setup_step_completed"),
   tradeSetupSubmitted: define<{
     title: string;
     specialty: string;
+    trade_group: string;
     is_custom_specialty: boolean;
-    commute_minutes: number;
-    price_type: string;
-    price: string;
-    about: string;
+    services_count: number;
+    experience_years: number | null;
+    pricing_model: string;
+    has_rate: boolean;
+    radius_miles: number;
+    days: string[];
+    response_time: string;
+    about_length: number;
     city: string | null;
     state: string | null;
   }>("trade_setup_submitted"),
@@ -285,8 +285,10 @@ export const analyticsEvents = {
   tradeCreated: define<{
     trade_id: string;
     specialty: string;
-    commute_minutes: number;
-    price_type: string;
+    trade_group: string;
+    pricing_model: string;
+    experience_years: number | null;
+    radius_miles: number;
     city: string | null;
     state: string | null;
   }>("trade_created"),

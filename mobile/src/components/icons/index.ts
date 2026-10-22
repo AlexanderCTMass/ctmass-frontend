@@ -48,3 +48,13 @@ export { TrashIcon } from "@/components/icons/trash";
 export { UserIcon } from "@/components/icons/user";
 export { UsersIcon } from "@/components/icons/users";
 export { WalletIcon } from "@/components/icons/wallet";
+export {
+  BuildingIcon,
+  DollarIcon,
+  GlobeIcon,
+  ScaleIcon,
+  SearchIcon,
+  SirenIcon,
+  TierIcon,
+  TradeGroupIcon,
+} from "@/components/icons/trade-icons";
