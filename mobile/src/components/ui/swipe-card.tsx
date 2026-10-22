@@ -270,6 +270,7 @@ export function SwipeCard({
   const prev = useRef({ key: itemKey, liked });
   const [generation, setGeneration] = useState(0);
   const [settlingKey, setSettlingKey] = useState<string | null>(null);
+  const collapsedKey = useSharedValue("");
   if (settlingKey !== null && settlingKey !== itemKey) {
     setSettlingKey(null);
     setGeneration((value) => value + 1);
@@ -378,6 +379,7 @@ export function SwipeCard({
         (finished) => {
           if (!finished) return;
           height.value = measured.value;
+          collapsedKey.value = itemKey;
           collapsing.value = 1;
           height.value = withTiming(
             0,
@@ -393,7 +395,7 @@ export function SwipeCard({
     });
 
   const containerStyle = useAnimatedStyle(() =>
-    collapsing.value === 1
+    collapsing.value === 1 && collapsedKey.value === itemKey
       ? {
           height: height.value,
           opacity: measured.value > 0 ? height.value / measured.value : 0,
@@ -418,7 +420,7 @@ export function SwipeCard({
 
   const onLayout = (event: LayoutChangeEvent) => {
     const layout = event.nativeEvent.layout;
-    if (collapsing.value === 1) return;
+    if (collapsing.value === 1 && collapsedKey.value === itemKey) return;
     measured.value = layout.height;
     width.value = layout.width;
     threshold.value = Math.min(120, Math.max(80, layout.width * 0.28));
