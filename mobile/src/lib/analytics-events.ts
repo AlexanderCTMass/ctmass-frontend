@@ -7,6 +7,8 @@ import type { GeoPlace } from "@/lib/mapbox";
 
 type Role = string | null;
 
+export type TradeActionSource = "card" | "page" | "compare";
+
 function define<P extends EventProperties | void = void>(name: string) {
   return (...args: P extends EventProperties ? [properties: P] : []): void => {
     trackEvent(name, args[0]);
@@ -522,18 +524,23 @@ export const analyticsEvents = {
   }>("trade_profile_viewed"),
   tradeProfileMessageTapped: define<{
     owner_id: string;
+    trade_id: string | null;
     project_id: string | null;
+    source: TradeActionSource;
   }>("trade_profile_message_tapped"),
   tradeProfileWebOpened: define<{ owner_id: string }>(
     "trade_profile_web_opened",
   ),
-  tradeProfileCallTapped: define<{ owner_id: string; trade_id: string }>(
-    "trade_profile_call_tapped",
-  ),
+  tradeProfileCallTapped: define<{
+    owner_id: string;
+    trade_id: string;
+    source: TradeActionSource;
+  }>("trade_profile_call_tapped"),
   tradeProfileRequestTapped: define<{
     owner_id: string;
     trade_id: string;
     specialty: string;
+    source: TradeActionSource;
   }>("trade_profile_request_tapped"),
   tradeProfileOwnerOpened: define<{ owner_id: string; trade_id: string }>(
     "trade_profile_owner_opened",

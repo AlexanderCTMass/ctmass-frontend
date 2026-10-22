@@ -12,7 +12,7 @@ import {
   where,
 } from "@react-native-firebase/firestore";
 
-import { findTrade } from "@/constants/trade-taxonomy";
+import { findGroup, findTrade } from "@/constants/trade-taxonomy";
 import {
   type OwnerPublic,
   readOwnerPublic,
@@ -293,6 +293,16 @@ export async function fetchSpecialistsByEmail(
   );
 }
 
+export function tradesByOwner(list: Specialist[]): Map<string, Specialist[]> {
+  const map = new Map<string, Specialist[]>();
+  for (const item of list) {
+    const bucket = map.get(item.ownerId);
+    if (bucket) bucket.push(item);
+    else map.set(item.ownerId, [item]);
+  }
+  return map;
+}
+
 export type SpecialistGroups = {
   topRated: Specialist[];
   recent: Specialist[];
@@ -329,7 +339,12 @@ export function matchesSpecialistQuery(
   if (!q) return true;
   return (
     specialist.name.toLowerCase().includes(q) ||
-    specialist.specialtyLabel.toLowerCase().includes(q)
+    specialist.specialtyLabel.toLowerCase().includes(q) ||
+    specialist.details.services.some((service) =>
+      service.toLowerCase().includes(q),
+    ) ||
+    (findGroup(specialist.details.groupId)?.label.toLowerCase().includes(q) ??
+      false)
   );
 }
 

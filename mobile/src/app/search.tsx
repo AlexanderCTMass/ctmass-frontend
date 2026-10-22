@@ -5,20 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  ArchiveIcon,
-  HeartIcon,
-  MapPinIcon,
-  ReviewIcon,
-  UsersIcon,
-} from "@/components/icons";
-import { shortPlace } from "@/components/project/project-card";
-import { Avatar } from "@/components/ui/avatar";
+import { ArchiveIcon, HeartIcon } from "@/components/icons";
+import { TradeCard } from "@/components/trade/trade-card";
 import { BackButton } from "@/components/ui/back-button";
 import { DistanceSlider } from "@/components/ui/distance-slider";
 import { FeedTabs } from "@/components/ui/feed-tabs";
-import { LikeButton } from "@/components/ui/like-button";
-import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { SwipeCard, useSwipeSides } from "@/components/ui/swipe-card";
 import { UndoToast, useUndoToast } from "@/components/ui/undo-toast";
@@ -36,8 +27,9 @@ import {
   useSwipeActions,
 } from "@/hooks/use-swipe-actions";
 import { useSwipeHint } from "@/hooks/use-swipe-hint";
+import { publicPhone, useTradeContact } from "@/hooks/use-trade-contact";
 import { analyticsEvents } from "@/lib/analytics-events";
-import { distanceMiles, formatMiles } from "@/lib/geo";
+import { distanceMiles } from "@/lib/geo";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
 import { rankByAffinity } from "@/lib/swipes";
@@ -46,6 +38,7 @@ import {
   fetchSpecialistsByEmail,
   groupSpecialists,
   matchesSpecialistQuery,
+  tradesByOwner,
 } from "@/lib/trades";
 import { useProfile } from "@/queries/use-profile";
 import { useSpecialistPool } from "@/queries/use-specialist-search";
@@ -80,100 +73,6 @@ function groupBadge(
     return { label: "New", tint: colors.accent, bg: "rgba(22,179,100,0.14)" };
   }
   return null;
-}
-
-function SpecialistCard({
-  specialist,
-  group,
-  distance,
-  liked,
-  onPress,
-  onToggleLike,
-}: {
-  specialist: Specialist;
-  group: string;
-  distance: number | null;
-  liked: boolean;
-  onPress: () => void;
-  onToggleLike?: () => void;
-}) {
-  const { colors } = useTheme();
-  const styles = useStyles();
-  const badge = groupBadge(group, colors);
-  const place = specialist.placeName ? shortPlace(specialist.placeName) : "";
-  const placeLine = [place, formatMiles(distance)].filter(Boolean).join(" · ");
-  const rated = specialist.rating > 0;
-  const iconColor = colors.textSecondary;
-  return (
-    <PressableScale accessibilityLabel={specialist.name} onPress={onPress}>
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Avatar
-            name={specialist.name}
-            url={specialist.avatarUrl || null}
-            size={52}
-          />
-          <View style={styles.cardHeaderText}>
-            <Text style={styles.cardName} numberOfLines={2}>
-              {specialist.name}
-            </Text>
-            {specialist.specialtyLabel ? (
-              <Text style={styles.cardSpecialty} numberOfLines={1}>
-                {specialist.specialtyLabel}
-              </Text>
-            ) : null}
-          </View>
-          {badge ? (
-            <View style={[styles.badge, { backgroundColor: badge.bg }]}>
-              <Text style={[styles.badgeText, { color: badge.tint }]}>
-                {badge.label}
-              </Text>
-            </View>
-          ) : null}
-          {onToggleLike ? (
-            <LikeButton liked={liked} onPress={onToggleLike} />
-          ) : null}
-        </View>
-
-        {placeLine ? (
-          <View style={styles.placeRow}>
-            <MapPinIcon size={15} color={colors.accent} />
-            <Text style={styles.place} numberOfLines={1}>
-              {placeLine}
-            </Text>
-          </View>
-        ) : null}
-
-        <View style={styles.stats}>
-          <View style={styles.stat}>
-            <View style={styles.statLabelRow}>
-              <ReviewIcon size={14} color={rated ? colors.coin : iconColor} />
-              <Text style={styles.statLabel}>Rating</Text>
-            </View>
-            <Text style={styles.statValue}>
-              {rated ? specialist.rating.toFixed(1) : "New"}
-            </Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.stat}>
-            <View style={styles.statLabelRow}>
-              <UsersIcon size={14} color={iconColor} />
-              <Text style={styles.statLabel}>Reviews</Text>
-            </View>
-            <Text style={styles.statValue}>
-              {specialist.reviews > 0
-                ? `${specialist.reviews} ${specialist.reviews === 1 ? "review" : "reviews"}`
-                : "No reviews yet"}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.cta}>
-          <Text style={styles.ctaText}>View services</Text>
-        </View>
-      </View>
-    </PressableScale>
-  );
 }
 
 function SkeletonRow() {
@@ -219,6 +118,7 @@ export default function SearchScreen() {
   const sides = useSwipeSides();
   const swipeHint = useSwipeHint("search");
   const undo = useUndoToast();
+  const contact = useTradeContact("card");
   const { liked, archived } = swipe.specialistIndex;
   const savedIds = useMemo(
     () => [...(tab === "archived" ? archived : liked)],
@@ -393,6 +293,19 @@ export default function SearchScreen() {
     });
   };
 
+  const ownerTrades = useMemo(
+    () => tradesByOwner([...(pool.data ?? []), ...(saved.data ?? [])]),
+    [pool.data, saved.data],
+  );
+  const otherTradesOf = (specialist: Specialist): Specialist[] => {
+    const seen = new Set<string>([specialist.tradeId]);
+    return (ownerTrades.get(specialist.ownerId) ?? []).filter((item) => {
+      if (seen.has(item.tradeId)) return false;
+      seen.add(item.tradeId);
+      return true;
+    });
+  };
+
   const openTrade = (specialist: Specialist, group: string, position: number) => {
     tapFeedback();
     analyticsEvents.specialistSearchProfileOpened({
@@ -510,19 +423,33 @@ export default function SearchScreen() {
               }
               const specialist = item.specialist;
               const isLiked = liked.has(specialist.tradeId);
+              const phone = publicPhone(specialist.owner);
+              const isSelf = contact.isSelf(specialist.ownerId);
               const card = (
-                <SpecialistCard
+                <TradeCard
                   specialist={specialist}
-                  group={item.group}
+                  badge={groupBadge(item.group, colors)}
                   distance={distanceTo(specialist)}
                   liked={isLiked}
+                  phone={phone}
+                  otherTrades={otherTradesOf(specialist)}
                   onPress={() =>
                     openTrade(specialist, item.group, item.position)
+                  }
+                  onOpenTrade={(other) =>
+                    openTrade(other, item.group, item.position)
                   }
                   onToggleLike={
                     uid && tab !== "archived"
                       ? () => likeSpecialist(specialist, "tap")
                       : undefined
+                  }
+                  onMessage={
+                    isSelf ? undefined : () => void contact.message(specialist)
+                  }
+                  onCall={() => contact.call(specialist, phone)}
+                  onRequestQuote={
+                    isSelf ? undefined : () => contact.requestQuote(specialist)
                   }
                 />
               );

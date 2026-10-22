@@ -323,7 +323,9 @@ export default function TradeProfileScreen() {
     if (ownerId) {
       analyticsEvents.tradeProfileMessageTapped({
         owner_id: ownerId,
+        trade_id: trade?.tradeId ?? null,
         project_id: projectId ?? null,
+        source: "page",
       });
     }
     if (!requireAuth()) return;
@@ -346,6 +348,7 @@ export default function TradeProfileScreen() {
     analyticsEvents.tradeProfileCallTapped({
       owner_id: trade.ownerId,
       trade_id: trade.tradeId,
+      source: "page",
     });
     void Linking.openURL(`tel:${phoneDigits(phone)}`).catch(() =>
       Alert.alert("Can't place a call", phone),
@@ -358,6 +361,7 @@ export default function TradeProfileScreen() {
       owner_id: trade.ownerId,
       trade_id: trade.tradeId,
       specialty: trade.specialtyLabel,
+      source: "page",
     });
     if (!requireAuth()) return;
     tapFeedback();
