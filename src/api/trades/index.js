@@ -14,6 +14,7 @@ import {
     where
 } from 'firebase/firestore';
 import { firestore } from 'src/libs/firebase';
+import { readTradeDetails } from 'src/utils/trade-details';
 
 const COLLECTION = 'trades';
 
@@ -77,10 +78,31 @@ const mapTradeSnapshot = (snapshot) => {
         pricing: data.pricing || {},
         story,
         metrics,
+        details: readTradeDetails(data),
         createdAt: data.createdAt ?? null,
         updatedAt: data.updatedAt ?? null
     };
 };
+
+const DETAIL_KEYS = [
+    'tradeGroupId',
+    'services',
+    'experience',
+    'rates',
+    'availability',
+    'response',
+    'serviceArea',
+    'workPolicy',
+    'credentials',
+    'detailsUpdatedAt'
+];
+
+const pickDetailFields = (payload = {}) => DETAIL_KEYS.reduce((acc, key) => {
+    if (payload[key] !== undefined) {
+        acc[key] = payload[key];
+    }
+    return acc;
+}, {});
 
 const normalizeTradePayload = (userId, payload = {}) => {
     const now = serverTimestamp();
@@ -117,6 +139,7 @@ const normalizeTradePayload = (userId, payload = {}) => {
             totalViews: Number.isFinite(payload.views) ? Number(payload.views) : 0,
             updatedAt: now
         },
+        ...pickDetailFields(payload),
         createdAt: now,
         updatedAt: now
     };

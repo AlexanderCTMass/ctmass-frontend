@@ -6,9 +6,28 @@ import {
     getProfessionalRoleLabel
 } from "src/components/profiles/previewCards/base-preview-card";
 
+import { tierBadgeLabel, tierFor } from "src/constants/trade-options";
+import { priceLine, trustItems } from "src/utils/trade-display";
+
 const resolveVerified = (profile) => Boolean(
     profile?.isVerified ?? profile?.verified ?? (profile?.emailVerified && profile?.phoneVerified)
 );
+
+export const tradeCardFields = (details) => {
+    if (!details) {
+        return {};
+    }
+    const years = details.experienceYears;
+    const tier = years === null || years === undefined ? null : tierFor(years);
+    const trust = trustItems(details).map((item) => item.label).join(' · ');
+    const hasModernRates = Boolean(details.rates && !details.rates.legacy);
+    return {
+        tierLabel: tier ? tierBadgeLabel(years) : null,
+        tierColor: tier ? tier.color : null,
+        trustLabel: trust || null,
+        ...(hasModernRates ? { priceLabel: priceLine(details.rates) } : {})
+    };
+};
 
 const resolvePro = (profile) => profile?.isPro === true || profile?.pro === true;
 
@@ -149,7 +168,8 @@ export const mapWorkerToPreviewData = (worker, theme) => {
         avatarInitial: getInitials(),
         registrationDuration: getRegistrationDuration(),
         statusKey: statusKey,
-        statusLabel: statusLabels[statusKey] || 'Available'
+        statusLabel: statusLabels[statusKey] || 'Available',
+        ...tradeCardFields(worker.tradeDetails)
     };
 };
 

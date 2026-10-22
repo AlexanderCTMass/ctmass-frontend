@@ -38,6 +38,12 @@ import { useSettings } from 'src/hooks/use-settings';
 import { paths } from 'src/paths';
 import { storage } from 'src/libs/firebase';
 import { PROFESSIONAL_ROLE_OPTIONS } from 'src/constants/professional-role-options';
+import {
+    BusinessDetailsFields,
+    foundedYearError,
+    preferredContactError
+} from 'src/sections/dashboard/profile/business-details-fields';
+import { EMPTY_BUSINESS, isValidWebsite } from 'src/utils/business-profile';
 import { DiversityModal } from './modals/diversity-modal';
 import { AiAvatarModal } from './modals/ai-avatar-modal';
 import { InviteDialog } from 'src/pages/cabinet/profiles/my/Connections/InviteDialog';
@@ -186,7 +192,9 @@ const defaultFormValues = {
     primaryAddressLocation: null,
     timeZone: '(GMT-05:00) Eastern Time (US & Canada)',
     faq: [],
-    socialGroups: []
+    socialGroups: [],
+    business: EMPTY_BUSINESS,
+    contactSettings: { showPhone: true, showEmail: false, preferred: 'message' }
 };
 
 const TIMEZONE_OPTIONS = [
@@ -340,6 +348,14 @@ const ProfileInformationPage = () => {
 
         if (secondaryEmailMatchesPrimary) {
             toast.error('Secondary email must be different from the primary email.');
+            return;
+        }
+
+        const businessError = foundedYearError(formValues.business?.foundedYear)
+            || (isValidWebsite(formValues.business?.website) ? '' : 'Enter a valid website.')
+            || preferredContactError(formValues.contactSettings, Boolean(formValues.phoneNumber));
+        if (businessError) {
+            toast.error(businessError);
             return;
         }
 
@@ -888,6 +904,13 @@ const ProfileInformationPage = () => {
                                         onChange={handleFieldChange('shortBio')}
                                     />
                                 </Box>
+                                <BusinessDetailsFields
+                                    business={formValues.business || EMPTY_BUSINESS}
+                                    contact={formValues.contactSettings || { showPhone: true, showEmail: false, preferred: 'message' }}
+                                    hasPhone={Boolean(formValues.phoneNumber)}
+                                    onBusinessChange={(business) => setFormValues((prev) => ({ ...prev, business }))}
+                                    onContactChange={(contactSettings) => setFormValues((prev) => ({ ...prev, contactSettings }))}
+                                />
                             </Stack>
                         </CardContent>
                     </Card>

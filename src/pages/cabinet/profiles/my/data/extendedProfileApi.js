@@ -21,6 +21,7 @@ import { v4 as uuidv4 } from "uuid";
 import { FriendStatus } from "../ProfileConst"
 import { ERROR, INFO } from "src/libs/log";
 import { profileService } from "src/service/profile-service";
+import { resolveReviewTradeId } from "src/utils/review-trade";
 
 
 class ExtendedProfileApi {
@@ -147,7 +148,8 @@ class ExtendedProfileApi {
             const newReviewRef = doc(reviewsCollection);
             const reviewId = newReviewRef.id;
 
-            const data = { id: reviewId, text, rating, authorId, date: serverTimestamp(), projectId };
+            const tradeId = await resolveReviewTradeId(profileId, projectId);
+            const data = { id: reviewId, text, rating, authorId, date: serverTimestamp(), projectId, tradeId };
             if (transaction) {
                 transaction.add(reviewsCollection, data);
             } else {
