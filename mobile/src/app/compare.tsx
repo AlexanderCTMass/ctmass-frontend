@@ -196,7 +196,7 @@ export default function CompareScreen() {
     });
     if (direction === 1) {
       setCursor(after ?? END);
-      if (liked.has(trade.tradeId)) return;
+      if (!uid || liked.has(trade.tradeId)) return;
       const subject = specialistSubject(trade);
       swipe.like(subject, "swipe");
       undo.show(
@@ -470,6 +470,7 @@ export default function CompareScreen() {
             ) : null}
           </>
         )}
+        {empty ? <UndoToast toast={undo.toast} onHide={undo.hide} /> : null}
       </SafeAreaView>
     </ScreenBackground>
   );
