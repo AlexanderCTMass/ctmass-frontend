@@ -27,7 +27,7 @@ type Perk = { label: string; Icon: ComponentType<IconProps> };
 
 const homeownerPerks: Perk[] = [
   { label: "Free to post — always", Icon: TagIcon },
-  { label: "Verified local specialists", Icon: ShieldCheckIcon },
+  { label: "Trusted local specialists", Icon: ShieldCheckIcon },
   { label: "Matched near your address", Icon: MapPinIcon },
 ];
 

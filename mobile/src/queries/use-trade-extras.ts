@@ -30,14 +30,27 @@ export function useTradeCertificates(
   });
 }
 
-export function useOwnerReviews(ownerId: string | undefined, limit: number) {
+export type OwnerReviews = {
+  total: number;
+  scope: "trade" | "all";
+  items: ReviewWithAuthor[];
+};
+
+export function useOwnerReviews(
+  ownerId: string | undefined,
+  limit: number,
+  tradeId?: string,
+) {
   return useQuery({
-    queryKey: ["owner-reviews", ownerId ?? "", limit],
+    queryKey: ["owner-reviews", ownerId ?? "", tradeId ?? "", limit],
     enabled: Boolean(ownerId),
     staleTime: 5 * 60 * 1000,
-    queryFn: async (): Promise<{ total: number; items: ReviewWithAuthor[] }> => {
+    queryFn: async (): Promise<OwnerReviews> => {
       const all = await fetchReviews(ownerId as string);
-      const sorted = [...all].sort(
+      const own = tradeId ? all.filter((review) => review.tradeId === tradeId) : [];
+      const scope = own.length > 0 ? "trade" : "all";
+      const list = scope === "trade" ? own : all;
+      const sorted = [...list].sort(
         (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
       );
       const top = sorted.slice(0, limit);
@@ -49,7 +62,8 @@ export function useOwnerReviews(ownerId: string | undefined, limit: number) {
         ),
       );
       return {
-        total: all.length,
+        total: list.length,
+        scope,
         items: top.map((review, index) => ({
           ...review,
           author: authors[index] ?? null,

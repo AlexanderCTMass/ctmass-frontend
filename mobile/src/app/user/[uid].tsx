@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import {
   AwardIcon,
+  BuildingIcon,
   MapPinIcon,
   PlayIcon,
   ReviewIcon,
@@ -21,6 +22,11 @@ import {
 } from "@/components/icons";
 import { CommunityBadges } from "@/components/profile/community-badges";
 import { ProfileShareActions } from "@/components/profile/profile-share-actions";
+import { TierAvatar } from "@/components/trade/tier-badge";
+import {
+  BusinessPanel,
+  hasBusinessDetails,
+} from "@/components/trade/trade-sections";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
 import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
@@ -53,6 +59,7 @@ import {
   type PublicProfile,
 } from "@/lib/public-profile";
 import { fetchReviews, reviewSummary, type Review } from "@/lib/reviews";
+import { priceLine } from "@/lib/trade-display";
 import { fetchTradesByOwner, type Specialist } from "@/lib/trades";
 import { type VideoStory, fetchUserVideos } from "@/lib/videos";
 import { VideoStoryViewer } from "@/components/video/video-story-viewer";
@@ -494,9 +501,10 @@ export default function PublicProfileScreen() {
                       scaleTo={0.98}
                     >
                       <View style={styles.tradeRow}>
-                        <Avatar
+                        <TierAvatar
                           name={trade.name}
                           url={trade.avatarUrl || null}
+                          years={trade.details.experienceYears}
                           size={44}
                         />
                         <View style={styles.tradeBody}>
@@ -508,9 +516,19 @@ export default function PublicProfileScreen() {
                               style={styles.tradeSpecialty}
                               numberOfLines={1}
                             >
-                              {trade.specialtyLabel}
+                              {[
+                                trade.specialtyLabel,
+                                trade.details.experienceYears !== null
+                                  ? `${trade.details.experienceYears} yrs`
+                                  : "",
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
                             </Text>
                           ) : null}
+                          <Text style={styles.tradeMeta} numberOfLines={1}>
+                            {priceLine(trade.details.rates)}
+                          </Text>
                           {trade.placeName ? (
                             <View style={styles.tradeMetaRow}>
                               <MapPinIcon
@@ -535,6 +553,16 @@ export default function PublicProfileScreen() {
                     </PressableScale>
                   ))}
                 </View>
+              </View>
+            ) : null}
+
+            {trades[0]?.owner && hasBusinessDetails(trades[0].owner) ? (
+              <View style={styles.section}>
+                <View style={styles.sectionTitleRow}>
+                  <BuildingIcon size={18} color={colors.accent} />
+                  <Text style={styles.sectionTitle}>Business</Text>
+                </View>
+                <BusinessPanel owner={trades[0].owner} />
               </View>
             ) : null}
 
