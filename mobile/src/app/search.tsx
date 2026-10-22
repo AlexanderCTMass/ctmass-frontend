@@ -6,6 +6,7 @@ import { Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ArchiveIcon, HeartIcon } from "@/components/icons";
+import { CompareTray } from "@/components/trade/compare-tray";
 import { TradeCard } from "@/components/trade/trade-card";
 import { BackButton } from "@/components/ui/back-button";
 import { DistanceSlider } from "@/components/ui/distance-slider";
@@ -26,6 +27,7 @@ import {
   specialistSubject,
   useSwipeActions,
 } from "@/hooks/use-swipe-actions";
+import { useCompare } from "@/hooks/use-compare";
 import { useSwipeHint } from "@/hooks/use-swipe-hint";
 import { publicPhone, useTradeContact } from "@/hooks/use-trade-contact";
 import { analyticsEvents } from "@/lib/analytics-events";
@@ -119,6 +121,7 @@ export default function SearchScreen() {
   const swipeHint = useSwipeHint("search");
   const undo = useUndoToast();
   const contact = useTradeContact("card");
+  const compare = useCompare("card");
   const { liked, archived } = swipe.specialistIndex;
   const savedIds = useMemo(
     () => [...(tab === "archived" ? archived : liked)],
@@ -414,7 +417,7 @@ export default function SearchScreen() {
         <View style={styles.listWrap}>
           <FlashList
             data={rows}
-            extraData={[swipe.specialistIndex, hintTarget]}
+            extraData={[swipe.specialistIndex, hintTarget, compare.tradeIds]}
             keyExtractor={(item) => item.id}
             getItemType={(item) => item.kind}
             renderItem={({ item }) => {
@@ -431,6 +434,12 @@ export default function SearchScreen() {
                   badge={groupBadge(item.group, colors)}
                   distance={distanceTo(specialist)}
                   liked={isLiked}
+                  compared={compare.isCompared(specialist.tradeId)}
+                  onToggleCompare={
+                    tab === "archived"
+                      ? undefined
+                      : () => compare.toggle(specialist.tradeId)
+                  }
                   phone={phone}
                   otherTrades={otherTradesOf(specialist)}
                   onPress={() =>
@@ -495,6 +504,7 @@ export default function SearchScreen() {
           />
           <UndoToast toast={undo.toast} onHide={undo.hide} />
         </View>
+        <CompareTray />
       </SafeAreaView>
     </ScreenBackground>
   );

@@ -24,6 +24,7 @@ import {
   PhoneIcon,
   ResponsesIcon,
   ReviewIcon,
+  ScaleIcon,
   ShieldCheckIcon,
   TextMessageIcon,
   ToolsIcon,
@@ -60,6 +61,7 @@ import {
   useTheme,
 } from "@/constants/theme";
 import { businessRoleLabel } from "@/constants/trade-options";
+import { useCompare } from "@/hooks/use-compare";
 import { specialistSubject, useSwipeActions } from "@/hooks/use-swipe-actions";
 import { publicPhone, useTradeContact } from "@/hooks/use-trade-contact";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
@@ -203,6 +205,7 @@ export default function TradeProfileScreen() {
   const ownerTrades = useTradesByOwner(ownerId);
   const contact = useTradeContact("page");
   const swipe = useSwipeActions(uid, "trade");
+  const compare = useCompare("page");
 
   const [deleting, setDeleting] = useState(false);
   const [showAllPortfolio, setShowAllPortfolio] = useState(false);
@@ -430,8 +433,29 @@ export default function TradeProfileScreen() {
           <Text style={styles.headerTitle} numberOfLines={1}>
             {isOwner ? "My trade" : "Services"}
           </Text>
-          {!isOwner && uid ? (
-            <LikeButton liked={liked} onPress={toggleLike} />
+          {!isOwner ? (
+            <View style={styles.headerActions}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={
+                  compare.isCompared(trade.tradeId) ? "Remove from compare" : "Add to compare"
+                }
+                accessibilityState={{ selected: compare.isCompared(trade.tradeId) }}
+                hitSlop={8}
+                onPress={() => compare.toggle(trade.tradeId)}
+                style={[
+                  styles.compareButton,
+                  compare.isCompared(trade.tradeId) && styles.compareButtonActive,
+                ]}
+              >
+                <ScaleIcon
+                  size={18}
+                  color={compare.isCompared(trade.tradeId) ? colors.onAccent : colors.textSecondary}
+                  strokeWidth={2}
+                />
+              </Pressable>
+              {uid ? <LikeButton liked={liked} onPress={toggleLike} /> : null}
+            </View>
           ) : (
             <View style={styles.headerSpacer} />
           )}
@@ -987,6 +1011,22 @@ const useStyles = makeStyles((t) => ({
   },
   headerSpacer: {
     width: 40,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  compareButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: t.colors.surfaceStrong,
+  },
+  compareButtonActive: {
+    backgroundColor: t.colors.accent,
   },
   center: {
     flex: 1,

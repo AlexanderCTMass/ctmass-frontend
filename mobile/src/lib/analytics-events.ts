@@ -510,6 +510,18 @@ export const analyticsEvents = {
     "trade_update_failed",
   ),
   tradeDeleted: define<{ trade_id: string }>("trade_deleted"),
+  compareToggled: define<{
+    trade_id: string;
+    action: "added" | "removed" | "full";
+    count: number;
+    source: TradeActionSource;
+  }>("compare_toggled"),
+  compareOpened: define<{ count: number }>("compare_opened"),
+  compareRemoved: define<{ trade_id: string; count: number }>("compare_removed"),
+  compareCleared: define<{ count: number }>("compare_cleared"),
+  compareDifferencesToggled: define<{ enabled: boolean; count: number }>(
+    "compare_differences_toggled",
+  ),
   tradeCredentialsOpened: define<{ trade_id: string; source: string }>(
     "trade_credentials_opened",
   ),
