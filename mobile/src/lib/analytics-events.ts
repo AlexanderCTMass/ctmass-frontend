@@ -7,6 +7,8 @@ import type { GeoPlace } from "@/lib/mapbox";
 
 type Role = string | null;
 
+export type TradeActionSource = "card" | "page" | "compare";
+
 function define<P extends EventProperties | void = void>(name: string) {
   return (...args: P extends EventProperties ? [properties: P] : []): void => {
     trackEvent(name, args[0]);
@@ -257,23 +259,23 @@ export const analyticsEvents = {
   ),
 
   tradeSetupViewed: define("trade_setup_viewed"),
-  tradeSetupFieldCompleted: define<{
-    field: string;
-    value: string;
-    value_length: number;
-  }>("trade_setup_field_completed"),
-  tradeSetupOptionSelected: define<{
-    field: "specialty" | "commute_minutes" | "price_type";
-    value: string;
-  }>("trade_setup_option_selected"),
+  tradeSetupStepCompleted: define<{
+    step: number;
+    step_name: string;
+  }>("trade_setup_step_completed"),
   tradeSetupSubmitted: define<{
     title: string;
     specialty: string;
+    trade_group: string;
     is_custom_specialty: boolean;
-    commute_minutes: number;
-    price_type: string;
-    price: string;
-    about: string;
+    services_count: number;
+    experience_years: number | null;
+    pricing_model: string;
+    has_rate: boolean;
+    radius_miles: number;
+    days: string[];
+    response_time: string;
+    about_length: number;
     city: string | null;
     state: string | null;
   }>("trade_setup_submitted"),
@@ -285,8 +287,10 @@ export const analyticsEvents = {
   tradeCreated: define<{
     trade_id: string;
     specialty: string;
-    commute_minutes: number;
-    price_type: string;
+    trade_group: string;
+    pricing_model: string;
+    experience_years: number | null;
+    radius_miles: number;
     city: string | null;
     state: string | null;
   }>("trade_created"),
@@ -506,6 +510,45 @@ export const analyticsEvents = {
     "trade_update_failed",
   ),
   tradeDeleted: define<{ trade_id: string }>("trade_deleted"),
+  compareToggled: define<{
+    trade_id: string;
+    action: "added" | "removed" | "full";
+    count: number;
+    source: TradeActionSource;
+  }>("compare_toggled"),
+  compareOpened: define<{ count: number }>("compare_opened"),
+  compareRemoved: define<{ trade_id: string; count: number }>("compare_removed"),
+  compareSwiped: define<{
+    trade_id: string;
+    action: "keep" | "drop";
+    method: "swipe" | "button";
+    position: number;
+    count: number;
+  }>("compare_swiped"),
+  compareUndone: define<{ trade_id: string; action: "keep" | "drop" }>(
+    "compare_undone",
+  ),
+  compareModeChanged: define<{ mode: "cards" | "side_by_side"; count: number }>(
+    "compare_mode_changed",
+  ),
+  compareSwapped: define<{ trade_id: string; count: number }>("compare_swapped"),
+  compareCleared: define<{ count: number }>("compare_cleared"),
+  compareDifferencesToggled: define<{ enabled: boolean; count: number }>(
+    "compare_differences_toggled",
+  ),
+  tradeCredentialsOpened: define<{ trade_id: string; source: string }>(
+    "trade_credentials_opened",
+  ),
+  tradeCredentialsSaved: define<{
+    trade_id: string;
+    has_license: boolean;
+    has_insurance: boolean;
+    license_state: string | null;
+    has_documents: boolean;
+  }>("trade_credentials_saved"),
+  tradeCredentialsSaveFailed: define<{ trade_id: string; error_message: string }>(
+    "trade_credentials_save_failed",
+  ),
   tradeDeleteFailed: define<{ trade_id: string; error_message: string }>(
     "trade_delete_failed",
   ),
@@ -520,18 +563,23 @@ export const analyticsEvents = {
   }>("trade_profile_viewed"),
   tradeProfileMessageTapped: define<{
     owner_id: string;
+    trade_id: string | null;
     project_id: string | null;
+    source: TradeActionSource;
   }>("trade_profile_message_tapped"),
   tradeProfileWebOpened: define<{ owner_id: string }>(
     "trade_profile_web_opened",
   ),
-  tradeProfileCallTapped: define<{ owner_id: string; trade_id: string }>(
-    "trade_profile_call_tapped",
-  ),
+  tradeProfileCallTapped: define<{
+    owner_id: string;
+    trade_id: string;
+    source: TradeActionSource;
+  }>("trade_profile_call_tapped"),
   tradeProfileRequestTapped: define<{
     owner_id: string;
     trade_id: string;
     specialty: string;
+    source: TradeActionSource;
   }>("trade_profile_request_tapped"),
   tradeProfileOwnerOpened: define<{ owner_id: string; trade_id: string }>(
     "trade_profile_owner_opened",

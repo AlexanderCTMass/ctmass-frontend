@@ -2,6 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions/v2";
 import axios from "axios";
 import { secrets } from "../../config/secrets.js";
+import { assessInquiryLead } from "./inquiry-lead-check.js";
 
 // Sends an IT-services inquiry from the app or website to support@ctmass.com via the
 // same EmailJS account/template as the web app (service "default_service",
@@ -22,12 +23,70 @@ const SOURCE_LABELS = {
   "web-shop": "ctmass.com (shop)",
 };
 
+const VERDICTS = {
+  "likely-bot": {
+    label: "Likely bot",
+    subject: "[Likely bot] ",
+    color: "#B42318",
+    background: "#FEF3F2",
+    border: "#FDA29B",
+  },
+  "possible-bot": {
+    label: "Possibly a bot — double-check",
+    subject: "[Possible bot] ",
+    color: "#B54708",
+    background: "#FFFAEB",
+    border: "#FEC84B",
+  },
+  unknown: {
+    label: "Bot check unavailable",
+    subject: "",
+    color: "#475467",
+    background: "#F2F4F7",
+    border: "#D0D5DD",
+  },
+  human: {
+    label: "Looks like a real person",
+    subject: "",
+    color: "#067647",
+    background: "#ECFDF3",
+    border: "#75E0A7",
+  },
+};
+
 const escapeHtml = (value = "") =>
   String(value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+
+const buildLeadCheckHtml = ({ verdict, score, reasons }) => {
+  const style = VERDICTS[verdict];
+  return `
+    <div style="margin:0 0 16px;padding:12px 14px;border-radius:10px;background:${style.background};border:1px solid ${style.border};">
+      <p style="margin:0;font-size:15px;font-weight:700;color:${style.color};">${escapeHtml(style.label)} <span style="font-weight:400;font-size:13px;">(bot score ${score})</span></p>
+      ${
+        reasons.length
+          ? `<ul style="margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.5;color:#3b4757;">${reasons
+              .map((reason) => `<li>${escapeHtml(reason)}</li>`)
+              .join("")}</ul>`
+          : ""
+      }
+    </div>`;
+};
+
+const buildDetailsHtml = (details) =>
+  details.length
+    ? `
+    <p style="font-size:13px;font-weight:700;margin:20px 0 6px;color:#3b4757;">Technical details</p>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;color:#3b4757;">${details
+      .map(
+        ([label, value]) =>
+          `<tr><td style="padding:3px 8px 3px 0;vertical-align:top;white-space:nowrap;color:#9aa7b8;">${escapeHtml(label)}</td><td style="padding:3px 0;word-break:break-all;">${escapeHtml(value)}</td></tr>`,
+      )
+      .join("")}</table>`
+    : "";
 
 const buildHtml = ({
   services,
@@ -37,10 +96,12 @@ const buildHtml = ({
   uid,
   sourceLabel,
   booking,
+  lead,
 }) => `
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0C1420;">
     <h2 style="margin:0 0 8px;">${booking ? "New IT consultation request" : "New IT services inquiry"}</h2>
     <p style="font-size:14px;color:#3b4757;margin:0 0 16px;">Sent from ${escapeHtml(sourceLabel)}.</p>
+    ${buildLeadCheckHtml(lead)}
     ${
       booking
         ? `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;padding:10px 12px;border-radius:8px;background:#eef6ff;">The client is now picking a time for a free 30-minute call in Calendly. The booking confirmation with the Google Meet link arrives separately from Calendly.</p>`
@@ -55,6 +116,7 @@ const buildHtml = ({
     <div style="font-size:15px;line-height:1.6;color:#0C1420;white-space:pre-wrap;border-left:3px solid #16B364;padding:4px 12px;background:#f6f9f7;">${
       message ? escapeHtml(message) : "—"
     }</div>
+    ${buildDetailsHtml(lead.details)}
     <p style="font-size:12px;color:#9aa7b8;margin-top:24px;">User: ${escapeHtml(
       uid || "guest",
     )} · support@ctmass.com</p>
@@ -105,6 +167,16 @@ export const sendServiceInquiry = onCall(
       );
     }
 
+    let lead;
+    try {
+      lead = await assessInquiryLead({ request, replyTo, name, source });
+    } catch (error) {
+      logger.warn("sendServiceInquiry: lead check failed", {
+        error: error.message,
+      });
+      lead = { verdict: "unknown", score: 0, reasons: [], details: [] };
+    }
+
     try {
       await axios.post(
         "https://api.emailjs.com/api/v1.0/email/send",
@@ -114,9 +186,11 @@ export const sendServiceInquiry = onCall(
           user_id: EMAILJS_PUBLIC_KEY,
           accessToken: privateKey,
           template_params: {
-            subject: booking
-              ? `IT consultation request from ${name || replyTo}`
-              : `IT services inquiry from ${replyTo}`,
+            subject: `${VERDICTS[lead.verdict].subject}${
+              booking
+                ? `IT consultation request from ${name || replyTo}`
+                : `IT services inquiry from ${replyTo}`
+            }`,
             html: buildHtml({
               services,
               message,
@@ -125,6 +199,7 @@ export const sendServiceInquiry = onCall(
               uid,
               sourceLabel,
               booking,
+              lead,
             }),
             mail_to: SUPPORT_EMAIL,
             from_name: "CTMASS",
@@ -138,6 +213,8 @@ export const sendServiceInquiry = onCall(
         services: services.length,
         source,
         booking,
+        verdict: lead.verdict,
+        botScore: lead.score,
       });
       return { success: true };
     } catch (error) {

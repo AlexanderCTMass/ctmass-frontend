@@ -8,6 +8,7 @@ import {
 } from 'firebase/firestore';
 import { firestore } from 'src/libs/firebase';
 import { normalizeUSPhone, formatUSPhoneForDisplay } from 'src/utils/validation/phone';
+import { normalizeWebsite, readBusiness, readContactSettings } from 'src/utils/business-profile';
 
 const COLLECTION = 'profiles';
 
@@ -48,7 +49,9 @@ const mapFirestoreToProfile = (userId, data = {}) => {
         }))
         : [],
     socialGroups: Array.isArray(data.socialGroups) ? data.socialGroups : [],
-    notificationPreferences: data.notificationPreferences || {}
+    notificationPreferences: data.notificationPreferences || {},
+    business: readBusiness(data),
+    contactSettings: readContactSettings(data)
     };
 };
 
@@ -78,7 +81,11 @@ const mapProfileToFirestore = (values = {}) => {
             question: item.question || '',
             answer: item.answer || ''
         })),
-        socialGroups: Array.isArray(values.socialGroups) ? values.socialGroups : []
+        socialGroups: Array.isArray(values.socialGroups) ? values.socialGroups : [],
+        business: values.business
+            ? { ...values.business, website: normalizeWebsite(values.business.website) }
+            : undefined,
+        contactSettings: values.contactSettings || undefined
     };
 
     Object.keys(payload).forEach((key) => {

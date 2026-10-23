@@ -8,16 +8,37 @@ import { cabinetApi } from 'src/api/cabinet';
 import { tradesApi } from 'src/api/trades';
 import { profileApi } from 'src/api/profile';
 import { paths } from 'src/paths';
-import { PROFESSIONAL_ROLE_OPTIONS } from 'src/constants/professional-role-options';
 import TradePrimaryDetails from './components/TradePrimaryDetails';
+import {
+    TradeAvailabilityCard,
+    TradeCredentialsCard,
+    TradePricingCard,
+    TradeServicesExperienceCard,
+    TradeWorkPolicyCard
+} from './components/TradeDetailsSections';
+import {
+    credentialsChanged,
+    credentialsFromTrade,
+    credentialsPayload,
+    emptyCredentials,
+    emptyFormDetails,
+    findDictionarySpecialty,
+    formDetailsFromTrade,
+    groupForLabel,
+    parseAreas,
+    validateTradeForm
+} from './trade-form-model';
 import TradeLocationSection from './components/TradeLocationSection';
 import TradeStorySection from './components/TradeStorySection';
 import { BackLink, DashPage } from 'src/components/ctmass-ui';
 import TradePreviewGallery from './components/TradePreviewGallery';
 import TradeFormActions from './components/TradeFormActions';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { serverTimestamp } from 'firebase/firestore';
+import { findTrade } from 'src/constants/trade-taxonomy';
+import { stripUndefined, tradeDetailsPayload } from 'src/utils/trade-details';
+import useDictionary from 'src/hooks/use-dictionaries';
 import { storage } from 'src/libs/firebase';
-import { useSpecialties } from 'src/sections/home/home-hero';
 import { AiAvatarModal } from 'src/pages/dashboard/profile/modals/ai-avatar-modal';
 import { WORKER_UPSELL_KEY } from 'src/components/onboarding-upsell-modal';
 import { useQueryClient } from '@tanstack/react-query';
@@ -72,22 +93,6 @@ const formatPriceInputValue = (value) => {
     return value;
 };
 
-const PRIMARY_SPECIALTY_OPTIONS = [
-    { value: 'plumbing', label: 'Plumber' },
-    { value: 'electrician', label: 'Electrician' },
-    { value: 'handyman', label: 'Handyman' },
-    { value: 'carpenter', label: 'Carpenter' },
-    { value: 'hvac', label: 'HVAC Technician' }
-];
-
-const PRICE_TYPE_OPTIONS = [
-    { value: 'hourly', label: 'Hourly' },
-    { value: 'project', label: 'Per project' },
-    { value: 'consultation', label: 'Consultation' }
-];
-
-const COMMUTE_DURATIONS = [10, 20, 30, 40, 50];
-
 const DEFAULT_FORM_VALUES = {
     businessName: '',
     professionalRole: '',
@@ -115,6 +120,9 @@ const DEFAULT_FORM_VALUES = {
     registrationAt: null,
     createdAt: null,
     busyUntil: null,
+    details: emptyFormDetails(),
+    credentials: emptyCredentials(),
+    areasText: ''
 };
 
 function CreateTradePage() {
@@ -134,23 +142,15 @@ function CreateTradePage() {
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const [aiGenerationsLeft, setAiGenerationsLeft] = useState(5);
     const [aiAvatarModalOpen, setAiAvatarModalOpen] = useState(false);
-    const [locationErrors, setLocationErrors] = useState({ address: false, duration: false });
+    const [locationErrors, setLocationErrors] = useState({ address: false });
+    const [fieldErrors, setFieldErrors] = useState({});
+    const [originalDetails, setOriginalDetails] = useState(null);
+    const [originalCredentials, setOriginalCredentials] = useState(null);
     const [profileHasLocation, setProfileHasLocation] = useState(false);
     const fileInputRef = useRef(null);
     const locationSectionRef = useRef(null);
 
-    const homeSpecialties = useSpecialties();
-    const specialtyOptions = useMemo(() => {
-        if (!homeSpecialties || homeSpecialties.length === 0) {
-            return PRIMARY_SPECIALTY_OPTIONS;
-        }
-
-        return homeSpecialties.map((item) => ({
-            value: item.id,
-            label: item.label,
-            fullId: item.fullId
-        }));
-    }, [homeSpecialties]);
+    const { specialties } = useDictionary();
 
     useEffect(() => {
         let active = true;
@@ -224,6 +224,9 @@ function CreateTradePage() {
                     return;
                 }
 
+                const loadedCredentials = credentialsFromTrade(trade.details);
+                setOriginalDetails(trade.details ?? null);
+                setOriginalCredentials(loadedCredentials);
                 const normalizedLocation = normalizeAddressLocation(trade.location);
                 const locationAddress = trade.location?.address ?? normalizedLocation?.place_name ?? '';
 
@@ -253,7 +256,10 @@ function CreateTradePage() {
                     status: trade.status ?? prev.status,
                     registrationAt: trade.registrationAt ?? trade.createdAt ?? prev.registrationAt,
                     createdAt: trade.createdAt ?? prev.createdAt,
-                    busyUntil: trade.busyUntil ?? prev.busyUntil
+                    busyUntil: trade.busyUntil ?? prev.busyUntil,
+                    details: formDetailsFromTrade(trade.details),
+                    credentials: loadedCredentials,
+                    areasText: (trade.details?.areas ?? []).join(', ')
                 }));
             } catch (error) {
                 console.error('[CreateTradePage] Failed to load trade', error);
@@ -285,9 +291,40 @@ function CreateTradePage() {
 
         if (field === 'addressLocation') {
             setLocationErrors((prev) => ({ ...prev, address: !value }));
-        } else if (field === 'commuteDuration') {
-            setLocationErrors((prev) => ({ ...prev, duration: !value }));
         }
+    }, []);
+
+    const handleDetailsChange = useCallback((patchValues) => {
+        setFormValues((prev) => ({
+            ...prev,
+            details: { ...prev.details, ...patchValues }
+        }));
+        setFieldErrors({});
+    }, []);
+
+    const handleCredentialsChange = useCallback((next) => {
+        setFormValues((prev) => ({ ...prev, credentials: next }));
+        setFieldErrors({});
+    }, []);
+
+    const handleTradeChange = useCallback((label) => {
+        const trimmed = String(label || '');
+        const known = findTrade(trimmed);
+        setFormValues((prev) => {
+            const changed = prev.primarySpecialtyLabel !== trimmed;
+            return {
+                ...prev,
+                primarySpecialty: known?.id ?? '',
+                primarySpecialtyLabel: known?.label ?? trimmed,
+                primarySpecialtyPath: known ? '' : trimmed,
+                details: {
+                    ...prev.details,
+                    groupId: groupForLabel(trimmed),
+                    services: changed && known ? [] : prev.details.services
+                }
+            };
+        });
+        setFieldErrors({});
     }, []);
 
     const handleAvatarButtonClick = useCallback(() => {
@@ -354,12 +391,12 @@ function CreateTradePage() {
     );
 
     const isSubmitDisabled = useMemo(() => {
-        if (!formValues.tradeTitle || !formValues.primarySpecialty) {
+        if (!formValues.tradeTitle || formValues.primarySpecialtyLabel.trim().length < 2) {
             return true;
         }
 
         return submitting || loadingProfile || loadingTrade;
-    }, [formValues.primarySpecialty, formValues.tradeTitle, loadingProfile, loadingTrade, submitting]);
+    }, [formValues.primarySpecialtyLabel, formValues.tradeTitle, loadingProfile, loadingTrade, submitting]);
 
     const handleSubmit = useCallback(async () => {
         if (!user?.id) {
@@ -381,34 +418,60 @@ function CreateTradePage() {
         }
 
         const missingAddress = !formValues.addressLocation;
-        const missingDuration = !formValues.commuteDuration;
-        if (missingAddress || missingDuration) {
-            setLocationErrors({ address: missingAddress, duration: missingDuration });
+        if (missingAddress) {
+            setLocationErrors({ address: true });
             setSnackbar({
                 open: true,
                 severity: 'error',
-                message: 'Please add your service location and the maximum duration you’re ready to travel.'
+                message: 'Please add the address of your business location.'
             });
             locationSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
 
-        setLocationErrors({ address: false, duration: false });
+        const errors = validateTradeForm(formValues, !isEditMode);
+        if (Object.keys(errors).length > 0) {
+            setFieldErrors(errors);
+            setSnackbar({
+                open: true,
+                severity: 'error',
+                message: 'Please fill in the highlighted trade details.'
+            });
+            return;
+        }
+
+        setLocationErrors({ address: false });
+        setFieldErrors({});
         setSubmitting(true);
 
         try {
-            const selectedSpecialty = specialtyOptions.find(
-                (option) => option.value === formValues.primarySpecialty
-            );
+            const tradeLabel = formValues.primarySpecialtyLabel.trim();
+            const knownTrade = findTrade(tradeLabel);
+            const dictionarySpecialty = findDictionarySpecialty(specialties, tradeLabel);
+            const now = serverTimestamp();
+            const detailsInput = {
+                ...formValues.details,
+                groupId: groupForLabel(tradeLabel),
+                areas: parseAreas(formValues.areasText)
+            };
+            delete detailsInput.hasPricing;
+            if (!formValues.details.hasPricing) {
+                detailsInput.rates = { ...detailsInput.rates, model: 'not_provided' };
+            }
+            const detailFields = tradeDetailsPayload(detailsInput, now, isEditMode ? originalDetails : null);
+            const credentialFields = !isEditMode || credentialsChanged(originalCredentials, formValues.credentials)
+                ? { credentials: { ...credentialsPayload(formValues.credentials), source: 'contractor', updatedAt: now } }
+                : {};
 
             const basePayload = {
                 title: formValues.tradeTitle || 'Untitled trade',
-                subtitle: selectedSpecialty?.label || formValues.primarySpecialtyLabel || 'Specialty',
+                subtitle: knownTrade?.label || tradeLabel || 'Specialty',
                 description: formValues.shortDescription || formValues.about || '',
                 avatarUrl: formValues.avatarUrl || '',
-                primarySpecialtyId: selectedSpecialty?.value || formValues.primarySpecialty || '',
-                primarySpecialtyLabel: selectedSpecialty?.label || formValues.primarySpecialtyLabel || '',
-                primarySpecialtyPath: selectedSpecialty?.fullId || formValues.primarySpecialtyPath || '',
+                primarySpecialtyId: knownTrade?.id || dictionarySpecialty?.id || (isEditMode ? formValues.primarySpecialty || '' : ''),
+                primarySpecialtyLabel: knownTrade?.label || tradeLabel,
+                primarySpecialtyPath: dictionarySpecialty?.path || (knownTrade ? '' : tradeLabel),
+                other: !knownTrade,
                 contact: {
                     businessName: formValues.businessName || '',
                     professionalRole: formValues.professionalRole || '',
@@ -421,18 +484,16 @@ function CreateTradePage() {
                     commuteMode: formValues.commuteMode,
                     commuteDuration: formValues.commuteDuration
                 },
-                pricing: {
-                    type: formValues.priceType || '',
-                    amount: formValues.price || ''
-                },
                 story: {
                     about: formValues.about || '',
                     shortDescription: formValues.shortDescription || ''
-                }
+                },
+                ...stripUndefined(detailFields),
+                ...credentialFields
             };
 
             const servicePayload = {
-                specialtyId: basePayload.primarySpecialtyId,
+                specialtyId: dictionarySpecialty?.id || basePayload.primarySpecialtyId,
                 label: basePayload.title,
                 price: basePayload.pricing?.amount || '',
                 priceType: basePayload.pricing?.type || ''
@@ -462,7 +523,9 @@ function CreateTradePage() {
                 await profileApi.addServiceFromTrade(user.id, newTradeId, servicePayload).catch(() => {});
                 trackEvent('trade_publish', {
                     trade_id: newTradeId,
-                    specialty: formValues.primarySpecialty
+                    specialty: basePayload.primarySpecialtyLabel,
+                    trade_group: detailsInput.groupId,
+                    pricing_model: detailsInput.rates.model
                 });
                 window.localStorage.setItem(WORKER_UPSELL_KEY, '1');
                 setSnackbar({
@@ -498,28 +561,14 @@ function CreateTradePage() {
     }, [
         isEditMode,
         tradeId,
-        formValues.about,
-        formValues.address,
-        formValues.addressLocation,
-        formValues.avatarUrl,
-        formValues.businessName,
-        formValues.commuteDuration,
-        formValues.commuteMode,
-        formValues.price,
-        formValues.priceType,
-        formValues.primarySpecialty,
-        formValues.primarySpecialtyLabel,
-        formValues.primarySpecialtyPath,
-        formValues.professionalRole,
-        formValues.shortDescription,
-        formValues.tradeTitle,
-        formValues.useProfilePhone,
-        formValues.phone,
+        formValues,
+        originalDetails,
+        originalCredentials,
+        specialties,
         profileHasLocation,
         navigate,
         queryClient,
         returnTo,
-        specialtyOptions,
         user?.id
     ]);
 
@@ -568,7 +617,7 @@ function CreateTradePage() {
                             <TradePrimaryDetails
                                 values={formValues}
                                 onChange={handleFieldChange}
-                                specialtyOptions={specialtyOptions}
+                                onTradeChange={handleTradeChange}
                                 onAvatarUploadClick={handleAvatarButtonClick}
                                 onApplyProfileAvatar={handleApplyProfileAvatar}
                                 fileInputRef={fileInputRef}
@@ -582,17 +631,47 @@ function CreateTradePage() {
                                 <TradeLocationSection
                                     values={formValues}
                                     onChange={handleFieldChange}
-                                    commuteDurations={COMMUTE_DURATIONS}
+                                    radiusMiles={formValues.details.radiusMiles}
+                                    onRadiusChange={(radiusMiles) => handleDetailsChange({ radiusMiles })}
+                                    areas={formValues.areasText}
+                                    onAreasChange={(text) => handleFieldChange('areasText', text)}
                                     addressError={locationErrors.address}
-                                    durationError={locationErrors.duration}
                                 />
                             </Box>
+
+                            <TradeServicesExperienceCard
+                                specialtyLabel={formValues.primarySpecialtyLabel}
+                                details={formValues.details}
+                                onChange={handleDetailsChange}
+                                errors={fieldErrors}
+                            />
+
+                            <TradePricingCard
+                                details={formValues.details}
+                                onChange={handleDetailsChange}
+                                errors={fieldErrors}
+                            />
+
+                            <TradeAvailabilityCard
+                                details={formValues.details}
+                                onChange={handleDetailsChange}
+                                errors={fieldErrors}
+                            />
+
+                            <TradeCredentialsCard
+                                credentials={formValues.credentials}
+                                onChange={handleCredentialsChange}
+                                errors={fieldErrors}
+                            />
+
+                            <TradeWorkPolicyCard
+                                details={formValues.details}
+                                onChange={handleDetailsChange}
+                            />
 
                             <TradeStorySection
                                 values={formValues}
                                 onChange={handleFieldChange}
-                                professionalRoleOptions={PROFESSIONAL_ROLE_OPTIONS}
-                                priceTypeOptions={PRICE_TYPE_OPTIONS}
                             />
                         </Stack>
 

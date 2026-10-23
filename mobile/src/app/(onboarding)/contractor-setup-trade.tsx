@@ -1,191 +1,132 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { type ReactNode, useEffect, useState } from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { z } from "zod";
 
-import { BackButton } from "@/components/ui/back-button";
-import { LocationPicker } from "@/components/ui/location-picker";
-import { PressableScale } from "@/components/ui/pressable-scale";
-import { PrimaryButton } from "@/components/ui/primary-button";
-import { ScreenBackground } from "@/components/ui/screen-background";
-import { OTHER_SPECIALTY, SPECIALTIES } from "@/constants/specialties";
 import {
-  Brand,
-  Radius,
-  Spacing,
-  makeStyles,
-  useTheme,
-} from "@/constants/theme";
+  AreaAvailabilitySection,
+  DetailsSection,
+  IdentitySection,
+  PricingSection,
+  STEP_FIELDS,
+  ServicesSection,
+  type TradeFormValues,
+  fromFormValues,
+  specialtyFromValues,
+  toFormValues,
+  tradeFormSchema,
+} from "@/components/trade/trade-form";
+import { BackButton } from "@/components/ui/back-button";
+import { PrimaryButton } from "@/components/ui/primary-button";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import { ScreenBackground } from "@/components/ui/screen-background";
+import { OTHER_TRADE_LABEL } from "@/constants/trade-taxonomy";
+import { Spacing, makeStyles } from "@/constants/theme";
 import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, locationProps } from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
-import { selectFeedback } from "@/lib/haptics";
-import type { GeoPlace } from "@/lib/mapbox";
+import { errorFeedback, tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
 import { useAuthStore } from "@/store/use-auth-store";
 import { useTradeDraftStore } from "@/store/use-trade-draft-store";
 
-const specialtyOptions = [...SPECIALTIES, OTHER_SPECIALTY];
-const commuteDurations = [10, 20, 30, 40, 50];
-const priceTypes = [
-  { value: "hourly", label: "Hourly" },
-  { value: "project", label: "Per project" },
-  { value: "consultation", label: "Consultation" },
-];
+const STEPS = [
+  { name: "trade", title: "What's your trade?", subtitle: "Start with one trade. You can add more trades to your profile later." },
+  { name: "services", title: "Services & experience", subtitle: "Experience counts only for this trade." },
+  { name: "pricing", title: "Pricing", subtitle: "Clear pricing helps homeowners compare. Amounts are optional." },
+  { name: "area", title: "Where & when you work", subtitle: "Homeowners see your city, radius and schedule." },
+  { name: "details", title: "Final details", subtitle: "Optional, but complete profiles get more requests." },
+] as const;
 
-const schema = z
-  .object({
-    title: z.string().trim().min(2, "Enter a trade name."),
-    specialty: z.string().min(1, "Pick a specialty."),
-    customSpecialty: z.string(),
-    location: z.custom<GeoPlace | null>(),
-    commuteDuration: z.number(),
-    about: z.string(),
-    priceType: z.string(),
-    price: z.string(),
-  })
-  .refine((value) => value.location != null, {
-    message: "Add your service location.",
-    path: ["location"],
-  })
-  .refine(
-    (value) =>
-      value.specialty !== OTHER_SPECIALTY ||
-      value.customSpecialty.trim().length > 0,
-    { message: "Describe your specialty.", path: ["customSpecialty"] },
-  );
-
-type FormValues = z.infer<typeof schema>;
-
-function Chip({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  const styles = useStyles();
-  return (
-    <PressableScale accessibilityLabel={label} onPress={onPress}>
-      <View style={[styles.chip, selected && styles.chipSelected]}>
-        <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-          {label}
-        </Text>
-      </View>
-    </PressableScale>
-  );
-}
-
-function Section({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: ReactNode;
-}) {
-  const styles = useStyles();
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionLabel}>{label}</Text>
-      {hint ? <Text style={styles.sectionHint}>{hint}</Text> : null}
-      {children}
-    </View>
-  );
-}
+const schema = tradeFormSchema(true);
 
 export default function ContractorSetupTradeScreen() {
-  const { colors } = useTheme();
   const styles = useStyles();
   const patch = useTradeDraftStore((state) => state.patch);
+  const scrollRef = useRef<ScrollView>(null);
+  const [step, setStep] = useState(0);
+  const [filterError, setFilterError] = useState<string | null>(null);
 
   const {
     control,
     handleSubmit,
     setValue,
-    formState: { isValid, errors, submitCount },
-  } = useForm<FormValues>({
+    trigger,
+    formState: { errors, submitCount },
+  } = useForm<TradeFormValues>({
     resolver: zodResolver(schema),
-    mode: "onChange",
-    defaultValues: {
-      title: "",
-      specialty: "",
-      customSpecialty: "",
-      location: null,
-      commuteDuration: 20,
-      about: "",
-      priceType: "",
-      price: "",
-    },
+    mode: "onTouched",
+    defaultValues: toFormValues(null),
   });
   useSubmitErrorHaptic(submitCount, errors);
-
-  const specialty = useWatch({ control, name: "specialty" });
-  const priceType = useWatch({ control, name: "priceType" });
-  const isOther = specialty === OTHER_SPECIALTY;
-  const [filterError, setFilterError] = useState<string | null>(null);
 
   useEffect(() => {
     analyticsEvents.tradeSetupViewed();
   }, []);
 
-  const trackField = (field: string, value: string) => {
-    const trimmed = value.trim();
-    if (!trimmed) return;
-    analyticsEvents.tradeSetupFieldCompleted({
-      field,
-      value: trimmed,
-      value_length: trimmed.length,
-    });
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, [step]);
+
+  const isLast = step === STEPS.length - 1;
+  const sectionProps = { control, errors, setValue };
+
+  const goBack = () => {
+    if (step === 0) {
+      router.back();
+      return;
+    }
+    tapFeedback();
+    setStep((value) => value - 1);
   };
 
-  const onSubmit = (values: FormValues) => {
-    if (findObjectionable(values.title, values.about, values.customSpecialty)) {
+  const onSubmit = (values: TradeFormValues) => {
+    if (findObjectionable(values.title, values.about, values.customSpecialty, ...values.services)) {
       analyticsEvents.contentFilterBlocked({
         screen: "trade_setup",
         fields: [
           findObjectionable(values.title) ? "title" : null,
           findObjectionable(values.about) ? "about" : null,
           findObjectionable(values.customSpecialty) ? "custom_specialty" : null,
+          findObjectionable(...values.services) ? "services" : null,
         ].filter((field): field is string => field !== null),
       });
-      setFilterError(
-        "Please remove inappropriate language from your trade details.",
-      );
+      errorFeedback();
+      setFilterError("Please remove inappropriate language from your trade details.");
       return;
     }
     setFilterError(null);
+    const specialty = specialtyFromValues(values);
+    const details = fromFormValues(values);
     patch({
       title: values.title.trim(),
-      specialty: isOther ? values.customSpecialty.trim() : values.specialty,
+      specialty,
       location: values.location,
-      commuteDuration: values.commuteDuration,
       about: values.about.trim(),
-      priceType: values.priceType,
-      price: values.price.trim(),
+      details,
     });
     analyticsEvents.tradeSetupSubmitted({
       title: values.title.trim(),
-      specialty: isOther ? values.customSpecialty.trim() : values.specialty,
-      is_custom_specialty: isOther,
-      commute_minutes: values.commuteDuration,
-      price_type: values.priceType,
-      price: values.price.trim(),
-      about: values.about.trim(),
+      specialty,
+      trade_group: details.groupId,
+      is_custom_specialty: values.specialty === OTHER_TRADE_LABEL,
+      services_count: details.services.length,
+      experience_years: details.experienceYears,
+      pricing_model: details.rates.model,
+      has_rate: details.rates.min !== null,
+      radius_miles: details.radiusMiles,
+      days: details.availability.days,
+      response_time: details.responseTime,
+      about_length: values.about.trim().length,
       ...locationProps(values.location),
     });
     const auth = useAuthStore.getState();
@@ -198,6 +139,26 @@ export default function ContractorSetupTradeScreen() {
     );
   };
 
+  const goNext = async () => {
+    if (isLast) {
+      await handleSubmit(onSubmit)();
+      return;
+    }
+    const valid = await trigger(STEP_FIELDS[step]);
+    if (!valid) {
+      errorFeedback();
+      return;
+    }
+    tapFeedback();
+    analyticsEvents.tradeSetupStepCompleted({
+      step: step + 1,
+      step_name: STEPS[step].name,
+    });
+    setStep((value) => value + 1);
+  };
+
+  const current = STEPS[step];
+
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
@@ -207,223 +168,34 @@ export default function ContractorSetupTradeScreen() {
           keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 12}
         >
           <View style={styles.header}>
-            <BackButton onPress={() => router.back()} />
+            <BackButton onPress={goBack} />
+            <View style={styles.progress}>
+              <ProgressBar progress={(step + 1) / STEPS.length} />
+            </View>
+            <Text style={styles.stepCount}>
+              {step + 1}/{STEPS.length}
+            </Text>
           </View>
 
           <ScrollView
+            ref={scrollRef}
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
             showsVerticalScrollIndicator={false}
           >
-            <Animated.Text
-              entering={FadeIn.duration(460)}
-              style={styles.eyebrow}
-            >
-              Your trade
-            </Animated.Text>
-            <Animated.Text
-              entering={FadeIn.delay(80).duration(500)}
-              style={styles.title}
-            >
-              Set up your trade
-            </Animated.Text>
-            <Animated.Text
-              entering={FadeIn.delay(150).duration(500)}
-              style={styles.subtitle}
-            >
-              A few quick details so local homeowners can find you.
-            </Animated.Text>
-
-            <Section label="Trade name">
-              <Controller
-                control={control}
-                name="title"
-                render={({ field: { value, onChange, onBlur } }) => (
-                  <TextInput
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={() => {
-                      onBlur();
-                      trackField("title", value);
-                    }}
-                    placeholder="e.g. Mike's Plumbing"
-                    placeholderTextColor={colors.textMuted}
-                    style={styles.input}
-                  />
-                )}
-              />
-            </Section>
-
-            <Section label="Primary specialty">
-              <Controller
-                control={control}
-                name="specialty"
-                render={({ field: { value, onChange } }) => (
-                  <View style={styles.chipWrap}>
-                    {specialtyOptions.map((option) => (
-                      <Chip
-                        key={option}
-                        label={option}
-                        selected={value === option}
-                        onPress={() => {
-                          selectFeedback();
-                          analyticsEvents.tradeSetupOptionSelected({
-                            field: "specialty",
-                            value: option,
-                          });
-                          onChange(option);
-                          if (option !== OTHER_SPECIALTY) {
-                            setValue("customSpecialty", "", {
-                              shouldValidate: true,
-                            });
-                          }
-                        }}
-                      />
-                    ))}
-                  </View>
-                )}
-              />
-              {isOther ? (
-                <Controller
-                  control={control}
-                  name="customSpecialty"
-                  render={({ field: { value, onChange, onBlur } }) => (
-                    <TextInput
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={() => {
-                        onBlur();
-                        trackField("custom_specialty", value);
-                      }}
-                      placeholder="Describe your specialty"
-                      placeholderTextColor={colors.textMuted}
-                      style={[styles.input, styles.inputSpaced]}
-                    />
-                  )}
-                />
-              ) : null}
-              {errors.customSpecialty ? (
-                <Text style={styles.error}>
-                  {errors.customSpecialty.message}
-                </Text>
-              ) : null}
-            </Section>
-
-            <Section
-              label="Service location"
-              hint="Where you're available to work — used to match you with nearby jobs."
-            >
-              <Controller
-                control={control}
-                name="location"
-                render={({ field: { value, onChange } }) => (
-                  <LocationPicker
-                    value={value}
-                    onChange={onChange}
-                    analyticsContext="trade_setup"
-                  />
-                )}
-              />
-              {errors.location ? (
-                <Text style={styles.error}>{errors.location.message}</Text>
-              ) : null}
-            </Section>
-
-            <Section label="Max travel time (minutes)">
-              <Controller
-                control={control}
-                name="commuteDuration"
-                render={({ field: { value, onChange } }) => (
-                  <View style={styles.chipWrap}>
-                    {commuteDurations.map((duration) => (
-                      <Chip
-                        key={duration}
-                        label={`${duration}`}
-                        selected={value === duration}
-                        onPress={() => {
-                          selectFeedback();
-                          analyticsEvents.tradeSetupOptionSelected({
-                            field: "commute_minutes",
-                            value: String(duration),
-                          });
-                          onChange(duration);
-                        }}
-                      />
-                    ))}
-                  </View>
-                )}
-              />
-            </Section>
-
-            <Section label="About your work" hint="Optional — a short pitch.">
-              <Controller
-                control={control}
-                name="about"
-                render={({ field: { value, onChange, onBlur } }) => (
-                  <TextInput
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={() => {
-                      onBlur();
-                      trackField("about", value);
-                    }}
-                    placeholder="What you do, experience, what makes you great…"
-                    placeholderTextColor={colors.textMuted}
-                    style={[styles.input, styles.textArea]}
-                    multiline
-                  />
-                )}
-              />
-            </Section>
-
-            <Section label="Pricing" hint="Optional.">
-              <Controller
-                control={control}
-                name="priceType"
-                render={({ field: { value, onChange } }) => (
-                  <View style={styles.chipWrap}>
-                    {priceTypes.map((option) => (
-                      <Chip
-                        key={option.value}
-                        label={option.label}
-                        selected={value === option.value}
-                        onPress={() => {
-                          selectFeedback();
-                          const next =
-                            value === option.value ? "" : option.value;
-                          analyticsEvents.tradeSetupOptionSelected({
-                            field: "price_type",
-                            value: next || "none",
-                          });
-                          onChange(next);
-                        }}
-                      />
-                    ))}
-                  </View>
-                )}
-              />
-              {priceType ? (
-                <Controller
-                  control={control}
-                  name="price"
-                  render={({ field: { value, onChange, onBlur } }) => (
-                    <TextInput
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={() => {
-                        onBlur();
-                        trackField("price", value);
-                      }}
-                      placeholder="Amount, e.g. 75"
-                      placeholderTextColor={colors.textMuted}
-                      keyboardType="number-pad"
-                      style={[styles.input, styles.inputSpaced]}
-                    />
-                  )}
-                />
-              ) : null}
-            </Section>
+            <Animated.View key={current.name} entering={FadeInRight.duration(260)}>
+              <Animated.Text entering={FadeIn.duration(360)} style={styles.eyebrow}>
+                Your trade
+              </Animated.Text>
+              <Text style={styles.title}>{current.title}</Text>
+              <Text style={styles.subtitle}>{current.subtitle}</Text>
+              {step === 0 ? <IdentitySection {...sectionProps} /> : null}
+              {step === 1 ? <ServicesSection {...sectionProps} /> : null}
+              {step === 2 ? <PricingSection {...sectionProps} /> : null}
+              {step === 3 ? <AreaAvailabilitySection {...sectionProps} /> : null}
+              {step === 4 ? <DetailsSection {...sectionProps} /> : null}
+            </Animated.View>
           </ScrollView>
 
           <View style={styles.footer}>
@@ -431,9 +203,8 @@ export default function ContractorSetupTradeScreen() {
               <Text style={styles.filterError}>{filterError}</Text>
             ) : null}
             <PrimaryButton
-              label="Continue"
-              onPress={() => void handleSubmit(onSubmit)()}
-              disabled={!isValid}
+              label={isLast ? "Publish trade" : "Continue"}
+              onPress={() => void goNext()}
             />
           </View>
         </KeyboardAvoidingView>
@@ -452,9 +223,18 @@ const useStyles = makeStyles((t) => ({
   header: {
     flexDirection: "row",
     alignItems: "center",
+    gap: Spacing.md,
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
+  },
+  progress: {
+    flex: 1,
+  },
+  stepCount: {
+    color: t.colors.textSecondary,
+    fontSize: 13,
+    fontWeight: "700",
   },
   scrollContent: {
     paddingHorizontal: Spacing.base,
@@ -480,68 +260,6 @@ const useStyles = makeStyles((t) => ({
     fontSize: 15,
     lineHeight: 22,
     marginTop: Spacing.sm,
-  },
-  section: {
-    marginTop: Spacing.xl,
-    gap: Spacing.sm,
-  },
-  sectionLabel: {
-    color: t.colors.text,
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  sectionHint: {
-    color: t.colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  error: {
-    color: t.colors.coin,
-    fontSize: 12.5,
-    fontWeight: "600",
-  },
-  input: {
-    height: 54,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.base,
-    backgroundColor: t.colors.surface,
-    borderWidth: 1,
-    borderColor: t.colors.border,
-    color: t.colors.text,
-    fontSize: 16,
-  },
-  inputSpaced: {
-    marginTop: Spacing.sm,
-  },
-  textArea: {
-    height: 108,
-    paddingTop: Spacing.md,
-    textAlignVertical: "top",
-  },
-  chipWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.sm,
-  },
-  chip: {
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.pill,
-    backgroundColor: t.colors.surface,
-    borderWidth: 1.5,
-    borderColor: t.colors.border,
-  },
-  chipSelected: {
-    borderColor: Brand.primary,
-    backgroundColor: "rgba(22,179,100,0.12)",
-  },
-  chipText: {
-    color: t.colors.textSecondary,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  chipTextSelected: {
-    color: t.colors.textStrong,
   },
   footer: {
     paddingHorizontal: Spacing.base,

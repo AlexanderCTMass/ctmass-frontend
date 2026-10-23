@@ -22,6 +22,7 @@ type ProjectDraftState = {
   creationClaimed: boolean;
   targetSpecialistId: string | null;
   targetSpecialistName: string | null;
+  targetTradeId: string | null;
   setSpecialty: (specialty: string) => void;
   setName: (name: string) => void;
   setLocation: (location: GeoPlace) => void;
@@ -30,7 +31,7 @@ type ProjectDraftState = {
   setContact: (preferences: ContactPreferences, phone: string | null) => void;
   setPhotoUri: (photoUri: string | null) => void;
   setCreatedProjectId: (id: string) => void;
-  setTargetSpecialist: (id: string, name: string) => void;
+  setTargetSpecialist: (id: string, name: string, tradeId?: string | null) => void;
   claimProjectCreation: () => boolean;
   releaseProjectCreation: () => void;
   ensureRequestId: () => string;
@@ -58,6 +59,7 @@ export const useProjectDraftStore = create<ProjectDraftState>()(
       creationClaimed: false,
       targetSpecialistId: null,
       targetSpecialistName: null,
+      targetTradeId: null,
       setSpecialty: (specialty) => set({ specialty }),
       setName: (name) => set({ name }),
       setLocation: (location) => set({ location }),
@@ -67,8 +69,12 @@ export const useProjectDraftStore = create<ProjectDraftState>()(
         set({ contactPreferences, contactPhone }),
       setPhotoUri: (photoUri) => set({ photoUri }),
       setCreatedProjectId: (id) => set({ createdProjectId: id }),
-      setTargetSpecialist: (id, name) =>
-        set({ targetSpecialistId: id, targetSpecialistName: name }),
+      setTargetSpecialist: (id, name, tradeId) =>
+        set({
+          targetSpecialistId: id,
+          targetSpecialistName: name,
+          targetTradeId: tradeId ?? null,
+        }),
       claimProjectCreation: () => {
         if (get().creationClaimed || get().createdProjectId) return false;
         set({ creationClaimed: true });
@@ -97,6 +103,7 @@ export const useProjectDraftStore = create<ProjectDraftState>()(
           creationClaimed: false,
           targetSpecialistId: null,
           targetSpecialistName: null,
+          targetTradeId: null,
         }),
     }),
     {
@@ -121,6 +128,7 @@ export const useProjectDraftStore = create<ProjectDraftState>()(
         createdProjectId: state.createdProjectId,
         targetSpecialistId: state.targetSpecialistId,
         targetSpecialistName: state.targetSpecialistName,
+        targetTradeId: state.targetTradeId,
       }),
     },
   ),

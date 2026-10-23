@@ -1,5 +1,6 @@
-import { useCallback, useState, forwardRef } from 'react';
+import { forwardRef } from 'react';
 import {
+    Autocomplete,
     Box,
     Button,
     Card,
@@ -15,7 +16,7 @@ import AddAPhotoOutlinedIcon from '@mui/icons-material/AddAPhotoOutlined';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
-import { SpecialtySelectForm } from 'src/components/specialty-select-form';
+import { OTHER_TRADE_LABEL, TRADE_ITEMS, findGroup, findTrade } from 'src/constants/trade-taxonomy';
 import { IMaskInput } from 'react-imask';
 import { isValidUSPhone } from 'src/utils/validation/phone';
 
@@ -33,10 +34,16 @@ const PhoneMaskInput = forwardRef((props, ref) => {
     );
 });
 
+const TRADE_OPTIONS = TRADE_ITEMS.map((item) => ({
+    label: item.label,
+    group: findGroup(item.groupId)?.label ?? OTHER_TRADE_LABEL
+}));
+
 function TradePrimaryDetails({
     values,
     onChange,
-    specialtyOptions,
+    onTradeChange,
+    tradeError,
     onAvatarUploadClick,
     onApplyProfileAvatar,
     fileInputRef,
@@ -46,27 +53,10 @@ function TradePrimaryDetails({
     aiGenerationsLeft
 }) {
     const mdDown = useMediaQuery((theme) => theme.breakpoints.down('md'));
-    const [specialtyModalOpen, setSpecialtyModalOpen] = useState(false);
 
     const generationsLeft = typeof aiGenerationsLeft === 'number' ? aiGenerationsLeft : 0;
     const hasGenerationsLeft = generationsLeft > 0;
-
-    const handleOpenSpecialtyModal = useCallback(() => {
-        setSpecialtyModalOpen(true);
-    }, []);
-
-    const handleCloseSpecialtyModal = useCallback(() => {
-        setSpecialtyModalOpen(false);
-    }, []);
-
-    const handleSpecialtySelect = useCallback((specialty) => {
-        if (specialty) {
-            onChange('primarySpecialty', specialty.id || specialty.value);
-            onChange('primarySpecialtyLabel', specialty.label || '');
-            onChange('primarySpecialtyPath', specialty.fullId || specialty.id || '');
-        }
-        setSpecialtyModalOpen(false);
-    }, [onChange]);
+    const known = findTrade(values.primarySpecialtyLabel);
 
     return (
         <Card variant="outlined" sx={{ borderRadius: 4 }}>
@@ -83,34 +73,30 @@ function TradePrimaryDetails({
                             gap: 2
                         }}
                     >
-                        <Box>
-                            <TextField
-                                label="Business Name / Company"
-                                fullWidth
-                                value={values.businessName}
-                                onChange={(event) => onChange('businessName', event.target.value)}
-                                placeholder="CTMASS"
-                            />
-                        </Box>
-                        <Box>
-                            <Button
-                                variant="outlined"
-                                fullWidth
-                                onClick={handleOpenSpecialtyModal}
-                                sx={{
-                                    justifyContent: 'flex-start',
-                                    textTransform: 'none',
-                                    ":hover": {
-                                        backgroundColor: 'rgba(17, 25, 39, 0.04)',
-                                        borderColor: 'rgb(229, 231, 235)',
-                                    },
-                                    height: '57px',
-                                    borderColor: 'rgb(229, 231, 235)',
-                                    color: values.primarySpecialtyLabel ? 'text.primary' : 'text.secondary'
+                        <Box sx={{ gridColumn: { md: '1 / -1' } }}>
+                            <Autocomplete
+                                freeSolo
+                                options={TRADE_OPTIONS}
+                                groupBy={(option) => option.group}
+                                getOptionLabel={(option) => (typeof option === 'string' ? option : option.label)}
+                                value={values.primarySpecialtyLabel || null}
+                                isOptionEqualToValue={(option, value) => option.label === (typeof value === 'string' ? value : value?.label)}
+                                onChange={(_, next) => onTradeChange(typeof next === 'string' ? next : next?.label ?? '')}
+                                onInputChange={(_, next, reason) => {
+                                    if (reason === 'input') onTradeChange(next);
                                 }}
-                            >
-                                {values.primarySpecialtyLabel || 'Select Primary Trade'}
-                            </Button>
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Primary trade"
+                                        placeholder="Search trades, e.g. EV charger"
+                                        error={Boolean(tradeError)}
+                                        helperText={tradeError || (values.primarySpecialtyLabel && !known
+                                            ? 'Custom trade. It will be listed under Other.'
+                                            : 'Each trade gets its own page with its own experience, prices and reviews.')}
+                                    />
+                                )}
+                            />
                         </Box>
 
                         <Box>
@@ -266,13 +252,6 @@ function TradePrimaryDetails({
                 </Stack>
             </CardContent>
 
-            <SpecialtySelectForm
-                open={specialtyModalOpen}
-                onClose={handleCloseSpecialtyModal}
-                onSpecialtyChange={handleSpecialtySelect}
-                selectedSpecialties={[]}
-                onChange={handleSpecialtySelect}
-            />
         </Card>
     );
 }

@@ -44,7 +44,7 @@ const options: RoleOption[] = [
     subtitle: "I need work done on my property",
     points: [
       "Post a project for free",
-      "Get proposals from verified local pros",
+      "Get proposals from local pros",
     ],
     Icon: HomeIcon,
   },

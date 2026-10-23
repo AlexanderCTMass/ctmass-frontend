@@ -147,6 +147,17 @@ export const ConsultationBooking = () => {
     const [sending, setSending] = useState(false);
     const [prefill, setPrefill] = useState(null);
     const [error, setError] = useState(null);
+    const openedAt = useRef(0);
+
+    useEffect(() => {
+        openedAt.current = Date.now();
+    }, []);
+
+    const collectMeta = () => ({
+        formMs: Math.max(0, Date.now() - openedAt.current),
+        signedIn: Boolean(user?.id || user?.uid),
+        page: window.location.pathname
+    });
 
     const source = searchParams.get('from') === 'shop' ? 'web-shop' : 'web';
     const presetService = searchParams.get('service');
@@ -211,7 +222,7 @@ export const ConsultationBooking = () => {
         if (!(await validate())) return;
         const { name, email, message } = readValues();
         setError(null);
-        sendServiceInquiry({ name, email, services: selected, message, source, booking: true })
+        sendServiceInquiry({ name, email, services: selected, message, source, booking: true, meta: collectMeta() })
             .catch((err) => console.error('sendServiceInquiry failed', err));
         setPrefill({ name, email, details: buildProjectDetails(selected, message) });
         setStep(STEP.CALENDAR);
@@ -228,7 +239,7 @@ export const ConsultationBooking = () => {
         setSending(true);
         setError(null);
         try {
-            await sendServiceInquiry({ name, email, services: selected, message, source });
+            await sendServiceInquiry({ name, email, services: selected, message, source, meta: collectMeta() });
             toast.success('Thanks! Our team will get back to you by email soon.');
             formik.resetForm();
             setSelected([]);

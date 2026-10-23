@@ -18,8 +18,10 @@ const fetchWorkerProfiles = async (limit) => {
             try {
                 const latestTrade = await tradesApi.getLatestTrade(worker.id);
                 worker.pricing = latestTrade?.pricing || null;
+                worker.tradeDetails = latestTrade?.details || null;
             } catch (error) {
                 worker.pricing = null;
+                worker.tradeDetails = null;
             }
         })
     );

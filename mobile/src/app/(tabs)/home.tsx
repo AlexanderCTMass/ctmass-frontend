@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -151,22 +152,30 @@ function SegmentedControl({
   const index = mode === "contractor" ? 1 : 0;
   const [width, setWidth] = useState(0);
   const pillWidth = width > 0 ? (width - 8) / 2 : 0;
-  const offset = useSharedValue(0);
+  const offset = useSharedValue(index * pillWidth);
   const animateNext = useRef(false);
-  const target = useRef(0);
+  const target = useRef(index * pillWidth);
+  const [pillKey, setPillKey] = useState(0);
 
   useEffect(() => {
     const next = index * pillWidth;
     target.current = next;
-    offset.value = animateNext.current
-      ? withTiming(next, SEGMENT_TIMING)
-      : next;
+    const animate = animateNext.current;
     animateNext.current = false;
+    if (animate) {
+      offset.value = withTiming(next, SEGMENT_TIMING);
+      return;
+    }
+    cancelAnimation(offset);
+    offset.value = next;
   }, [index, pillWidth, offset]);
 
   useFocusEffect(
     useCallback(() => {
+      animateNext.current = false;
+      cancelAnimation(offset);
       offset.value = target.current;
+      setPillKey((value) => value + 1);
     }, [offset]),
   );
 
@@ -181,6 +190,7 @@ function SegmentedControl({
     >
       {pillWidth > 0 ? (
         <Animated.View
+          key={pillKey}
           style={[styles.segmentPill, { width: pillWidth }, pillStyle]}
         />
       ) : null}

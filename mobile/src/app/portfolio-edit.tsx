@@ -23,10 +23,16 @@ import {
   ImageIcon,
 } from "@/components/icons";
 import { shortPlace } from "@/components/project/project-card";
+import { ChoiceChips } from "@/components/trade/form-parts";
 import { BackButton } from "@/components/ui/back-button";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import {
+  PROJECT_COST_RANGES,
+  PROJECT_DURATIONS,
+  PROJECT_TYPES,
+} from "@/constants/trade-options";
 import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
@@ -52,6 +58,9 @@ const schema = z.object({
   beforeUri: z.string().nullable(),
   afterUri: z.string().min(1, "Add an after photo."),
   date: z.date().nullable(),
+  projectType: z.string(),
+  costRange: z.string(),
+  duration: z.string(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -243,6 +252,9 @@ function PortfolioForm({
       beforeUri: item?.beforeImage ?? null,
       afterUri: item?.afterImage ?? item?.cover ?? "",
       date: item ? item.date : startOfMonth(new Date()),
+      projectType: item?.projectType ?? "",
+      costRange: item?.costRange ?? "",
+      duration: item?.duration ?? "",
     },
   });
   useSubmitErrorHaptic(submitCount, errors);
@@ -310,6 +322,9 @@ function PortfolioForm({
       tags: values.tags,
       beforeUri: values.beforeUri,
       afterUri: values.afterUri,
+      projectType: values.projectType,
+      costRange: values.costRange,
+      duration: values.duration,
     };
     try {
       const portfolioId = item
@@ -461,6 +476,36 @@ function PortfolioForm({
           {errors.description ? (
             <Text style={styles.error}>{errors.description.message}</Text>
           ) : null}
+        </Section>
+
+        <Section label="Project type" hint="Optional.">
+          <Controller
+            control={control}
+            name="projectType"
+            render={({ field: { value, onChange } }) => (
+              <ChoiceChips options={PROJECT_TYPES} value={value} onChange={onChange} allowClear />
+            )}
+          />
+        </Section>
+
+        <Section label="Approximate cost" hint="Optional. Leave empty to keep it private.">
+          <Controller
+            control={control}
+            name="costRange"
+            render={({ field: { value, onChange } }) => (
+              <ChoiceChips options={PROJECT_COST_RANGES} value={value} onChange={onChange} allowClear />
+            )}
+          />
+        </Section>
+
+        <Section label="How long did it take?" hint="Optional.">
+          <Controller
+            control={control}
+            name="duration"
+            render={({ field: { value, onChange } }) => (
+              <ChoiceChips options={PROJECT_DURATIONS} value={value} onChange={onChange} allowClear />
+            )}
+          />
         </Section>
 
         <Section

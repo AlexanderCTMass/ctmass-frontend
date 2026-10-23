@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   Alert,
@@ -28,6 +28,7 @@ import {
   INQUIRY_SOURCES,
   type InquirySource,
   buildProjectDetails,
+  collectInquiryMeta,
   sendServiceInquiry,
 } from "@/lib/it-inquiry";
 import { toHref } from "@/lib/navigation";
@@ -79,7 +80,13 @@ export default function ItInquiryScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
   const storeEmail = useAuthStore((state) => state.user?.email ?? "");
-  const storeName = useAuthStore((state) => state.user?.name ?? "");
+  const storeName = useAuthStore((state) =>
+    state.isGuest ? "" : (state.user?.name ?? ""),
+  );
+  const signedIn = useAuthStore(
+    (state) => state.isAuthenticated && !state.isGuest,
+  );
+  const openedAt = useRef(0);
   const params = useLocalSearchParams<{ source?: string; service?: string }>();
   const rawSource = typeof params.source === "string" ? params.source : "";
   const source: InquirySource = INQUIRY_SOURCES.includes(rawSource as InquirySource)
@@ -111,6 +118,10 @@ export default function ItInquiryScreen() {
   useSubmitErrorHaptic(submitCount, errors);
 
   useEffect(() => {
+    openedAt.current = Date.now();
+  }, []);
+
+  useEffect(() => {
     analyticsEvents.itInquiryOpened({ source });
   }, [source]);
 
@@ -140,6 +151,7 @@ export default function ItInquiryScreen() {
       message,
       source,
       booking: true,
+      meta: collectInquiryMeta(openedAt.current, signedIn),
     })
       .then(() =>
         analyticsEvents.itInquirySent({ services_count: selected.length }),
@@ -181,6 +193,7 @@ export default function ItInquiryScreen() {
         services: selected,
         message,
         source,
+        meta: collectInquiryMeta(openedAt.current, signedIn),
       });
       analyticsEvents.itInquirySent({ services_count: selected.length });
       Alert.alert(

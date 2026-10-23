@@ -12,8 +12,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { CheckIcon, ReviewIcon } from "@/components/icons";
-import { PressableScale } from "@/components/ui/pressable-scale";
+import { CheckIcon } from "@/components/icons";
+import { TradeCard } from "@/components/trade/trade-card";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import {
@@ -21,14 +21,15 @@ import {
   Radius,
   Spacing,
   makeStyles,
-  useTheme,
 } from "@/constants/theme";
+import { publicPhone, useTradeContact } from "@/hooks/use-trade-contact";
 import {
   analyticsEvents,
   errorMessage,
   locationProps,
 } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
+import { distanceMiles } from "@/lib/geo";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
 import { createProject, requestDetailsFromDraft } from "@/lib/projects";
@@ -38,15 +39,6 @@ import { useSpecialists } from "@/queries/use-specialists";
 import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
 import { useProjectDraftStore } from "@/store/use-project-draft-store";
-
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((word) => word[0] ?? "")
-    .join("")
-    .toUpperCase();
-}
 
 function SearchingHint({ label }: { label: string }) {
   const styles = useStyles();
@@ -80,54 +72,6 @@ function SkeletonCard() {
   );
 }
 
-function SpecialistCard({
-  specialist,
-  authed,
-  onMessage,
-}: {
-  specialist: Specialist;
-  authed: boolean;
-  onMessage: (specialist: Specialist) => void;
-}) {
-  const { colors } = useTheme();
-  const styles = useStyles();
-  return (
-    <Animated.View entering={FadeIn.duration(360)} style={styles.card}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{initials(specialist.name)}</Text>
-      </View>
-      <View style={styles.cardBody}>
-        <Text style={styles.cardName} numberOfLines={1}>
-          {specialist.name}
-        </Text>
-        <View style={styles.ratingRow}>
-          <ReviewIcon size={14} color={colors.coin} />
-          <Text style={styles.ratingText} numberOfLines={1}>
-            {specialist.rating > 0
-              ? `${specialist.rating.toFixed(1)} · ${specialist.reviews} reviews`
-              : specialist.specialtyLabel || "New specialist"}
-          </Text>
-        </View>
-        {specialist.placeName ? (
-          <Text style={styles.cardPlace} numberOfLines={1}>
-            {specialist.placeName}
-          </Text>
-        ) : null}
-      </View>
-      {authed ? (
-        <PressableScale
-          accessibilityLabel={`Message ${specialist.name}`}
-          onPress={() => onMessage(specialist)}
-        >
-          <View style={styles.messageChip}>
-            <Text style={styles.messageChipText}>Message</Text>
-          </View>
-        </PressableScale>
-      ) : null}
-    </Animated.View>
-  );
-}
-
 export default function SpecialistsScreen() {
   const styles = useStyles();
   const specialty = useProjectDraftStore((state) => state.specialty);
@@ -156,6 +100,7 @@ export default function SpecialistsScreen() {
   const userName = useAuthStore((state) => state.user?.name);
   const userEmail = useAuthStore((state) => state.user?.email);
   const queryClient = useQueryClient();
+  const contact = useTradeContact("card");
 
   const { data, isLoading } = useSpecialists(specialty, uid);
   const specialists = data?.items ?? [];
@@ -284,6 +229,24 @@ export default function SpecialistsScreen() {
     });
   };
 
+  const openTrade = (specialist: Specialist) => {
+    tapFeedback();
+    const project = createdProjectId
+      ? `&projectId=${encodeURIComponent(createdProjectId)}`
+      : "";
+    router.push(
+      toHref(
+        `/trade/${encodeURIComponent(specialist.ownerId)}?tradeId=${encodeURIComponent(specialist.tradeId)}${project}`,
+      ),
+    );
+  };
+
+  const origin = location?.center ?? null;
+  const distanceTo = (specialist: Specialist): number | null =>
+    origin && specialist.lat != null && specialist.lng != null
+      ? distanceMiles(origin[1], origin[0], specialist.lat, specialist.lng)
+      : null;
+
   const goHome = () => {
     tapFeedback();
     analyticsEvents.projectSpecialistsGoHomeTapped({
@@ -338,14 +301,23 @@ export default function SpecialistsScreen() {
             </>
           ) : null}
 
-          {specialists.map((specialist) => (
-            <SpecialistCard
-              key={specialist.tradeId}
-              specialist={specialist}
-              authed={isAuthenticated}
-              onMessage={handleMessage}
-            />
-          ))}
+          {specialists.map((specialist) => {
+            const phone = publicPhone(specialist.owner);
+            return (
+              <Animated.View key={specialist.tradeId} entering={FadeIn.duration(360)}>
+                <TradeCard
+                  specialist={specialist}
+                  distance={distanceTo(specialist)}
+                  phone={phone}
+                  onPress={() => openTrade(specialist)}
+                  onMessage={
+                    isAuthenticated ? () => handleMessage(specialist) : undefined
+                  }
+                  onCall={() => contact.call(specialist, phone)}
+                />
+              </Animated.View>
+            );
+          })}
 
           {isLoading ? (
             <SearchingHint label="Finding specialists near you…" />
@@ -473,48 +445,8 @@ const useStyles = makeStyles((t) => ({
     borderWidth: 1,
     borderColor: "rgba(22,179,100,0.3)",
   },
-  avatarText: {
-    color: t.colors.accent,
-    fontSize: 15,
-    fontWeight: "800",
-  },
   cardBody: {
     flex: 1,
-  },
-  cardName: {
-    color: t.colors.text,
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  ratingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    marginTop: 3,
-  },
-  ratingText: {
-    flex: 1,
-    color: t.colors.textSecondary,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  cardPlace: {
-    color: t.colors.textMuted,
-    fontSize: 12.5,
-    marginTop: 2,
-  },
-  messageChip: {
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.pill,
-    backgroundColor: "rgba(22,179,100,0.16)",
-    borderWidth: 1,
-    borderColor: "rgba(22,179,100,0.4)",
-  },
-  messageChipText: {
-    color: t.colors.accent,
-    fontSize: 13,
-    fontWeight: "700",
   },
   skeletonBlock: {
     backgroundColor: t.colors.skeleton,

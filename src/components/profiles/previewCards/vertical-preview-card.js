@@ -128,6 +128,31 @@ const VerticalPreviewCard = ({ data, theme }) => {
                     }}
                 />
 
+                {data.tierLabel && (
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            left: 10,
+                            bottom: 10,
+                            maxWidth: 'calc(100% - 20px)',
+                            px: 1.1,
+                            py: 0.4,
+                            borderRadius: 999,
+                            bgcolor: data.tierColor,
+                            color: '#04170D',
+                            fontSize: 10.5,
+                            fontWeight: 900,
+                            letterSpacing: '0.04em',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            [COMPACT]: { fontSize: 9.5, left: 8, bottom: 8 }
+                        }}
+                    >
+                        {data.tierLabel}
+                    </Box>
+                )}
+
                 <Tooltip title={infoText} arrow placement="top">
                     <Box
                         sx={{
@@ -343,13 +368,17 @@ const VerticalPreviewCard = ({ data, theme }) => {
                                 sx={{
                                     fontSize: 17,
                                     flexShrink: 0,
-                                    color: data.isVerified ? theme.palette.success.main : panelMuted,
+                                    color: data.trustLabel ? theme.palette.success.main : panelMuted,
                                     [COMPACT]: { fontSize: 14 }
                                 }}
                             />
                             <Box sx={{ minWidth: 0 }}>
-                                <Typography noWrap sx={{ fontSize: 12.5, fontWeight: 800, color: panelText, lineHeight: 1.25, [COMPACT]: { fontSize: 10.5 } }}>
-                                    {data.isVerified ? 'Verified with CTMASS' : 'Member of CTMASS'}
+                                <Typography
+                                    noWrap
+                                    title={data.trustLabel || undefined}
+                                    sx={{ fontSize: 12.5, fontWeight: 800, color: panelText, lineHeight: 1.25, [COMPACT]: { fontSize: 10.5 } }}
+                                >
+                                    {data.trustLabel || 'Member of CTMASS'}
                                 </Typography>
                                 {memberFor && (
                                     <Typography noWrap sx={{ fontSize: 10.5, fontWeight: 500, color: panelMuted, lineHeight: 1.3, [COMPACT]: { fontSize: 9.5 } }}>
