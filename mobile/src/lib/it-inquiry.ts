@@ -1,4 +1,7 @@
 import { getApp } from "@react-native-firebase/app";
+import Constants from "expo-constants";
+import * as Device from "expo-device";
+import { Platform } from "react-native";
 
 import { getFirebaseAuth } from "@/lib/firebase";
 
@@ -27,7 +30,35 @@ export type ServiceInquiry = {
   name?: string;
   source?: InquirySource;
   booking?: boolean;
+  meta?: InquiryMeta;
 };
+
+export type InquiryMeta = {
+  formMs: number;
+  signedIn: boolean;
+  appVersion: string;
+  platform: string;
+  osVersion: string;
+  deviceModel: string;
+  deviceBrand: string;
+  isDevice: boolean;
+};
+
+export function collectInquiryMeta(
+  formOpenedAt: number,
+  signedIn: boolean,
+): InquiryMeta {
+  return {
+    formMs: Math.max(0, Date.now() - formOpenedAt),
+    signedIn,
+    appVersion: Constants.expoConfig?.version ?? "",
+    platform: Platform.OS,
+    osVersion: Device.osVersion ?? "",
+    deviceModel: Device.modelName ?? "",
+    deviceBrand: Device.brand ?? Device.manufacturer ?? "",
+    isDevice: Device.isDevice,
+  };
+}
 
 export function buildProjectDetails(
   services: string[],
@@ -93,6 +124,7 @@ export async function sendServiceInquiry(input: ServiceInquiry): Promise<void> {
         name: input.name ?? "",
         source: input.source ?? "app",
         booking: input.booking === true,
+        meta: input.meta ?? null,
       },
     }),
   });
