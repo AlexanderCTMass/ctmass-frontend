@@ -4,16 +4,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Text,
   TextInput,
   View,
 } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { CheckIcon } from "@/components/icons";
+import { TradePicker } from "@/components/trade/trade-picker";
 import { BackButton } from "@/components/ui/back-button";
-import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import {
@@ -23,52 +21,10 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
-import { OTHER_SPECIALTY, SPECIALTIES } from "@/constants/specialties";
+import { OTHER_TRADE_LABEL, TRADE_ITEMS } from "@/constants/trade-taxonomy";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { selectFeedback } from "@/lib/haptics";
 import { useProjectDraftStore } from "@/store/use-project-draft-store";
-
-const options = [...SPECIALTIES, OTHER_SPECIALTY];
-
-function SpecialtyCard({
-  label,
-  index,
-  selected,
-  onSelect,
-}: {
-  label: string;
-  index: number;
-  selected: boolean;
-  onSelect: (label: string) => void;
-}) {
-  const styles = useStyles();
-  return (
-    <Animated.View
-      entering={FadeIn.delay(80 + index * 45).duration(360)}
-      style={styles.cardWrap}
-    >
-      <PressableScale
-        accessibilityLabel={label}
-        onPress={() => onSelect(label)}
-      >
-        <View style={[styles.card, selected && styles.cardSelected]}>
-          <Text
-            style={[styles.cardLabel, selected && styles.cardLabelSelected]}
-          >
-            {label}
-          </Text>
-          <View style={styles.checkSlot}>
-            {selected ? (
-              <View style={styles.check}>
-                <CheckIcon size={13} color="#04170D" strokeWidth={3} />
-              </View>
-            ) : null}
-          </View>
-        </View>
-      </PressableScale>
-    </Animated.View>
-  );
-}
 
 export default function ChooseSpecialtyScreen() {
   const { colors } = useTheme();
@@ -77,7 +33,7 @@ export default function ChooseSpecialtyScreen() {
   const [selected, setSelected] = useState<string | null>(null);
   const [custom, setCustom] = useState("");
 
-  const isOther = selected === OTHER_SPECIALTY;
+  const isOther = selected === OTHER_TRADE_LABEL;
   const canContinue =
     selected !== null && (!isOther || custom.trim().length > 0);
 
@@ -89,11 +45,11 @@ export default function ChooseSpecialtyScreen() {
     selectFeedback();
     analyticsEvents.projectSpecialtySelected({
       specialty: label,
-      is_other: label === OTHER_SPECIALTY,
-      position: options.indexOf(label),
+      is_other: label === OTHER_TRADE_LABEL,
+      position: TRADE_ITEMS.findIndex((item) => item.label === label),
     });
     setSelected(label);
-    if (label !== OTHER_SPECIALTY) setCustom("");
+    if (label !== OTHER_TRADE_LABEL) setCustom("");
   };
 
   const handleContinue = () => {
@@ -144,16 +100,8 @@ export default function ChooseSpecialtyScreen() {
               Pick the type of specialist you&apos;re looking for.
             </Animated.Text>
 
-            <View style={styles.grid}>
-              {options.map((label, index) => (
-                <SpecialtyCard
-                  key={label}
-                  label={label}
-                  index={index}
-                  selected={selected === label}
-                  onSelect={handleSelect}
-                />
-              ))}
+            <View style={styles.picker}>
+              <TradePicker value={selected} onChange={handleSelect} />
             </View>
           </ScrollView>
 
@@ -225,55 +173,8 @@ const useStyles = makeStyles((t) => ({
     textAlign: "center",
     marginTop: Spacing.sm,
   },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
+  picker: {
     marginTop: Spacing.xl,
-    rowGap: Spacing.md,
-  },
-  cardWrap: {
-    width: "48%",
-  },
-  card: {
-    minHeight: 64,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.md,
-    backgroundColor: t.colors.surface,
-    borderWidth: 1.5,
-    borderColor: t.colors.border,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: Spacing.sm,
-  },
-  cardSelected: {
-    borderColor: Brand.primary,
-    backgroundColor: "rgba(22,179,100,0.12)",
-  },
-  cardLabel: {
-    flex: 1,
-    color: t.colors.text,
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  cardLabelSelected: {
-    color: t.colors.textStrong,
-  },
-  checkSlot: {
-    width: 22,
-    height: 22,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  check: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: Brand.primary,
   },
   input: {
     height: 54,

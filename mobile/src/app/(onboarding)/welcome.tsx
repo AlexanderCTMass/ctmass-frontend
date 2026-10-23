@@ -37,7 +37,7 @@ const highlights: {
   Icon: (p: IconProps) => React.JSX.Element;
 }[] = [
   { label: "Always free", Icon: TagIcon },
-  { label: "Verified pros", Icon: ShieldCheckIcon },
+  { label: "Trusted pros", Icon: ShieldCheckIcon },
   { label: "Local first", Icon: MapPinIcon },
 ];
 
@@ -123,7 +123,7 @@ export default function WelcomeScreen() {
         <ScreenHeading
           eyebrow="Massachusetts & Connecticut"
           title="Home projects, done the local way"
-          body="CTMASS connects homeowners with trusted, verified contractors nearby. No hidden fees, no paid leads — the platform is free for everyone."
+          body="CTMASS connects homeowners with trusted contractors nearby. No hidden fees, no paid leads — the platform is free for everyone."
           delay={220}
         />
         <View style={styles.pills}>

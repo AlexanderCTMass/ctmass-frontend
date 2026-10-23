@@ -478,6 +478,7 @@ export default function BriefScreen() {
           customerName: userName ?? "",
           customerMail: userEmail ?? "",
           attach,
+          tradeId: draft.targetTradeId,
           requesterName: userName ?? "A client",
         },
       );

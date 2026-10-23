@@ -2,15 +2,14 @@ import {
     Box,
     Card,
     CardContent,
-    Grid,
     InputAdornment,
     Stack,
+    TextField,
     ToggleButton,
     ToggleButtonGroup,
     Typography
 } from '@mui/material';
-import DirectionsCarFilledOutlinedIcon from '@mui/icons-material/DirectionsCarFilledOutlined';
-import DirectionsWalkOutlinedIcon from '@mui/icons-material/DirectionsWalkOutlined';
+import { SERVICE_RADII } from 'src/constants/trade-options';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import { AddressAutoComplete } from 'src/components/address/AddressAutoComplete';
 
@@ -34,7 +33,7 @@ const ensurePlaceShape = (place) => {
     };
 };
 
-function TradeLocationSection({ values, onChange, commuteDurations, addressError = false, durationError = false }) {
+function TradeLocationSection({ values, onChange, radiusMiles, onRadiusChange, areas, onAreasChange, addressError = false }) {
     const locationValue = values.addressLocation ?? null;
 
     return (
@@ -50,70 +49,38 @@ function TradeLocationSection({ values, onChange, commuteDurations, addressError
                         </Typography>
                     </Stack>
 
-                    <Grid container>
-                        <Grid item xs={12} md={6}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5 }}>
-                                Choose a way to get there
-                            </Typography>
-                            <ToggleButtonGroup
-                                exclusive
-                                value={values.commuteMode}
-                                onChange={(_, next) => next && onChange('commuteMode', next)}
-                                sx={{
-                                    '& .MuiToggleButton-root': {
-                                        textTransform: 'none',
-                                        px: 3,
-                                        py: 1.2
-                                    }
-                                }}
-                            >
-                                <ToggleButton value="walking">
-                                    <DirectionsWalkOutlinedIcon sx={{ mr: 1 }} />
-                                    Walking
-                                </ToggleButton>
-                                <ToggleButton value="driving">
-                                    <DirectionsCarFilledOutlinedIcon sx={{ mr: 1 }} />
-                                    Driving
-                                </ToggleButton>
-                            </ToggleButtonGroup>
-                        </Grid>
-
-                        <Grid item xs={12} md={6}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5 }}>
-                                Maximum duration you’re ready to go (minutes)
-                            </Typography>
-                            <ToggleButtonGroup
-                                exclusive
-                                value={values.commuteDuration}
-                                onChange={(_, next) => next && onChange('commuteDuration', next)}
-                                sx={{
-                                    flexWrap: 'wrap',
+                    <Stack spacing={1.5}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                            Service radius
+                        </Typography>
+                        <ToggleButtonGroup
+                            exclusive
+                            value={radiusMiles}
+                            onChange={(_, next) => next && onRadiusChange(next)}
+                            sx={{
+                                flexWrap: 'wrap',
+                                '& .MuiToggleButton-root': {
+                                    px: 2.5,
                                     borderRadius: 2,
-                                    ...(durationError && {
-                                        border: '1px solid',
-                                        borderColor: 'error.main',
-                                        p: 0.5
-                                    }),
-                                    '& .MuiToggleButton-root': {
-                                        px: 2.5,
-                                        borderRadius: 2,
-                                        textTransform: 'none'
-                                    }
-                                }}
-                            >
-                                {commuteDurations.map((duration) => (
-                                    <ToggleButton key={duration} value={duration}>
-                                        {duration}
-                                    </ToggleButton>
-                                ))}
-                            </ToggleButtonGroup>
-                            {durationError && (
-                                <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>
-                                    Please choose the maximum duration you’re ready to travel.
-                                </Typography>
-                            )}
-                        </Grid>
-                    </Grid>
+                                    textTransform: 'none'
+                                }
+                            }}
+                        >
+                            {SERVICE_RADII.map((miles) => (
+                                <ToggleButton key={miles} value={miles}>
+                                    {miles} mi
+                                </ToggleButton>
+                            ))}
+                        </ToggleButtonGroup>
+                        <TextField
+                            label="Towns you serve (optional)"
+                            fullWidth
+                            value={areas}
+                            onChange={(event) => onAreasChange(event.target.value)}
+                            placeholder="Hartford, West Hartford, Glastonbury"
+                            helperText="Separate towns with commas. Homeowners see your city, state and radius, never your street address."
+                        />
+                    </Stack>
 
                     <Stack spacing={1}>
                         <Box

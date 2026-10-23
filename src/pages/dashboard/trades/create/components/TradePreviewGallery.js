@@ -15,6 +15,26 @@ import HorizontalPreviewCard from "src/components/profiles/previewCards/horizont
 import SmallPreviewCard from "src/components/profiles/previewCards/small-preview-card";
 import VerticalPreviewCard from "src/components/profiles/previewCards/vertical-preview-card";
 import {extractPreviewData, parseDateLike} from "src/components/profiles/previewCards/base-preview-card";
+import {tradeCardFields} from "src/utils/preview-card-utils";
+import {monthToDate} from "../trade-form-model";
+
+const previewDetails = (values) => {
+    const details = values.details;
+    const credentials = values.credentials;
+    if (!details || !credentials) {
+        return null;
+    }
+    return {
+        ...details,
+        rates: details.hasPricing ? {...details.rates, legacy: false} : null,
+        license: credentials.license.on
+            ? {state: credentials.license.state, expiresAt: monthToDate(credentials.license.expiry)}
+            : null,
+        insurance: credentials.insurance.on
+            ? {state: '', expiresAt: monthToDate(credentials.insurance.expiry)}
+            : null
+    };
+};
 
 const CARD_SIZE_OPTIONS = [
     {id: 'big', label: 'Vertical'},
@@ -34,7 +54,10 @@ function TradePreviewGallery({values, ownerId}) {
     }, [ownerProfile]);
 
     const previewData = useMemo(
-        () => extractPreviewData(values, profileRegistrationDate),
+        () => ({
+            ...extractPreviewData(values, profileRegistrationDate),
+            ...tradeCardFields(previewDetails(values))
+        }),
         [values, profileRegistrationDate]
     );
 

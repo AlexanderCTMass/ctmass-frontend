@@ -1,11 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Redirect, router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { CheckIcon } from "@/components/icons";
+import { CheckIcon, CoinIcon } from "@/components/icons";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import {
@@ -15,6 +15,7 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
+import { groupOfTrade } from "@/constants/trade-taxonomy";
 import {
   analyticsEvents,
   errorMessage,
@@ -22,23 +23,20 @@ import {
 } from "@/lib/analytics-events";
 import { successFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
+import { emptyDetailsInput } from "@/lib/trade-details";
+import { coinsForRole, isRuleEnabledForRole } from "@/lib/loyalty-config";
+import { formatCoins } from "@/lib/shop";
 import { createTrade } from "@/lib/trades";
+import { useLoyaltyRules } from "@/queries/use-loyalty-config";
 import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
 import { useTradeDraftStore } from "@/store/use-trade-draft-store";
 
-const perks = [
-  "Multiple specialties on one profile",
-  "Portfolio and reviews for each trade",
-  "More leads with a complete profile",
+const BONUSES = [
+  { actionType: "ADD_PORTFOLIO", label: "Add a project to your portfolio" },
+  { actionType: "COMPLETE_PROJECT", label: "Complete a job through CTMASS" },
+  { actionType: "INVITE_USER_REGISTERS", label: "Invite a friend who joins" },
 ];
-
-function specialtyId(label: string): string {
-  return label
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
 
 export default function ContractorTradeCompletedScreen() {
   const { colors } = useTheme();
@@ -58,6 +56,17 @@ export default function ContractorTradeCompletedScreen() {
   const [attempt, setAttempt] = useState(0);
   const startedRef = useRef(false);
   const queryClient = useQueryClient();
+  const { data: rules } = useLoyaltyRules();
+  const bonuses = useMemo(
+    () =>
+      BONUSES.flatMap((bonus) => {
+        const rule = rules?.find((item) => item.actionType === bonus.actionType);
+        if (!rule || !isRuleEnabledForRole(rule, "contractor")) return [];
+        const coins = coinsForRole(rule, "contractor");
+        return coins > 0 ? [{ ...bonus, coins }] : [];
+      }),
+    [rules],
+  );
 
   useEffect(() => {
     if (!uid || startedRef.current) return;
@@ -67,33 +76,35 @@ export default function ContractorTradeCompletedScreen() {
     const location = draft.location;
     if (!specialty || !location) return;
 
+    const details = draft.details ?? emptyDetailsInput(groupOfTrade(specialty));
+
     void createTrade(uid, {
       title: draft.title,
-      primarySpecialtyId: specialtyId(specialty),
       primarySpecialtyLabel: specialty,
       about: draft.about,
-      priceType: draft.priceType,
-      price: draft.price,
-      phone: "",
       location: {
         address: location.place_name,
         addressLocation: location,
         commuteMode: "driving",
-        commuteDuration: draft.commuteDuration,
+        commuteDuration: 20,
       },
+      details,
     })
       .then((tradeId) => {
         analyticsEvents.tradeCreated({
           trade_id: tradeId,
           specialty,
-          commute_minutes: draft.commuteDuration,
-          price_type: draft.priceType,
+          trade_group: details.groupId,
+          pricing_model: details.rates.model,
+          experience_years: details.experienceYears,
+          radius_miles: details.radiusMiles,
           ...locationProps(location),
         });
         setCreatedTradeId(tradeId);
         void queryClient.invalidateQueries({ queryKey: ["trade"] });
         void queryClient.invalidateQueries({ queryKey: ["specialists"] });
         void queryClient.invalidateQueries({ queryKey: ["specialist-pool"] });
+        void queryClient.invalidateQueries({ queryKey: ["owner-trades"] });
         successFeedback();
         setCreating(false);
       })
@@ -113,9 +124,7 @@ export default function ContractorTradeCompletedScreen() {
     draft.specialty,
     draft.location,
     draft.about,
-    draft.priceType,
-    draft.price,
-    draft.commuteDuration,
+    draft.details,
     canCreate,
     setCreatedTradeId,
     queryClient,
@@ -203,24 +212,30 @@ export default function ContractorTradeCompletedScreen() {
                 find it in search, and you can already respond to nearby jobs.
               </Animated.Text>
 
-              <Animated.View
-                entering={FadeInDown.delay(260).duration(520)}
-                style={styles.card}
-              >
-                <Text style={styles.cardTitle}>
-                  More is available on the web
-                </Text>
-                {perks.map((perk) => (
-                  <View key={perk} style={styles.perkRow}>
-                    <CheckIcon
-                      size={14}
-                      color={colors.accent}
-                      strokeWidth={3}
-                    />
-                    <Text style={styles.perkText}>{perk}</Text>
-                  </View>
-                ))}
-              </Animated.View>
+              {bonuses.length > 0 ? (
+                <Animated.View
+                  entering={FadeInDown.delay(260).duration(520)}
+                  style={styles.card}
+                >
+                  <Text style={styles.cardTitle}>
+                    Earn CTMASS Coins with your trade
+                  </Text>
+                  <Text style={styles.cardNote}>
+                    Spend them on rewards in the Shop.
+                  </Text>
+                  {bonuses.map((bonus) => (
+                    <View key={bonus.actionType} style={styles.perkRow}>
+                      <Text style={styles.perkText}>{bonus.label}</Text>
+                      <View style={styles.coinPill}>
+                        <CoinIcon size={14} />
+                        <Text style={styles.coinText}>
+                          +{formatCoins(bonus.coins)}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </Animated.View>
+              ) : null}
             </>
           )}
         </View>
@@ -321,15 +336,36 @@ const useStyles = makeStyles((t) => ({
     fontWeight: "700",
     marginBottom: 2,
   },
+  cardNote: {
+    color: t.colors.textSecondary,
+    fontSize: 13,
+    marginTop: -4,
+    marginBottom: 2,
+  },
   perkRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm,
+    paddingVertical: 2,
   },
   perkText: {
     flex: 1,
-    color: t.colors.textSecondary,
+    color: t.colors.text,
     fontSize: 14,
+  },
+  coinPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
+    backgroundColor: "rgba(245,165,36,0.14)",
+  },
+  coinText: {
+    color: t.colors.coin,
+    fontSize: 13,
+    fontWeight: "800",
   },
   footer: {
     paddingHorizontal: Spacing.base,

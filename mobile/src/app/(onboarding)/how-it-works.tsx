@@ -43,7 +43,7 @@ const homeownerSteps: Step[] = [
   {
     title: "Receive responses",
     description:
-      "Verified local specialists review your project and send their proposals.",
+      "Local specialists review your project and send their proposals.",
     Icon: ResponsesIcon,
   },
   {

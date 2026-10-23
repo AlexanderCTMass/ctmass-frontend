@@ -19,6 +19,7 @@ import { z } from "zod";
 
 import {
   AwardIcon,
+  BuildingIcon,
   CloseIcon,
   MailIcon,
   MapPinIcon,
@@ -26,6 +27,13 @@ import {
   UserIcon,
   UsersIcon,
 } from "@/components/icons";
+import {
+  BusinessDetailsFields,
+  ContactVisibilityFields,
+  businessDefaults,
+  businessFieldsSchema,
+  businessFromValues,
+} from "@/components/profile/business-fields";
 import { SocialGroupsModal } from "@/components/profile/social-groups-modal";
 import { BackButton } from "@/components/ui/back-button";
 import { LocationPicker } from "@/components/ui/location-picker";
@@ -53,7 +61,7 @@ import { useProfile } from "@/queries/use-profile";
 import { useUserVideos, userVideosKey } from "@/queries/use-videos";
 import { useAuthStore } from "@/store/use-auth-store";
 
-const schema = z.object({
+const schema = businessFieldsSchema.extend({
   name: z.string().trim().min(1, "Name is required"),
   businessName: z.string().optional(),
   professionalRole: z.string().optional(),
@@ -71,6 +79,21 @@ const schema = z.object({
       "Enter a valid US phone number (+1 and 10 digits)",
     ),
   location: z.custom<GeoPlace | null>().nullable().optional(),
+}).superRefine((values, ctx) => {
+  if (values.preferredContact === "phone" && (!values.phone?.trim() || !values.showPhone)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["preferredContact"],
+      message: "Add and show your phone to make it preferred.",
+    });
+  }
+  if (values.preferredContact === "email" && !values.showEmail) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["preferredContact"],
+      message: "Show your email to make it preferred.",
+    });
+  }
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -115,6 +138,7 @@ export default function SetupProfileScreen() {
       email: "",
       phone: "",
       location: null,
+      ...businessDefaults(undefined, undefined),
     },
   });
   useSubmitErrorHaptic(submitCount, errors);
@@ -129,6 +153,7 @@ export default function SetupProfileScreen() {
       email: data.email,
       phone: data.phone,
       location: data.location,
+      ...businessDefaults(data.business, data.contactSettings),
     });
   }, [data, reset]);
 
@@ -160,12 +185,16 @@ export default function SetupProfileScreen() {
             businessName: values.businessName?.trim() ?? "",
             professionalRole: values.professionalRole?.trim() ?? "",
             shortBio: values.shortBio?.trim() ?? "",
+            ...businessFromValues(values),
           }
         : {}),
     };
     try {
       await updateEditableProfile(uid, patch);
       void queryClient.invalidateQueries({ queryKey: ["profile", uid] });
+      void queryClient.invalidateQueries({ queryKey: ["trade"] });
+      void queryClient.invalidateQueries({ queryKey: ["owner-trades"] });
+      void queryClient.invalidateQueries({ queryKey: ["public-profile", uid] });
       analyticsEvents.profileSetupSaved();
       router.back();
     } catch (error) {
@@ -388,7 +417,20 @@ export default function SetupProfileScreen() {
                 />
               )}
             />
+            {isContractor ? (
+              <ContactVisibilityFields control={control} errors={errors} />
+            ) : null}
             </View>
+
+            {isContractor ? (
+              <View style={styles.formSection}>
+                <View style={styles.certHeader}>
+                  <BuildingIcon size={18} color={colors.accent} />
+                  <Text style={styles.certHeaderText}>Business details</Text>
+                </View>
+                <BusinessDetailsFields control={control} errors={errors} />
+              </View>
+            ) : null}
 
             <View style={styles.formSection}>
               <View style={styles.certHeader}>

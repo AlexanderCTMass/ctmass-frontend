@@ -16,24 +16,40 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
   AwardIcon,
+  BuildingIcon,
   CalendarIcon,
-  CheckIcon,
+  DollarIcon,
   ImageIcon,
   MapPinIcon,
   PhoneIcon,
+  ResponsesIcon,
   ReviewIcon,
+  ScaleIcon,
   ShieldCheckIcon,
   TextMessageIcon,
   ToolsIcon,
+  TradeGroupIcon,
   UsersIcon,
-  WalletIcon,
 } from "@/components/icons";
 import { PortfolioTile } from "@/components/portfolio/portfolio-tile";
 import { CommunityBadges } from "@/components/profile/community-badges";
 import { shortPlace } from "@/components/project/project-card";
+import { TierAvatar } from "@/components/trade/tier-badge";
+import { TradeCompleteness } from "@/components/trade/trade-completeness";
+import {
+  AvailabilityPanel,
+  BusinessPanel,
+  CredentialsPanel,
+  ExperiencePanel,
+  PricingPanel,
+  WorkProcessPanel,
+  hasBusinessDetails,
+  hasWorkProcess,
+} from "@/components/trade/trade-sections";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
 import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
+import { LikeButton } from "@/components/ui/like-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
@@ -44,75 +60,35 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
-import { useRequireAuth } from "@/hooks/use-require-auth";
+import { businessRoleLabel } from "@/constants/trade-options";
+import { useCompare } from "@/hooks/use-compare";
+import { specialistSubject, useSwipeActions } from "@/hooks/use-swipe-actions";
+import { publicPhone, useTradeContact } from "@/hooks/use-trade-contact";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
-import { startChat } from "@/lib/chat";
 import { tapFeedback } from "@/lib/haptics";
-import { chatHref, toHref } from "@/lib/navigation";
+import { toHref } from "@/lib/navigation";
 import type { PortfolioItem } from "@/lib/portfolio";
-import { type TradeProfile, deleteTrade } from "@/lib/trades";
+import { priceLine, responseLine, trustItems } from "@/lib/trade-display";
+import { type Specialist, deleteTrade } from "@/lib/trades";
 import { useTradePortfolio } from "@/queries/use-portfolio";
-import { useTradeById, useTradeByOwner } from "@/queries/use-trade";
+import {
+  useTradeById,
+  useTradeByOwner,
+  useTradesByOwner,
+} from "@/queries/use-trade";
 import {
   useOwnerPublicProfile,
   useOwnerReviews,
   useTradeCertificates,
 } from "@/queries/use-trade-extras";
 import { useAuthStore } from "@/store/use-auth-store";
-import { useProjectDraftStore } from "@/store/use-project-draft-store";
 
 const PORTFOLIO_PREVIEW = 4;
 const REVIEWS_PREVIEW = 3;
 
-const COMMUTE_LABELS: Record<string, string> = {
-  driving: "by car",
-  walking: "on foot",
-  cycling: "by bike",
-  transit: "by transit",
-};
-
-function priceLabel(trade: TradeProfile): string {
-  const amount = trade.price.trim();
-  if (!amount) return "";
-  const value = /^\d/.test(amount) ? `$${amount}` : amount;
-  switch (trade.priceType) {
-    case "hourly":
-      return `${value} / hour`;
-    case "project":
-      return `${value} / project`;
-    case "consultation":
-      return `${value} consultation`;
-    default:
-      return value;
-  }
-}
-
-function priceTypeLabel(type: string): string {
-  switch (type) {
-    case "hourly":
-      return "Hourly rate";
-    case "project":
-      return "Per project";
-    case "consultation":
-      return "Consultation";
-    default:
-      return "Pricing";
-  }
-}
-
-function serviceAreaLabel(trade: TradeProfile): string {
-  if (!trade.commuteDuration) return "";
-  const mode = COMMUTE_LABELS[trade.commuteMode] ?? "by car";
-  return `Up to ${trade.commuteDuration} min ${mode}`;
-}
-
 function memberSince(date: Date | null): string {
   if (!date) return "";
   return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-}
-
-function phoneDigits(phone: string): string {
-  return phone.replace(/[^\d+]/g, "");
 }
 
 function Section({
@@ -213,7 +189,6 @@ export default function TradeProfileScreen() {
   const tradeId =
     typeof params.tradeId === "string" ? params.tradeId : undefined;
   const uid = useAuthStore((state) => state.user?.uid);
-  const requireAuth = useRequireAuth();
 
   const queryClient = useQueryClient();
   const byId = useTradeById(tradeId);
@@ -226,20 +201,17 @@ export default function TradeProfileScreen() {
   const ownerProfile = useOwnerPublicProfile(ownerId);
   const portfolio = useTradePortfolio(ownerId, trade?.tradeId, isOwner);
   const certificates = useTradeCertificates(ownerId, trade?.tradeId);
-  const reviews = useOwnerReviews(ownerId, REVIEWS_PREVIEW);
+  const reviews = useOwnerReviews(ownerId, REVIEWS_PREVIEW, trade?.tradeId);
+  const ownerTrades = useTradesByOwner(ownerId);
+  const contact = useTradeContact("page");
+  const swipe = useSwipeActions(uid, "trade");
+  const compare = useCompare("page");
 
-  const [opening, setOpening] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showAllPortfolio, setShowAllPortfolio] = useState(false);
   const [viewerUri, setViewerUri] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const portfolioY = useRef(0);
-
-  const resetDraft = useProjectDraftStore((state) => state.reset);
-  const setDraftSpecialty = useProjectDraftStore((state) => state.setSpecialty);
-  const setTargetSpecialist = useProjectDraftStore(
-    (state) => state.setTargetSpecialist,
-  );
 
   const profile = ownerProfile.data ?? null;
   const portfolioItems = portfolio.data ?? [];
@@ -249,16 +221,21 @@ export default function TradeProfileScreen() {
   const linkedCertificates = certificates.data ?? [];
   const reviewItems = reviews.data?.items ?? [];
   const reviewTotal = reviews.data?.total ?? trade?.reviews ?? 0;
+  const reviewScope = reviews.data?.scope ?? trade?.ratingScope ?? "all";
+  const owner = trade?.owner ?? null;
   const phone = trade
-    ? trade.phone || (trade.useProfilePhone ? (profile?.phone ?? "") : "")
+    ? publicPhone(owner, trade.useProfilePhone ? "" : trade.phone)
     : "";
-  const canCall = phoneDigits(phone).length >= 7;
   const gallery = trade?.gallery ?? [];
   const cover =
     portfolioItems.find((item) => item.isPublic)?.cover ?? gallery[0] ?? null;
   const photoCount =
     portfolioItems.filter((item) => item.isPublic).length || gallery.length;
   const avatarUrl = trade?.avatarUrl || profile?.avatar || null;
+  const otherTrades = (ownerTrades.data ?? []).filter(
+    (item) => item.tradeId !== trade?.tradeId,
+  );
+  const liked = trade ? swipe.specialistIndex.liked.has(trade.tradeId) : false;
 
   const viewedRef = useRef(false);
   useEffect(() => {
@@ -274,11 +251,30 @@ export default function TradeProfileScreen() {
     });
   }, [trade, projectId]);
 
+  const contactTarget = trade
+    ? {
+        tradeId: trade.tradeId,
+        ownerId: trade.ownerId,
+        name: trade.name,
+        specialtyLabel: trade.specialtyLabel,
+        avatarUrl: avatarUrl ?? "",
+        owner,
+      }
+    : null;
+
   const handleEdit = () => {
     if (!trade) return;
     tapFeedback();
     analyticsEvents.tradeEditOpened({ trade_id: trade.tradeId });
     router.push(toHref(`/trade-edit/${encodeURIComponent(trade.tradeId)}`));
+  };
+
+  const openCredentials = () => {
+    if (!trade) return;
+    tapFeedback();
+    router.push(
+      toHref(`/trade-credentials/${encodeURIComponent(trade.tradeId)}?source=trade_page`),
+    );
   };
 
   const runDelete = async () => {
@@ -287,10 +283,9 @@ export default function TradeProfileScreen() {
     try {
       await deleteTrade(trade.tradeId);
       analyticsEvents.tradeDeleted({ trade_id: trade.tradeId });
-      void queryClient.invalidateQueries({
-        queryKey: ["trade", "id", trade.tradeId],
-      });
-      void queryClient.invalidateQueries({ queryKey: ["trade", trade.ownerId] });
+      void queryClient.invalidateQueries({ queryKey: ["trade"] });
+      void queryClient.invalidateQueries({ queryKey: ["owner-trades"] });
+      void queryClient.invalidateQueries({ queryKey: ["specialist-pool"] });
       router.back();
     } catch (error) {
       analyticsEvents.tradeDeleteFailed({
@@ -319,52 +314,11 @@ export default function TradeProfileScreen() {
     );
   };
 
-  const handleMessage = async () => {
-    if (ownerId) {
-      analyticsEvents.tradeProfileMessageTapped({
-        owner_id: ownerId,
-        project_id: projectId ?? null,
-      });
-    }
-    if (!requireAuth()) return;
-    if (!uid || !ownerId || opening) return;
-    tapFeedback();
-    setOpening(true);
-    try {
-      const threadId = await startChat(uid, ownerId, projectId);
-      router.push(chatHref(threadId, trade?.name, avatarUrl));
-    } catch {
-      Alert.alert("Couldn't open the chat", "Please try again.");
-    } finally {
-      setOpening(false);
-    }
-  };
-
-  const handleCall = () => {
-    if (!trade || !canCall) return;
-    tapFeedback();
-    analyticsEvents.tradeProfileCallTapped({
-      owner_id: trade.ownerId,
-      trade_id: trade.tradeId,
-    });
-    void Linking.openURL(`tel:${phoneDigits(phone)}`).catch(() =>
-      Alert.alert("Can't place a call", phone),
-    );
-  };
-
-  const handleRequest = () => {
+  const toggleLike = () => {
     if (!trade) return;
-    analyticsEvents.tradeProfileRequestTapped({
-      owner_id: trade.ownerId,
-      trade_id: trade.tradeId,
-      specialty: trade.specialtyLabel,
-    });
-    if (!requireAuth()) return;
-    tapFeedback();
-    resetDraft();
-    setDraftSpecialty(trade.specialtyLabel || trade.name);
-    setTargetSpecialist(trade.ownerId, profile?.name || trade.name);
-    router.push(toHref("/homeowner-brief"));
+    const subject = specialistSubject(trade);
+    if (liked) swipe.unlike(subject, "tap");
+    else swipe.like(subject, "tap");
   };
 
   const openOwner = () => {
@@ -378,6 +332,16 @@ export default function TradeProfileScreen() {
     router.push(
       toHref(
         `/user/${encodeURIComponent(trade.ownerId)}?name=${encodeURIComponent(name)}`,
+      ),
+    );
+  };
+
+  const openOtherTrade = (other: Specialist) => {
+    tapFeedback();
+    const project = projectId ? `&projectId=${encodeURIComponent(projectId)}` : "";
+    router.push(
+      toHref(
+        `/trade/${encodeURIComponent(other.ownerId)}?tradeId=${encodeURIComponent(other.tradeId)}${project}`,
       ),
     );
   };
@@ -423,7 +387,7 @@ export default function TradeProfileScreen() {
     );
   };
 
-  if (isLoading || !trade) {
+  if (isLoading || !trade || !contactTarget) {
     return (
       <ScreenBackground>
         <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
@@ -444,17 +408,20 @@ export default function TradeProfileScreen() {
     );
   }
 
+  const details = trade.details;
   const place = trade.placeName ? shortPlace(trade.placeName) : "";
-  const price = priceLabel(trade);
-  const area = serviceAreaLabel(trade);
   const since = memberSince(trade.createdAt);
   const about = trade.about || trade.shortDescription;
-  const verified = trade.status === "active";
+  const tradeLabel = trade.specialtyLabel || "this trade";
   const subtitle = [trade.specialtyLabel, place].filter(Boolean).join(" · ");
+  const trust = trustItems(details);
+  const response = responseLine(details);
+  const accepting = details.availability?.acceptingWork !== false;
+  const roleLabel = owner ? businessRoleLabel(owner.business.role) : "";
   const tags = [
-    trade.professionalRole,
-    trade.businessName && trade.businessName !== trade.name
-      ? trade.businessName
+    roleLabel,
+    owner?.businessName && owner.businessName !== trade.name
+      ? owner.businessName
       : "",
   ].filter(Boolean);
 
@@ -466,7 +433,32 @@ export default function TradeProfileScreen() {
           <Text style={styles.headerTitle} numberOfLines={1}>
             {isOwner ? "My trade" : "Services"}
           </Text>
-          <View style={styles.headerSpacer} />
+          {!isOwner ? (
+            <View style={styles.headerActions}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={
+                  compare.isCompared(trade.tradeId) ? "Remove from compare" : "Add to compare"
+                }
+                accessibilityState={{ selected: compare.isCompared(trade.tradeId) }}
+                hitSlop={8}
+                onPress={() => compare.toggle(trade.tradeId)}
+                style={[
+                  styles.compareButton,
+                  compare.isCompared(trade.tradeId) && styles.compareButtonActive,
+                ]}
+              >
+                <ScaleIcon
+                  size={18}
+                  color={compare.isCompared(trade.tradeId) ? colors.onAccent : colors.textSecondary}
+                  strokeWidth={2}
+                />
+              </Pressable>
+              {uid ? <LikeButton liked={liked} onPress={toggleLike} /> : null}
+            </View>
+          ) : (
+            <View style={styles.headerSpacer} />
+          )}
         </View>
 
         <ScrollView
@@ -495,17 +487,23 @@ export default function TradeProfileScreen() {
             ) : null}
             <View style={styles.heroBody}>
               <View style={[styles.avatarRing, cover && styles.avatarLifted]}>
-                <Avatar name={trade.name} url={avatarUrl} size={76} />
+                <TierAvatar
+                  name={trade.name}
+                  url={avatarUrl}
+                  years={details.experienceYears}
+                  size={76}
+                />
               </View>
-              <View style={styles.titleRow}>
-                <Text style={styles.name} numberOfLines={2}>
-                  {trade.name}
-                </Text>
-              </View>
+              <Text style={styles.name} numberOfLines={2}>
+                {trade.name}
+              </Text>
               {subtitle ? (
-                <Text style={styles.subtitle} numberOfLines={2}>
-                  {subtitle}
-                </Text>
+                <View style={styles.subtitleRow}>
+                  <TradeGroupIcon groupId={details.groupId} size={15} color={colors.accent} />
+                  <Text style={styles.subtitle} numberOfLines={2}>
+                    {subtitle}
+                  </Text>
+                </View>
               ) : null}
               <View style={styles.badgeRow}>
                 {trade.rating > 0 ? (
@@ -515,7 +513,7 @@ export default function TradeProfileScreen() {
                       {trade.rating.toFixed(1)}
                     </Text>
                     <Text style={styles.ratingCount}>
-                      ({reviewTotal} {reviewTotal === 1 ? "review" : "reviews"})
+                      ({trade.reviews} {trade.reviews === 1 ? "review" : "reviews"})
                     </Text>
                   </View>
                 ) : (
@@ -523,13 +521,25 @@ export default function TradeProfileScreen() {
                     <Text style={styles.newPillText}>New on CTMASS</Text>
                   </View>
                 )}
-                {verified ? (
-                  <View style={styles.verifiedPill}>
-                    <CheckIcon size={13} color={colors.accent} strokeWidth={2.6} />
-                    <Text style={styles.verifiedText}>Verified</Text>
+                {details.experienceYears !== null ? (
+                  <View style={styles.tag}>
+                    <Text style={styles.tagText}>
+                      {details.experienceYears}{" "}
+                      {details.experienceYears === 1 ? "year" : "years"} in {tradeLabel}
+                    </Text>
                   </View>
                 ) : null}
               </View>
+              {trust.length > 0 ? (
+                <View style={styles.badgeRow}>
+                  {trust.map((item) => (
+                    <View key={item.key} style={styles.trustPill}>
+                      <ShieldCheckIcon size={13} color={colors.accent} />
+                      <Text style={styles.trustPillText}>{item.label}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
               {tags.length > 0 ? (
                 <View style={styles.tagRow}>
                   {tags.map((tag) => (
@@ -541,43 +551,113 @@ export default function TradeProfileScreen() {
                   ))}
                 </View>
               ) : null}
+              {!accepting ? (
+                <Text style={styles.unavailable}>
+                  Not accepting new projects right now
+                </Text>
+              ) : null}
             </View>
           </View>
 
+          {isOwner ? (
+            <TradeCompleteness trade={trade} portfolioCount={portfolioItems.length} />
+          ) : null}
+
           <View style={styles.highlights}>
             <Highlight
-              icon={<WalletIcon size={18} color={colors.accent} />}
-              label={priceTypeLabel(trade.priceType)}
-              value={price || "Ask for a quote"}
+              icon={<DollarIcon size={18} color={colors.accent} />}
+              label="Price"
+              value={priceLine(details.rates)}
             />
             <Highlight
               icon={<MapPinIcon size={18} color={colors.accent} />}
               label="Service area"
-              value={area || place || "Ask about your area"}
-              hint={area && place ? `from ${place}` : undefined}
+              value={details.radiusMiles ? `Within ${details.radiusMiles} mi` : place || "Ask about your area"}
+              hint={details.radiusMiles && place ? `from ${place}` : undefined}
+            />
+            <Highlight
+              icon={<ResponsesIcon size={18} color={colors.accent} />}
+              label="Response"
+              value={response || "Not yet established"}
+              hint={response ? "Set by contractor" : undefined}
             />
             <Highlight
               icon={<ToolsIcon size={18} color={colors.accent} />}
-              label="Completed jobs"
+              label="Jobs on CTMASS"
               value={trade.completedProjects > 0 ? String(trade.completedProjects) : "—"}
-            />
-            <Highlight
-              icon={<CalendarIcon size={18} color={colors.accent} />}
-              label="On CTMASS since"
-              value={since || "—"}
             />
           </View>
 
-          {linkedCertificates.length > 0 ? (
-            <View style={styles.trustRow}>
-              <ShieldCheckIcon size={18} color={colors.accent} />
-              <Text style={styles.trustText}>
-                {linkedCertificates.length === 1
-                  ? "1 license or certificate on file"
-                  : `${linkedCertificates.length} licenses and certificates on file`}
-              </Text>
-            </View>
+          <Section
+            icon={<ShieldCheckIcon size={18} color={colors.accent} />}
+            title="License & insurance"
+            action={
+              isOwner ? (
+                <Pressable accessibilityRole="button" hitSlop={8} onPress={openCredentials}>
+                  <Text style={styles.sectionLink}>Edit</Text>
+                </Pressable>
+              ) : null
+            }
+          >
+            <CredentialsPanel details={details} isOwner={isOwner} />
+            {linkedCertificates.length > 0 ? (
+              <View style={styles.list}>
+                {linkedCertificates.map((cert) => (
+                  <PressableScale
+                    key={cert.id}
+                    accessibilityLabel={cert.institution || cert.documentType}
+                    onPress={() => {
+                      const file = cert.files[0];
+                      if (file) openCertificate(file.url);
+                    }}
+                  >
+                    <View style={styles.certRow}>
+                      <View style={styles.certIcon}>
+                        <AwardIcon size={18} color={colors.accent} />
+                      </View>
+                      <View style={styles.certBody}>
+                        <Text style={styles.certTitle} numberOfLines={1}>
+                          {cert.institution || cert.documentType || "Document"}
+                        </Text>
+                        {cert.documentType && cert.institution ? (
+                          <Text style={styles.certSub} numberOfLines={1}>
+                            {cert.documentType}
+                            {cert.year ? ` · ${cert.year}` : ""}
+                          </Text>
+                        ) : null}
+                      </View>
+                    </View>
+                  </PressableScale>
+                ))}
+              </View>
+            ) : null}
+          </Section>
+
+          <Section icon={<DollarIcon size={18} color={colors.accent} />} title="Pricing">
+            <PricingPanel details={details} />
+          </Section>
+
+          {details.services.length > 0 ? (
+            <Section icon={<ToolsIcon size={18} color={colors.accent} />} title="Services">
+              <View style={styles.chipWrap}>
+                {details.services.map((service) => (
+                  <View key={service} style={styles.serviceChip}>
+                    <Text style={styles.serviceChipText}>{service}</Text>
+                  </View>
+                ))}
+              </View>
+            </Section>
           ) : null}
+
+          <Section icon={<AwardIcon size={18} color={colors.accent} />} title="Experience">
+            <ExperiencePanel
+              details={details}
+              tradeLabel={tradeLabel}
+              owner={owner}
+              completedJobs={trade.completedProjects}
+              since={since}
+            />
+          </Section>
 
           {about ? (
             <Section title="About">
@@ -656,7 +736,11 @@ export default function TradeProfileScreen() {
                   </>
                 )}
               </Section>
-            ) : null}
+            ) : (
+              <Section icon={<ImageIcon size={18} color={colors.accent} />} title="Portfolio">
+                <Text style={styles.emptyNote}>No projects added yet</Text>
+              </Section>
+            )}
           </View>
 
           {gallery.length > 0 ? (
@@ -685,60 +769,30 @@ export default function TradeProfileScreen() {
             </Section>
           ) : null}
 
-          {linkedCertificates.length > 0 ? (
-            <Section
-              icon={<AwardIcon size={18} color={colors.accent} />}
-              title="Licenses & certificates"
-            >
+          <Section
+            icon={<ReviewIcon size={18} color={colors.coin} />}
+            title={reviewTotal > 0 ? `Reviews (${reviewTotal})` : "Reviews"}
+            action={
+              reviewTotal > reviewItems.length ? (
+                <Pressable
+                  accessibilityRole="button"
+                  hitSlop={8}
+                  onPress={openOwner}
+                >
+                  <Text style={styles.sectionLink}>See all</Text>
+                </Pressable>
+              ) : null
+            }
+          >
+            {reviewItems.length === 0 ? (
+              <Text style={styles.emptyNote}>
+                {isOwner ? "No reviews yet" : "Be the first to leave a review after your project."}
+              </Text>
+            ) : (
               <View style={styles.list}>
-                {linkedCertificates.map((cert) => (
-                  <PressableScale
-                    key={cert.id}
-                    accessibilityLabel={cert.institution || cert.documentType}
-                    onPress={() => {
-                      const file = cert.files[0];
-                      if (file) openCertificate(file.url);
-                    }}
-                  >
-                    <View style={styles.certRow}>
-                      <View style={styles.certIcon}>
-                        <ShieldCheckIcon size={18} color={colors.accent} />
-                      </View>
-                      <View style={styles.certBody}>
-                        <Text style={styles.certTitle} numberOfLines={1}>
-                          {cert.institution || cert.documentType || "Document"}
-                        </Text>
-                        {cert.documentType && cert.institution ? (
-                          <Text style={styles.certSub} numberOfLines={1}>
-                            {cert.documentType}
-                            {cert.year ? ` · ${cert.year}` : ""}
-                          </Text>
-                        ) : null}
-                      </View>
-                    </View>
-                  </PressableScale>
-                ))}
-              </View>
-            </Section>
-          ) : null}
-
-          {reviewItems.length > 0 ? (
-            <Section
-              icon={<ReviewIcon size={18} color={colors.coin} />}
-              title={`Reviews (${reviewTotal})`}
-              action={
-                reviewTotal > reviewItems.length ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    hitSlop={8}
-                    onPress={openOwner}
-                  >
-                    <Text style={styles.sectionLink}>See all</Text>
-                  </Pressable>
-                ) : null
-              }
-            >
-              <View style={styles.list}>
+                {reviewScope === "all" ? (
+                  <Text style={styles.emptyNote}>Across all of this contractor&apos;s trades</Text>
+                ) : null}
                 {reviewItems.map((review) => {
                   const filled = Math.max(
                     0,
@@ -771,6 +825,58 @@ export default function TradeProfileScreen() {
                     </View>
                   );
                 })}
+              </View>
+            )}
+          </Section>
+
+          <Section icon={<CalendarIcon size={18} color={colors.accent} />} title="Availability & response">
+            <AvailabilityPanel details={details} owner={owner} />
+          </Section>
+
+          {hasWorkProcess(details) ? (
+            <Section icon={<ToolsIcon size={18} color={colors.accent} />} title="How they work">
+              <WorkProcessPanel details={details} />
+            </Section>
+          ) : null}
+
+          {owner && hasBusinessDetails(owner) ? (
+            <Section icon={<BuildingIcon size={18} color={colors.accent} />} title="Business">
+              <BusinessPanel owner={owner} />
+            </Section>
+          ) : null}
+
+          {otherTrades.length > 0 ? (
+            <Section icon={<TradeGroupIcon groupId={details.groupId} size={18} color={colors.accent} />} title="Other trades">
+              <View style={styles.list}>
+                {otherTrades.map((other) => (
+                  <PressableScale
+                    key={other.tradeId}
+                    accessibilityLabel={other.specialtyLabel || other.name}
+                    onPress={() => openOtherTrade(other)}
+                  >
+                    <View style={styles.certRow}>
+                      <View style={styles.certIcon}>
+                        <TradeGroupIcon groupId={other.details.groupId} size={18} color={colors.accent} />
+                      </View>
+                      <View style={styles.certBody}>
+                        <Text style={styles.certTitle} numberOfLines={1}>
+                          {other.specialtyLabel || other.name}
+                        </Text>
+                        <Text style={styles.certSub} numberOfLines={1}>
+                          {[
+                            other.details.experienceYears !== null
+                              ? `${other.details.experienceYears} yrs`
+                              : "",
+                            priceLine(other.details.rates),
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </Text>
+                      </View>
+                      <Text style={styles.ownerChevronText}>›</Text>
+                    </View>
+                  </PressableScale>
+                ))}
               </View>
             </Section>
           ) : null}
@@ -833,50 +939,38 @@ export default function TradeProfileScreen() {
             <>
               {projectId ? null : (
                 <PrimaryButton
-                  label="Request this service"
-                  onPress={handleRequest}
+                  label="Request quote"
+                  onPress={() => contact.requestQuote(contactTarget)}
                 />
               )}
               <View style={styles.contactRow}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={canCall ? "Call" : "Phone number not provided"}
-                  accessibilityState={{ disabled: !canCall }}
-                  disabled={!canCall}
-                  onPress={handleCall}
-                  style={({ pressed }) => [
-                    styles.contactButton,
-                    styles.callButton,
-                    !canCall && styles.contactDisabled,
-                    pressed && styles.contactPressed,
-                  ]}
-                >
-                  <PhoneIcon
-                    size={20}
-                    color={canCall ? "#FFFFFF" : colors.textMuted}
-                  />
-                  <Text
-                    style={[
-                      styles.contactText,
-                      styles.callText,
-                      !canCall && styles.contactTextDisabled,
+                {phone ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Call"
+                    onPress={() => contact.call(contactTarget, phone)}
+                    style={({ pressed }) => [
+                      styles.contactButton,
+                      styles.callButton,
+                      pressed && styles.contactPressed,
                     ]}
                   >
-                    {canCall ? "Call" : "No phone"}
-                  </Text>
-                </Pressable>
+                    <PhoneIcon size={20} color="#FFFFFF" />
+                    <Text style={[styles.contactText, styles.callText]}>Call</Text>
+                  </Pressable>
+                ) : null}
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Message"
-                  disabled={opening}
-                  onPress={() => void handleMessage()}
+                  disabled={contact.opening}
+                  onPress={() => void contact.message(contactTarget, projectId)}
                   style={({ pressed }) => [
                     styles.contactButton,
                     styles.messageButton,
                     pressed && styles.contactPressed,
                   ]}
                 >
-                  {opening ? (
+                  {contact.opening ? (
                     <ActivityIndicator color={colors.accent} />
                   ) : (
                     <TextMessageIcon size={20} color={colors.accent} />
@@ -917,6 +1011,22 @@ const useStyles = makeStyles((t) => ({
   },
   headerSpacer: {
     width: 40,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  compareButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: t.colors.surfaceStrong,
+  },
+  compareButtonActive: {
+    backgroundColor: t.colors.accent,
   },
   center: {
     flex: 1,
@@ -971,18 +1081,12 @@ const useStyles = makeStyles((t) => ({
     gap: Spacing.sm,
   },
   avatarRing: {
-    padding: 3,
-    borderRadius: 44,
-    borderWidth: 2.5,
-    borderColor: Brand.primary,
+    padding: 4,
+    borderRadius: 60,
     backgroundColor: t.isDark ? t.colors.surface : t.colors.backgroundElevated,
   },
   avatarLifted: {
     marginTop: -62,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
   },
   name: {
     color: t.colors.text,
@@ -991,12 +1095,58 @@ const useStyles = makeStyles((t) => ({
     letterSpacing: -0.4,
     textAlign: "center",
   },
+  subtitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    marginTop: -4,
+  },
   subtitle: {
+    flexShrink: 1,
     color: t.colors.textSecondary,
     fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
-    marginTop: -4,
+  },
+  trustPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 5,
+    borderRadius: Radius.pill,
+    backgroundColor: "rgba(22,179,100,0.12)",
+  },
+  trustPillText: {
+    color: t.colors.accent,
+    fontSize: 12.5,
+    fontWeight: "700",
+  },
+  unavailable: {
+    color: t.colors.coin,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  chipWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+  },
+  serviceChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 7,
+    borderRadius: Radius.pill,
+    backgroundColor: t.colors.surfaceStrong,
+  },
+  serviceChipText: {
+    color: t.colors.text,
+    fontSize: 13.5,
+    fontWeight: "600",
+  },
+  emptyNote: {
+    color: t.colors.textSecondary,
+    fontSize: 13.5,
   },
   badgeRow: {
     flexDirection: "row",
@@ -1033,23 +1183,6 @@ const useStyles = makeStyles((t) => ({
     color: t.colors.accent,
     fontSize: 12.5,
     fontWeight: "800",
-  },
-  verifiedPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 5,
-    borderRadius: Radius.pill,
-    borderWidth: 1,
-    borderColor: "rgba(22,179,100,0.4)",
-  },
-  verifiedText: {
-    color: t.colors.accent,
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
   },
   tagRow: {
     flexDirection: "row",
@@ -1107,21 +1240,6 @@ const useStyles = makeStyles((t) => ({
   highlightHint: {
     color: t.colors.textMuted,
     fontSize: 12,
-  },
-  trustRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-    marginTop: Spacing.md,
-    padding: Spacing.md,
-    borderRadius: Radius.md,
-    backgroundColor: "rgba(22,179,100,0.1)",
-  },
-  trustText: {
-    flex: 1,
-    color: t.colors.text,
-    fontSize: 13.5,
-    fontWeight: "700",
   },
   section: {
     marginTop: Spacing.xl,
@@ -1338,9 +1456,6 @@ const useStyles = makeStyles((t) => ({
     borderColor: "rgba(22,179,100,0.45)",
     backgroundColor: t.isDark ? "rgba(22,179,100,0.08)" : "rgba(255,255,255,0.75)",
   },
-  contactDisabled: {
-    backgroundColor: t.colors.surfaceStrong,
-  },
   contactPressed: {
     opacity: 0.75,
   },
@@ -1353,9 +1468,6 @@ const useStyles = makeStyles((t) => ({
   },
   messageText: {
     color: t.colors.accent,
-  },
-  contactTextDisabled: {
-    color: t.colors.textMuted,
   },
   deleteWrap: {
     alignItems: "center",

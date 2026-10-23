@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { type LayoutChangeEvent, StyleSheet, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -268,6 +268,24 @@ export function SwipeCard({
   const hasRight = Boolean(right);
   const hasLeft = Boolean(left);
   const prev = useRef({ key: itemKey, liked });
+  const [generation, setGeneration] = useState(0);
+  const [settlingKey, setSettlingKey] = useState<string | null>(null);
+  const collapsedKey = useSharedValue("");
+  if (settlingKey !== null && settlingKey !== itemKey) {
+    setSettlingKey(null);
+    setGeneration((value) => value + 1);
+  }
+
+  useEffect(() => {
+    if (settlingKey === null) return;
+    const timer = setTimeout(() => {
+      translateX.value = 0;
+      collapsing.value = 0;
+      setSettlingKey(null);
+      setGeneration((value) => value + 1);
+    }, 450);
+    return () => clearTimeout(timer);
+  }, [settlingKey, translateX, collapsing]);
 
   useEffect(() => {
     const was = prev.current;
@@ -311,6 +329,8 @@ export function SwipeCard({
   };
 
   const tick = () => tickFeedback();
+
+  const settle = () => setSettlingKey(itemKey);
 
   const dismissRight = Boolean(right?.dismiss);
   const dismissLeft = Boolean(left?.dismiss);
@@ -359,6 +379,7 @@ export function SwipeCard({
         (finished) => {
           if (!finished) return;
           height.value = measured.value;
+          collapsedKey.value = itemKey;
           collapsing.value = 1;
           height.value = withTiming(
             0,
@@ -366,8 +387,7 @@ export function SwipeCard({
             (done) => {
               if (!done) return;
               scheduleOnRN(fire, direction);
-              translateX.value = withDelay(450, withTiming(0, { duration: 0 }));
-              collapsing.value = withDelay(450, withTiming(0, { duration: 0 }));
+              scheduleOnRN(settle);
             },
           );
         },
@@ -375,7 +395,7 @@ export function SwipeCard({
     });
 
   const containerStyle = useAnimatedStyle(() =>
-    collapsing.value === 1
+    collapsing.value === 1 && collapsedKey.value === itemKey
       ? {
           height: height.value,
           opacity: measured.value > 0 ? height.value / measured.value : 0,
@@ -400,14 +420,18 @@ export function SwipeCard({
 
   const onLayout = (event: LayoutChangeEvent) => {
     const layout = event.nativeEvent.layout;
-    if (collapsing.value === 1) return;
+    if (collapsing.value === 1 && collapsedKey.value === itemKey) return;
     measured.value = layout.height;
     width.value = layout.width;
     threshold.value = Math.min(120, Math.max(80, layout.width * 0.28));
   };
 
   return (
-    <Animated.View style={[style, containerStyle]} onLayout={onLayout}>
+    <Animated.View
+      key={generation}
+      style={[style, containerStyle]}
+      onLayout={onLayout}
+    >
       {right ? (
         <Underlay
           side={right}

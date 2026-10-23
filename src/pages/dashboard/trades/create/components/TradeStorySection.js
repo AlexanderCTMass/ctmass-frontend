@@ -1,14 +1,12 @@
 import {
-    Box,
     Card,
     CardContent,
-    MenuItem,
     Stack,
     TextField,
     Typography
 } from '@mui/material';
 
-function TradeStorySection({ values, onChange, professionalRoleOptions = [], priceTypeOptions }) {
+function TradeStorySection({ values, onChange }) {
     return (
         <Card variant="outlined" sx={{ borderRadius: 4 }}>
             <CardContent sx={{ p: { xs: 3, md: 5 } }}>
@@ -16,51 +14,6 @@ function TradeStorySection({ values, onChange, professionalRoleOptions = [], pri
                     <Typography variant="h6" fontWeight={700}>
                         Why should customers hire you?
                     </Typography>
-
-                    <Box
-                        sx={{
-                            display: 'grid',
-                            gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr' },
-                            gap: 2
-                        }}
-                    >
-                        <TextField
-                            label="Company Professional Role"
-                            select
-                            fullWidth
-                            value={values.professionalRole}
-                            onChange={(event) => onChange('professionalRole', event.target.value)}
-                            placeholder="Select role"
-                            SelectProps={{ displayEmpty: true }}
-                        >
-                            {professionalRoleOptions.map((option) => (
-                                <MenuItem key={option.value} value={option.value}>
-                                    {option.label}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                        <TextField
-                            label="Price Type"
-                            select
-                            fullWidth
-                            value={values.priceType}
-                            onChange={(event) => onChange('priceType', event.target.value)}
-                            SelectProps={{ displayEmpty: false }}
-                        >
-                            {priceTypeOptions.map((option) => (
-                                <MenuItem key={option.value} value={option.value}>
-                                    {option.label}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                        <TextField
-                            label="Average Price"
-                            fullWidth
-                            value={values.price}
-                            onChange={(event) => onChange('price', event.target.value)}
-                            placeholder="$120"
-                        />
-                    </Box>
 
                     <TextField
                         label="Trade Title"

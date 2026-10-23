@@ -65,7 +65,7 @@ export const HomeSpecialistGallery = () => {
                 subtitle={
                     <Stack direction="row" spacing={0.75} alignItems="center" component="span">
                         <TrendingUpRoundedIcon sx={{ fontSize: 18, color: 'success.main' }} />
-                        <span>Verified experts in CT & MA</span>
+                        <span>Experienced pros in CT & MA</span>
                     </Stack>
                 }
                 action={

@@ -15,17 +15,19 @@ import {
   ChevronLeftIcon,
   HeartIcon,
   ResponsesIcon,
-  ReviewIcon,
 } from "@/components/icons";
 import { ProjectDetails } from "@/components/project/project-details";
+import { TradeCard } from "@/components/trade/trade-card";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { publicPhone, useTradeContact } from "@/hooks/use-trade-contact";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
+import { distanceMiles } from "@/lib/geo";
 import { tapFeedback } from "@/lib/haptics";
 import { chatHref, toHref } from "@/lib/navigation";
 import { cancelProject, type ProjectDetail, type Responder } from "@/lib/projects";
@@ -149,12 +151,27 @@ function LookingSpecialists({
   project: ProjectDetail;
   uid: string;
 }) {
-  const { colors } = useTheme();
   const styles = useStyles();
   const { data, isLoading } = useSpecialists(project.specialtyLabel, uid);
   const specialists = (data?.items ?? []).filter(
     (specialist) => !project.declinedBy.includes(specialist.ownerId),
   );
+
+  const contact = useTradeContact("card");
+  const origin = project.locationCenter;
+  const distanceTo = (specialist: Specialist): number | null =>
+    origin && specialist.lat != null && specialist.lng != null
+      ? distanceMiles(origin[1], origin[0], specialist.lat, specialist.lng)
+      : null;
+
+  const openTrade = (specialist: Specialist) => {
+    tapFeedback();
+    router.push(
+      toHref(
+        `/trade/${encodeURIComponent(specialist.ownerId)}?tradeId=${encodeURIComponent(specialist.tradeId)}&projectId=${encodeURIComponent(project.id)}`,
+      ),
+    );
+  };
 
   const message = async (specialist: Specialist) => {
     tapFeedback();
@@ -182,34 +199,22 @@ function LookingSpecialists({
           No specialists yet — we&apos;ll notify you when a match appears.
         </Text>
       ) : (
-        specialists.map((specialist) => (
-          <View key={specialist.tradeId} style={styles.row}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initials(specialist.name)}</Text>
-            </View>
-            <View style={styles.rowBody}>
-              <Text style={styles.rowName} numberOfLines={1}>
-                {specialist.name}
-              </Text>
-              <View style={styles.ratingRow}>
-                <ReviewIcon size={13} color={colors.coin} />
-                <Text style={styles.rowMeta}>
-                  {specialist.rating > 0
-                    ? `${specialist.rating.toFixed(1)} · ${specialist.reviews} reviews`
-                    : specialist.specialtyLabel || "New specialist"}
-                </Text>
-              </View>
-            </View>
-            <PressableScale
-              accessibilityLabel={`Message ${specialist.name}`}
-              onPress={() => void message(specialist)}
-            >
-              <View style={styles.messageChip}>
-                <Text style={styles.messageChipText}>Message</Text>
-              </View>
-            </PressableScale>
-          </View>
-        ))
+        <View style={styles.cards}>
+          {specialists.map((specialist) => {
+            const phone = publicPhone(specialist.owner);
+            return (
+              <TradeCard
+                key={specialist.tradeId}
+                specialist={specialist}
+                distance={distanceTo(specialist)}
+                phone={phone}
+                onPress={() => openTrade(specialist)}
+                onMessage={() => void message(specialist)}
+                onCall={() => contact.call(specialist, phone)}
+              />
+            );
+          })}
+        </View>
       )}
     </View>
   );
@@ -441,6 +446,9 @@ const useStyles = makeStyles((t) => ({
     fontSize: 13.5,
     fontWeight: "700",
   },
+  cards: {
+    gap: Spacing.md,
+  },
   section: {
     marginTop: Spacing.xl,
     gap: Spacing.md,
@@ -518,27 +526,8 @@ const useStyles = makeStyles((t) => ({
     color: t.colors.textSecondary,
     fontSize: 13,
   },
-  ratingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    marginTop: 3,
-  },
   chevron: {
     transform: [{ rotate: "180deg" }],
-  },
-  messageChip: {
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.pill,
-    backgroundColor: "rgba(22,179,100,0.16)",
-    borderWidth: 1,
-    borderColor: "rgba(22,179,100,0.4)",
-  },
-  messageChipText: {
-    color: t.colors.accent,
-    fontSize: 13,
-    fontWeight: "700",
   },
   cancelledCard: {
     marginTop: Spacing.xl,

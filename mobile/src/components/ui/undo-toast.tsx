@@ -2,10 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 
-import { ArchiveIcon } from "@/components/icons";
+import { ArchiveIcon, HeartIcon } from "@/components/icons";
 import { Radius, Spacing, makeStyles } from "@/constants/theme";
 
-type Toast = { id: number; message: string; onUndo: () => void };
+type ToastIcon = "archive" | "like";
+
+type Toast = { id: number; message: string; onUndo: () => void; icon: ToastIcon };
 
 const DURATION = 4500;
 
@@ -19,14 +21,17 @@ export function useUndoToast() {
     setToast(null);
   }, []);
 
-  const show = useCallback((message: string, onUndo: () => void) => {
-    if (timer.current) clearTimeout(timer.current);
-    setToast({ id: Date.now(), message, onUndo });
-    timer.current = setTimeout(() => {
-      timer.current = null;
-      setToast(null);
-    }, DURATION);
-  }, []);
+  const show = useCallback(
+    (message: string, onUndo: () => void, icon: ToastIcon = "archive") => {
+      if (timer.current) clearTimeout(timer.current);
+      setToast({ id: Date.now(), message, onUndo, icon });
+      timer.current = setTimeout(() => {
+        timer.current = null;
+        setToast(null);
+      }, DURATION);
+    },
+    [],
+  );
 
   useEffect(
     () => () => {
@@ -56,7 +61,11 @@ export function UndoToast({
           style={styles.toast}
           accessibilityLiveRegion="polite"
         >
-          <ArchiveIcon size={18} color="#FFFFFF" />
+          {toast.icon === "like" ? (
+            <HeartIcon size={18} color="#FFFFFF" filled />
+          ) : (
+            <ArchiveIcon size={18} color="#FFFFFF" />
+          )}
           <Text style={styles.message} numberOfLines={2}>
             {toast.message}
           </Text>

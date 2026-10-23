@@ -41,6 +41,7 @@ import useDictionary from "src/hooks/use-dictionaries";
 import { roles } from "src/roles";
 import { SpecialtiesView } from "src/pages/cabinet/profiles/my/specialties-view";
 import { SpecialistQRBusinessCard } from "src/sections/dashboard/specialist-profile/public/specialist-qr-business-card";
+import { SpecialistBusinessSection, SpecialistTradesSection } from "src/sections/dashboard/specialist-profile/public/specialist-trades-section";
 import ProfileCompletionProgress from "src/components/profile-completion-progress";
 import DonationBadge from "src/components/stripe/donation-badge";
 import HandshakeIcon from '@mui/icons-material/Handshake';
@@ -385,6 +386,8 @@ const ProfilePage = () => {
                                     <div>
                                         <SpecialtiesView isMyProfile={isMyProfile} profile={profile.profile}
                                             setProfile={setProfile} />
+                                        <SpecialistTradesSection profile={profile.profile} />
+                                        <SpecialistBusinessSection profile={profile.profile} />
                                         {/* <ServicesAndPrices
 profile={profile}
 setProfile={setProfile}

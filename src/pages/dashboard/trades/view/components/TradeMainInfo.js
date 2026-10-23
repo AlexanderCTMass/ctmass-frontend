@@ -3,7 +3,11 @@ import { alpha } from '@mui/material/styles';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import SellOutlinedIcon from '@mui/icons-material/SellOutlined';
+import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
+import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined';
 import { BRAND, FONT, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
+import { tierBadgeLabel } from 'src/constants/trade-options';
+import { priceLine, trustItems } from 'src/utils/trade-display';
 
 const STATUS_CONFIG = {
     active: { label: 'Active', color: BRAND.green },
@@ -50,9 +54,15 @@ function TradeMainInfo({ trade, onEdit }) {
         ? trade?.location?.address
         : 'Location not specified';
 
-    const priceText = trade?.pricing?.amount
-        ? `$${trade.pricing.amount}${trade?.pricing?.type ? `/${trade.pricing.type}` : '/hr'}`
-        : 'Price not specified';
+    const details = trade?.details;
+    const modernRates = details?.rates && !details.rates.legacy;
+    const priceText = modernRates
+        ? priceLine(details.rates)
+        : trade?.pricing?.amount
+            ? `${trade.pricing.amount}${trade?.pricing?.type ? `/${trade.pricing.type}` : '/hr'}`
+            : 'Price not specified';
+    const years = details?.experienceYears ?? null;
+    const trust = details ? trustItems(details) : [];
 
     const description = trade?.story?.about || trade?.story?.shortDescription || trade?.description || 'No description available';
     const status = STATUS_CONFIG[normalizeStatus(trade?.status)] || STATUS_CONFIG.on_review;
@@ -146,6 +156,15 @@ function TradeMainInfo({ trade, onEdit }) {
                     <Stack direction="row" flexWrap="wrap" sx={{ mt: 2.5, gap: 1 }}>
                         <Fact icon={<LocationOnOutlinedIcon />}>{locationText}</Fact>
                         <Fact icon={<SellOutlinedIcon />}>{priceText}</Fact>
+                        {years !== null ? (
+                            <Fact icon={<WorkspacePremiumOutlinedIcon />}>{tierBadgeLabel(years)}</Fact>
+                        ) : null}
+                        {details?.radiusMiles ? (
+                            <Fact icon={<LocationOnOutlinedIcon />}>{`Within ${details.radiusMiles} mi`}</Fact>
+                        ) : null}
+                        {trust.map((item) => (
+                            <Fact key={item.key} icon={<ShieldOutlinedIcon />}>{item.label}</Fact>
+                        ))}
                     </Stack>
 
                     <Typography sx={{ mt: 2.5, maxWidth: 720, fontSize: 15, lineHeight: 1.65, color: alpha('#FFFFFF', 0.78), overflowWrap: 'anywhere', whiteSpace: 'pre-line' }}>
