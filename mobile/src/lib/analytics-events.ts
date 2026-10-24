@@ -693,6 +693,9 @@ export const analyticsEvents = {
   contactSupportOpened: define<{ method: "mailto" | "gmail" | "fallback" }>(
     "contact_support_opened",
   ),
+  appReviewRequested: define<{ method: "native" | "store" | "unavailable" }>(
+    "app_review_requested",
+  ),
   logOutTapped: define("log_out_tapped"),
   logOutCancelled: define("log_out_cancelled"),
   loggedOut: define("logged_out"),

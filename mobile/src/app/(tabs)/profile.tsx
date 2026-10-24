@@ -17,8 +17,10 @@ import {
   BellIcon,
   CameraIcon,
   CodeBadgeIcon,
+  CoinIcon,
   MailIcon,
   QrCodeIcon,
+  ReviewIcon,
   ShareIcon,
   UserIcon,
   UsersIcon,
@@ -33,13 +35,21 @@ import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { AccountDeletionError, deleteMyAccount } from "@/lib/account";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
+import { requestAppReview } from "@/lib/app-review";
 import { signOutEverywhere } from "@/lib/auth";
 import { tapFeedback } from "@/lib/haptics";
+import {
+  coinsForRole,
+  isRuleEnabledForRole,
+  loyaltyRoleKey,
+} from "@/lib/loyalty-config";
 import { choosePhoto } from "@/lib/media";
 import { toHref } from "@/lib/navigation";
 import { profileShareUrl } from "@/lib/public-profile";
+import { formatCoins } from "@/lib/shop";
 import { uploadImage } from "@/lib/storage-upload";
 import { updateAvatar } from "@/lib/user-profile";
+import { useLoyaltyRules } from "@/queries/use-loyalty-config";
 import { useProfile } from "@/queries/use-profile";
 import { useAuthStore } from "@/store/use-auth-store";
 
@@ -64,8 +74,18 @@ export default function ProfileTab() {
   const [photoOpen, setPhotoOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
 
+  const { data: loyaltyRules } = useLoyaltyRules();
+
   const name = profile?.name || storeName || "Your profile";
   const avatar = profile?.avatar ?? null;
+  const inviteRule = loyaltyRules?.find(
+    (rule) => rule.actionType === "INVITE_USER_REGISTERS",
+  );
+  const roleKey = loyaltyRoleKey(role);
+  const inviteCoins =
+    inviteRule && isRuleEnabledForRole(inviteRule, roleKey)
+      ? coinsForRole(inviteRule, roleKey)
+      : 0;
 
   const removePhoto = async () => {
     if (!uid || uploading) return;
@@ -134,6 +154,24 @@ export default function ProfileTab() {
     tapFeedback();
     analyticsEvents.profileMenuItemTapped({ item });
     router.push(toHref(path));
+  };
+
+  const handleLeaveFeedback = async () => {
+    tapFeedback();
+    analyticsEvents.profileMenuItemTapped({ item: "leave_feedback" });
+    try {
+      const method = await requestAppReview();
+      analyticsEvents.appReviewRequested({ method });
+      if (method === "unavailable") {
+        Alert.alert(
+          "Leave feedback",
+          "Rating isn't available on this device. Please email us at support@ctmass.com",
+        );
+      }
+    } catch {
+      analyticsEvents.appReviewRequested({ method: "unavailable" });
+      Alert.alert("Couldn't open the store", "Please try again later.");
+    }
   };
 
   const handleContactSupport = async () => {
@@ -332,7 +370,8 @@ export default function ProfileTab() {
             <View style={styles.itemDivider} />
             <ProfileItem
               icon={<UserIcon size={20} color={colors.accent} />}
-              label="Invite a friend"
+              label="Invite friends & earn coins"
+              coins={inviteCoins}
               onPress={() => go("/invite", "invite_friend")}
             />
             <View style={styles.itemDivider} />
@@ -346,6 +385,12 @@ export default function ProfileTab() {
               icon={<CodeBadgeIcon size={20} color={colors.accent} />}
               label="Our IT Services"
               onPress={() => go("/it-services", "it_services")}
+            />
+            <View style={styles.itemDivider} />
+            <ProfileItem
+              icon={<ReviewIcon size={20} color={colors.accent} />}
+              label="Leave feedback"
+              onPress={() => void handleLeaveFeedback()}
             />
             <View style={styles.itemDivider} />
             <ProfileItem
@@ -403,6 +448,8 @@ export default function ProfileTab() {
           url={profileShareUrl(uid)}
           name={name}
           targetUid={uid}
+          avatar={avatar}
+          businessName={role === "WORKER" ? (profile?.businessName ?? "") : ""}
           subtitle="Scan to open my profile and connect"
           showReward
         />
@@ -414,10 +461,12 @@ export default function ProfileTab() {
 function ProfileItem({
   icon,
   label,
+  coins = 0,
   onPress,
 }: {
   icon: React.ReactNode;
   label: string;
+  coins?: number;
   onPress: () => void;
 }) {
   const { colors } = useTheme();
@@ -427,6 +476,12 @@ function ProfileItem({
       <View style={styles.item}>
         <View style={styles.itemIcon}>{icon}</View>
         <Text style={styles.itemLabel}>{label}</Text>
+        {coins > 0 ? (
+          <View style={styles.coinPill}>
+            <CoinIcon size={15} />
+            <Text style={styles.coinPillText}>+{formatCoins(coins)}</Text>
+          </View>
+        ) : null}
         <ArrowRightIcon size={18} color={colors.textMuted} />
       </View>
     </PressableScale>
@@ -577,6 +632,20 @@ const useStyles = makeStyles((t) => ({
     color: t.colors.text,
     fontSize: 15,
     fontWeight: "600",
+  },
+  coinPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
+    backgroundColor: "rgba(255,193,7,0.14)",
+  },
+  coinPillText: {
+    color: t.colors.coin,
+    fontSize: 13,
+    fontWeight: "800",
   },
   itemDivider: {
     height: 1,

@@ -9,12 +9,14 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.ctmass.app",
+      "appStoreUrl": "https://apps.apple.com/us/app/ctmass-homeowners-pros/id6806073536",
       "supportsTablet": false,
       "usesAppleSignIn": true,
       "associatedDomains": ["applinks:ctmass.com"]
     },
     "android": {
       "package": "com.ctmass.app",
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.ctmass.app",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png"

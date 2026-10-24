@@ -11,12 +11,18 @@ import { shareQrImage } from "@/lib/share";
 
 type QrRef = { toDataURL: (callback: (data: string) => void) => void };
 
+const QR_SIZE = 220;
+const LOGO_SIZE = 64;
+const logoMark = require("../../../assets/images/logo-mark.png") as number;
+
 export function ProfileQrModal({
   visible,
   onClose,
   url,
   name,
   targetUid,
+  avatar,
+  businessName,
   subtitle = "Scan to open this profile",
   showReward = false,
 }: {
@@ -25,6 +31,8 @@ export function ProfileQrModal({
   url: string;
   name: string;
   targetUid: string;
+  avatar?: string | null;
+  businessName?: string;
   subtitle?: string;
   showReward?: boolean;
 }) {
@@ -32,6 +40,8 @@ export function ProfileQrModal({
   const styles = useStyles();
   const [sharing, setSharing] = useState(false);
   const qrRef = useRef<QrRef | null>(null);
+  const company = businessName?.trim() ?? "";
+  const showCompany = company.length > 0 && company !== name.trim();
 
   const close = () => {
     analyticsEvents.profileQrClosed({ target_uid: targetUid });
@@ -74,14 +84,25 @@ export function ProfileQrModal({
           <View style={styles.qrWrap}>
             <QRCode
               value={url}
-              size={220}
+              size={QR_SIZE}
               color="#000000"
               backgroundColor="#FFFFFF"
+              ecl="H"
+              logo={avatar ? { uri: avatar } : logoMark}
+              logoSize={LOGO_SIZE}
+              logoMargin={4}
+              logoBorderRadius={LOGO_SIZE / 2}
+              logoBackgroundColor="#FFFFFF"
               getRef={(node: unknown) => {
                 qrRef.current = node as QrRef | null;
               }}
             />
           </View>
+          {showCompany ? (
+            <Text style={styles.company} numberOfLines={2}>
+              {company}
+            </Text>
+          ) : null}
           {showReward ? (
             <View style={styles.reward}>
               <CoinIcon size={20} />
@@ -151,6 +172,14 @@ const useStyles = makeStyles((t) => ({
     borderRadius: Radius.md,
     backgroundColor: "#FFFFFF",
     marginVertical: Spacing.base,
+  },
+  company: {
+    color: t.colors.text,
+    fontSize: 16,
+    fontWeight: "700",
+    textAlign: "center",
+    marginTop: -Spacing.sm,
+    marginBottom: Spacing.sm,
   },
   reward: {
     flexDirection: "row",

@@ -13,10 +13,14 @@ export function ProfileShareActions({
   url,
   name,
   targetUid,
+  avatar,
+  businessName,
 }: {
   url: string;
   name: string;
   targetUid: string;
+  avatar?: string | null;
+  businessName?: string;
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
@@ -76,6 +80,8 @@ export function ProfileShareActions({
         url={url}
         name={name}
         targetUid={targetUid}
+        avatar={avatar}
+        businessName={businessName}
         showReward
       />
     </View>

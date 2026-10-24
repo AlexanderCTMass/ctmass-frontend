@@ -88,6 +88,7 @@ export default function PublicProfileScreen() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const authReady = useAuthStore((state) => !state.isInitializing);
   const myName = useAuthStore((state) => state.user?.name ?? "");
+  const myRole = useAuthStore((state) => state.user?.role ?? null);
   const queryClient = useQueryClient();
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
@@ -753,6 +754,10 @@ export default function PublicProfileScreen() {
                 url={profileShareUrl(targetId)}
                 name={name}
                 targetUid={targetId}
+                avatar={profile?.avatar ?? null}
+                businessName={
+                  myRole === "WORKER" ? (profile?.businessName ?? "") : ""
+                }
               />
             ) : (
               <View style={styles.actions}>

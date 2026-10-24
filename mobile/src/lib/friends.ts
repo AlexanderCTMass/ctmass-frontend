@@ -112,6 +112,37 @@ export async function confirmFriendship(a: string, b: string): Promise<void> {
   );
 }
 
+export async function findEmailInviter(
+  uid: string,
+  email: string | null | undefined,
+): Promise<string | null> {
+  const normalized = (email ?? "").trim().toLowerCase();
+  if (!normalized) return null;
+  try {
+    const snapshot = await getDocs(
+      query(
+        collection(getDb(), INVITES),
+        where("email", "==", normalized),
+        where("status", "==", "pending"),
+      ),
+    );
+    let earliest: { inviterId: string; at: number } | null = null;
+    for (const docSnap of snapshot.docs) {
+      const data = asRecord(docSnap.data());
+      const inviterId =
+        typeof data.inviterId === "string" ? data.inviterId.trim() : "";
+      if (!inviterId || inviterId === uid) continue;
+      const createdAt = data.createdAt as { toMillis?: () => number } | null;
+      const at = createdAt?.toMillis?.() ?? Number.MAX_SAFE_INTEGER;
+      if (!earliest || at < earliest.at) earliest = { inviterId, at };
+    }
+    return earliest?.inviterId ?? null;
+  } catch (error) {
+    console.warn("findEmailInviter error", error);
+    return null;
+  }
+}
+
 export async function acceptPendingInvitesForUser(
   uid: string,
   email: string | null | undefined,

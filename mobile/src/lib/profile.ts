@@ -1,11 +1,13 @@
 import type { User } from "@react-native-firebase/auth";
 import {
   doc,
+  getDoc,
   runTransaction,
   serverTimestamp,
 } from "@react-native-firebase/firestore";
 
 import { getDb } from "@/lib/firebase";
+import { findEmailInviter } from "@/lib/friends";
 import type { Role } from "@/lib/roles";
 
 export type Profile = {
@@ -62,13 +64,22 @@ export async function ensureProfile(
     source: "mobile",
   };
 
+  let referral: { invitedBy: string; invitedVia: string } | null =
+    invitedBy && invitedBy !== user.uid
+      ? { invitedBy, invitedVia: "profile_link" }
+      : null;
+  if (!referral) {
+    const snapshot = await getDoc(ref);
+    if (snapshot.exists()) return { profile, created: false };
+    const emailInviter = await findEmailInviter(user.uid, user.email);
+    if (emailInviter) {
+      referral = { invitedBy: emailInviter, invitedVia: "email_invite" };
+    }
+  }
+
   const created = await runTransaction(db, async (tx) => {
     const existing = await tx.get(ref);
     if (existing.exists()) return false;
-    const referral =
-      invitedBy && invitedBy !== user.uid
-        ? { invitedBy, invitedVia: "profile_link" }
-        : {};
     tx.set(ref, {
       ...profile,
       ...referral,
