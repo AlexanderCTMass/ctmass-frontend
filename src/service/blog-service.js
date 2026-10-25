@@ -18,7 +18,49 @@ import {firestore, storage} from "src/libs/firebase";
 
 const BLOG_POSTS_COLLECTION = 'blogPosts';
 
+const getCommentTime = (value) => {
+  if (!value) return 0;
+  if (value instanceof Date) return value.getTime();
+  if (typeof value?.toDate === 'function') return value.toDate().getTime();
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+};
+
+const normalizeCommentsArray = (comments) => {
+  if (!comments) return [];
+  if (Array.isArray(comments)) return comments;
+  if (typeof comments === 'object') return Object.values(comments);
+  return [];
+};
+
 class BlogService {
+  processComment(comment, userId = null) {
+    if (!comment || typeof comment !== 'object') return null;
+
+    const likedBy = Array.isArray(comment.likedBy) ? comment.likedBy : [];
+
+    return {
+      ...comment,
+      id: comment.id || `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+      authorName: comment.authorName || 'Anonymous',
+      authorAvatar: comment.authorAvatar || '/assets/avatars/avatar-default.png',
+      content: comment.content || '',
+      createdAt: comment.createdAt?.toDate ? comment.createdAt.toDate() : comment.createdAt,
+      likedBy,
+      likes: comment.likes || 0,
+      isLiked: userId ? likedBy.includes(userId) : Boolean(comment.isLiked),
+      replies: (comment.replies ? normalizeCommentsArray(comment.replies) : [])
+        .map((reply) => this.processComment(reply, userId))
+        .filter(Boolean),
+    };
+  }
+
+  prepareComments(comments, userId = null) {
+    return normalizeCommentsArray(comments)
+      .map((comment) => this.processComment(comment, userId))
+      .filter(Boolean)
+      .sort((a, b) => getCommentTime(a.createdAt) - getCommentTime(b.createdAt));
+  }
   // Получение всех постов с сортировкой по дате
   async getPosts(maxItems = 10) {
     try {
@@ -46,7 +88,7 @@ class BlogService {
   }
 
   // Получение одного поста по ID
-  async getPostById(postId) {
+  async getPostById(postId, userId = null) {
     try {
       const postRef = doc(firestore, BLOG_POSTS_COLLECTION, postId);
       const postSnap = await getDoc(postRef);
@@ -55,23 +97,12 @@ class BlogService {
         const data = postSnap.data();
 
         // Рекурсивно обрабатываем комментарии
-        const processComments = (comments) => {
-          if (!comments) return [];
-          return comments.map(comment => ({
-            ...comment,
-            createdAt: comment.createdAt?.toDate ? comment.createdAt.toDate() : comment.createdAt,
-            likedBy: comment.likedBy || [],
-            likes: comment.likes || 0,
-            replies: comment.replies ? processComments(comment.replies) : []
-          }));
-        };
-
         return {
           id: postSnap.id,
           ...data,
           likedBy: Array.isArray(data.likedBy) ? data.likedBy : [],
           likes: typeof data.likes === 'number' ? data.likes : 0,
-          comments: processComments(data.comments || []),
+          comments: this.prepareComments(data.comments, userId),
           createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
           updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt,
           publishedAt: data.publishedAt?.toDate ? data.publishedAt.toDate() : data.publishedAt
@@ -236,7 +267,6 @@ class BlogService {
   async addComment(postId, comment, user) {
     try {
       const postRef = doc(firestore, BLOG_POSTS_COLLECTION, postId);
-      const post = await this.getPostById(postId);
 
       const newComment = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
@@ -247,13 +277,21 @@ class BlogService {
         createdAt: new Date(),
         likes: 0,
         isLiked: false,
-            likedBy: []
+        likedBy: [],
+        replies: []
       };
 
-      const comments = post.comments ? [...post.comments, newComment] : [newComment];
-      await updateDoc(postRef, { comments });
+      await runTransaction(firestore, async (transaction) => {
+        const postDoc = await transaction.get(postRef);
+        if (!postDoc.exists()) {
+          throw new Error('Post not found');
+        }
 
-      return newComment;
+        const existing = normalizeCommentsArray(postDoc.data().comments);
+        transaction.update(postRef, { comments: [...existing, newComment] });
+      });
+
+      return this.processComment(newComment, user.id);
     } catch (error) {
       console.error('Error adding comment:', error);
       throw error;
@@ -263,7 +301,6 @@ class BlogService {
   async addReply(postId, parentCommentId, replyText, user) {
     try {
       const postRef = doc(firestore, BLOG_POSTS_COLLECTION, postId);
-      const post = await this.getPostById(postId);
 
       const newReply = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
@@ -280,12 +317,12 @@ class BlogService {
 
       // Рекурсивная функция для добавления ответа
       const addReplyToComment = (comments, parentId, reply) => {
-        return comments.map(comment => {
+        return normalizeCommentsArray(comments).map((comment) => {
           if (comment.id === parentId) {
             // Нашли родительский комментарий
             return {
               ...comment,
-              replies: [...(comment.replies || []), reply]
+              replies: [...normalizeCommentsArray(comment.replies), reply]
             };
           } else if (comment.replies && comment.replies.length > 0) {
             // Ищем в ответах
@@ -298,11 +335,18 @@ class BlogService {
         });
       };
 
-      const updatedComments = addReplyToComment(post.comments || [], parentCommentId, newReply);
+      await runTransaction(firestore, async (transaction) => {
+        const postDoc = await transaction.get(postRef);
+        if (!postDoc.exists()) {
+          throw new Error('Post not found');
+        }
 
-      await updateDoc(postRef, { comments: updatedComments });
+        const existing = normalizeCommentsArray(postDoc.data().comments);
+        const updatedComments = addReplyToComment(existing, parentCommentId, newReply);
+        transaction.update(postRef, { comments: updatedComments });
+      });
 
-      return newReply;
+      return this.processComment(newReply, user.id);
     } catch (error) {
       console.error('Error adding reply:', error);
       throw error;
@@ -314,7 +358,6 @@ class BlogService {
       const postRef = doc(firestore, BLOG_POSTS_COLLECTION, postId);
       const post = await this.getPostById(postId);
 
-      debugger;
       let updatedItem = null;
 
       // Рекурсивная функция для поиска и обновления элемента
@@ -348,7 +391,7 @@ class BlogService {
         });
       };
 
-      const updatedComments = updateItemLikes(post.comments || []);
+      const updatedComments = updateItemLikes(normalizeCommentsArray(post.comments));
 
       if (!updatedItem) {
         throw new Error('Item not found');
@@ -364,9 +407,9 @@ class BlogService {
   }
 
   // Получение всех комментариев с древовидной структурой
-  async getCommentTree(postId) {
+  async getCommentTree(postId, userId = null) {
     try {
-      const post = await this.getPostById(postId);
+      const post = await this.getPostById(postId, userId);
       return post.comments || [];
     } catch (error) {
       console.error('Error getting comment tree:', error);
