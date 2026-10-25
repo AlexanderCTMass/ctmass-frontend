@@ -2,8 +2,8 @@ const APP_VARIANT = process.env.APP_VARIANT ?? "development";
 const IS_PRODUCTION = APP_VARIANT === "production";
 const IS_PREVIEW = APP_VARIANT === "preview";
 
-const IOS_VERSION = "1.2.1";
-const ANDROID_VERSION = "1.2.1";
+const IOS_VERSION = "1.2.2";
+const ANDROID_VERSION = "1.2.2";
 const appVersion =
   process.env.EAS_BUILD_PLATFORM === "android" ? ANDROID_VERSION : IOS_VERSION;
 
