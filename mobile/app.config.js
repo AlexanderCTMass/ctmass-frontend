@@ -39,6 +39,12 @@ const clarityProjectId = IS_PRODUCTION ? "ygatc0nqri" : "ygaubhpifs";
 
 const amplitudeApiKey = "8b7d29a4ff83204a256b894c280e30e5";
 
+const facebookAppId = "1527159562769011";
+const facebookClientToken = "0fd6d40132d6f001f72b328d7f3d5232";
+
+const trackingPermission =
+  "Allow tracking so CTMASS can measure which of its ads brought you to the app. We never sell your data.";
+
 module.exports = ({ config }) => ({
   ...config,
   version: appVersion,
@@ -49,6 +55,23 @@ module.exports = ({ config }) => ({
     [
       "@react-native-google-signin/google-signin",
       { iosUrlScheme: iosGoogleUrlScheme },
+    ],
+    [
+      "react-native-fbsdk-next",
+      {
+        appID: facebookAppId,
+        clientToken: facebookClientToken,
+        displayName: "CTMASS: Homeowners & Pros",
+        scheme: `fb${facebookAppId}`,
+        isAutoInitEnabled: IS_PRODUCTION,
+        autoLogAppEventsEnabled: IS_PRODUCTION,
+        advertiserIDCollectionEnabled: false,
+        iosUserTrackingPermission: trackingPermission,
+      },
+    ],
+    [
+      "expo-tracking-transparency",
+      { userTrackingPermission: trackingPermission },
     ],
   ],
   ios: {
@@ -72,5 +95,6 @@ module.exports = ({ config }) => ({
     webBaseUrl,
     clarityProjectId: process.env.CLARITY_PROJECT_ID ?? clarityProjectId,
     amplitudeApiKey: process.env.AMPLITUDE_API_KEY ?? amplitudeApiKey,
+    adTrackingEnabled: IS_PRODUCTION,
   },
 });

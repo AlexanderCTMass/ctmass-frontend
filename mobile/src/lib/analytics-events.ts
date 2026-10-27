@@ -57,6 +57,12 @@ export const analyticsEvents = {
   errorBoundaryRetryTapped: define<{ attempt: number }>(
     "error_boundary_retry_tapped",
   ),
+  trackingPermissionResolved: define<{ granted: boolean; prompted: boolean }>(
+    "tracking_permission_resolved",
+  ),
+  trackingPermissionFailed: define<{ error: string }>(
+    "tracking_permission_failed",
+  ),
   deepLinkOpened: define<{
     path: string;
     initial: boolean;

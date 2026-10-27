@@ -13,6 +13,7 @@ import { Brand, useTheme } from "@/constants/theme";
 import { initAnalytics, setAnalyticsUserProperties } from "@/lib/analytics";
 import { analyticsEvents } from "@/lib/analytics-events";
 import "@/lib/push-background";
+import { initAdTracking } from "@/lib/tracking";
 import { AnalyticsProvider } from "@/providers/analytics-provider";
 import { AuthProvider } from "@/providers/auth-provider";
 import { LoyaltyProvider } from "@/providers/loyalty-provider";
@@ -79,6 +80,7 @@ export default function RootLayout() {
       duration_ms: Date.now() - launchStartedAt,
       theme: resolveScheme(useThemeStore.getState()),
     });
+    void initAdTracking();
   }, [showLaunchSplash]);
 
   useEffect(() => {
