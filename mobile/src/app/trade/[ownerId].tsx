@@ -68,6 +68,7 @@ import { specialistSubject, useSwipeActions } from "@/hooks/use-swipe-actions";
 import { publicPhone, useTradeContact } from "@/hooks/use-trade-contact";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { reachableMethods } from "@/lib/business-profile";
+import { certificateSubtitle } from "@/lib/certificates";
 import { tapFeedback } from "@/lib/haptics";
 import { useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
@@ -182,6 +183,8 @@ export default function TradeProfileScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
   const { t, tx, locale } = useT();
+  const certNumber = (number: string) =>
+    t("trade.sections.licenseNumber", { number });
   const params = useLocalSearchParams<{
     ownerId?: string;
     projectId?: string;
@@ -692,10 +695,9 @@ export default function TradeProfileScreen() {
                             cert.documentType ||
                             t("tradePage.document")}
                         </Text>
-                        {cert.documentType && cert.institution ? (
-                          <Text style={styles.certSub} numberOfLines={1}>
-                            {cert.documentType}
-                            {cert.year ? ` · ${cert.year}` : ""}
+                        {certificateSubtitle(cert, tx, certNumber) ? (
+                          <Text style={styles.certSub} numberOfLines={2}>
+                            {certificateSubtitle(cert, tx, certNumber)}
                           </Text>
                         ) : null}
                       </View>

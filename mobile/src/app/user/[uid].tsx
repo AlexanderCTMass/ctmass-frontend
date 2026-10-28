@@ -57,7 +57,12 @@ import {
   fetchBlockState,
   unblockUser,
 } from "@/lib/moderation";
-import { type Certificate, fetchPublicCertificates } from "@/lib/certificates";
+import {
+  type Certificate,
+  certificateSubtitle,
+  certificateTitle,
+  fetchPublicCertificates,
+} from "@/lib/certificates";
 import { toHref } from "@/lib/navigation";
 import { fetchProfileBrief } from "@/lib/profiles";
 import {
@@ -84,6 +89,8 @@ export default function PublicProfileScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
   const { t, tx } = useT();
+  const certNumber = (number: string) =>
+    t("trade.sections.licenseNumber", { number });
   const params = useLocalSearchParams<{
     uid?: string;
     name?: string;
@@ -688,15 +695,14 @@ export default function PublicProfileScreen() {
                 <View style={styles.certList}>
                   {certificates.map((cert) => (
                     <View key={cert.id} style={styles.certCard}>
-                      {cert.institution || cert.documentType ? (
+                      {certificateTitle(cert, tx) ? (
                         <Text style={styles.certTitle} numberOfLines={2}>
-                          {cert.institution || tx(cert.documentType)}
+                          {certificateTitle(cert, tx)}
                         </Text>
                       ) : null}
-                      {cert.documentType && cert.institution ? (
-                        <Text style={styles.certSub} numberOfLines={1}>
-                          {tx(cert.documentType)}
-                          {cert.year ? ` · ${cert.year}` : ""}
+                      {certificateSubtitle(cert, tx, certNumber) ? (
+                        <Text style={styles.certSub} numberOfLines={2}>
+                          {certificateSubtitle(cert, tx, certNumber)}
                         </Text>
                       ) : null}
                       <View style={styles.certPhotos}>

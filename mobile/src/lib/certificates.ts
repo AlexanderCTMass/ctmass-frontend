@@ -268,3 +268,25 @@ export async function deleteCertificate(
   const db = getDb();
   await deleteDoc(doc(db, "profiles", uid, "education", certificateId));
 }
+
+export function certificateTitle(
+  cert: Certificate,
+  translate: (value: string) => string,
+): string {
+  return cert.institution || translate(cert.documentType);
+}
+
+export function certificateSubtitle(
+  cert: Certificate,
+  translate: (value: string) => string,
+  numberLabel: (number: string) => string,
+): string {
+  return [
+    cert.institution ? translate(cert.documentType) : "",
+    cert.specialty,
+    cert.year,
+    cert.documentNumber ? numberLabel(cert.documentNumber) : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
