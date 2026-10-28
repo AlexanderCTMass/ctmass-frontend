@@ -1,4 +1,9 @@
-import { doc, getDoc, updateDoc } from "@react-native-firebase/firestore";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+} from "@react-native-firebase/firestore";
 
 import type { ContactMethod } from "@/constants/project-request";
 import {
@@ -129,12 +134,18 @@ export async function saveTradeContact(
     (method) => method === "phone" || method === "sms",
   );
   const wantsEmail = input.methods.includes("email");
-  await updateDoc(ref, {
-    "business.languages": input.languages,
-    contactSettings: contactSettingsPayload(input.methods, {
-      showPhone: wantsPhone || current.showPhone,
-      showEmail: wantsEmail || current.showEmail,
-    }),
-    ...(wantsPhone && input.phone ? { phone: normalizeUSPhone(input.phone) } : {}),
-  });
+  await setDoc(
+    ref,
+    {
+      business: { languages: input.languages },
+      contactSettings: contactSettingsPayload(input.methods, {
+        showPhone: wantsPhone || current.showPhone,
+        showEmail: wantsEmail || current.showEmail,
+      }),
+      ...(wantsPhone && input.phone
+        ? { phone: normalizeUSPhone(input.phone) }
+        : {}),
+    },
+    { merge: true },
+  );
 }

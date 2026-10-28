@@ -62,13 +62,6 @@ export type CertificateInput = {
   files: CertificateFileInput[];
 };
 
-export const FULL_VISIBILITY: CertificateVisibility = {
-  institution: true,
-  specialty: true,
-  year: true,
-  number: true,
-};
-
 function str(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
 }

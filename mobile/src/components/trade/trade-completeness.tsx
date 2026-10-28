@@ -20,6 +20,7 @@ export function TradeCompleteness({
   const items = tradeCompleteness(trade.details, {
     about: trade.about,
     portfolioCount,
+    hasCertificates: trade.owner?.hasCertificates ?? false,
   });
   const done = items.filter((item) => item.done).length;
   const missing = items.filter((item) => !item.done);
