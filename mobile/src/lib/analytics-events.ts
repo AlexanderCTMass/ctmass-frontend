@@ -88,6 +88,9 @@ export const analyticsEvents = {
     from_theme: string;
     to_theme: string;
   }>("theme_changed"),
+  languageChanged: define<{ from_language: string; to_language: string }>(
+    "language_changed",
+  ),
 
   authScreenViewed: define<{
     role: Role;
@@ -132,9 +135,7 @@ export const analyticsEvents = {
     role: Role;
     action: "create_project" | "create_trade";
   }>("onboarding_primary_action_tapped"),
-  onboardingLogInTapped: define<{ role: Role }>(
-    "onboarding_log_in_tapped",
-  ),
+  onboardingLogInTapped: define<{ role: Role }>("onboarding_log_in_tapped"),
   onboardingExploreLaterTapped: define<{ role: Role }>(
     "onboarding_explore_later_tapped",
   ),
@@ -523,7 +524,9 @@ export const analyticsEvents = {
     source: TradeActionSource;
   }>("compare_toggled"),
   compareOpened: define<{ count: number }>("compare_opened"),
-  compareRemoved: define<{ trade_id: string; count: number }>("compare_removed"),
+  compareRemoved: define<{ trade_id: string; count: number }>(
+    "compare_removed",
+  ),
   compareSwiped: define<{
     trade_id: string;
     action: "keep" | "drop";
@@ -537,7 +540,9 @@ export const analyticsEvents = {
   compareModeChanged: define<{ mode: "cards" | "side_by_side"; count: number }>(
     "compare_mode_changed",
   ),
-  compareSwapped: define<{ trade_id: string; count: number }>("compare_swapped"),
+  compareSwapped: define<{ trade_id: string; count: number }>(
+    "compare_swapped",
+  ),
   compareCleared: define<{ count: number }>("compare_cleared"),
   compareDifferencesToggled: define<{ enabled: boolean; count: number }>(
     "compare_differences_toggled",
@@ -552,9 +557,10 @@ export const analyticsEvents = {
     license_state: string | null;
     has_documents: boolean;
   }>("trade_credentials_saved"),
-  tradeCredentialsSaveFailed: define<{ trade_id: string; error_message: string }>(
-    "trade_credentials_save_failed",
-  ),
+  tradeCredentialsSaveFailed: define<{
+    trade_id: string;
+    error_message: string;
+  }>("trade_credentials_save_failed"),
   tradeDeleteFailed: define<{ trade_id: string; error_message: string }>(
     "trade_delete_failed",
   ),

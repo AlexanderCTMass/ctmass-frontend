@@ -1,23 +1,28 @@
-export function timeAgo(date: Date | null | undefined): string {
+import { type Translate, dateLocale } from "@/lib/i18n";
+
+export function timeAgo(date: Date | null | undefined, t: Translate): string {
   if (!date) return "";
   const diffMs = Date.now() - date.getTime();
   const minutes = Math.floor(diffMs / 60_000);
 
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 1) return t("time.justNow");
+  if (minutes < 60) return t("time.minutesAgo", { count: minutes });
 
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+  if (hours < 24) return t("time.hoursAgo", { count: hours });
 
   const days = Math.floor(hours / 24);
-  if (days <= 6) return `${days} ${days === 1 ? "day" : "days"} ago`;
+  if (days <= 6) return t("time.daysAgo", { count: days });
 
-  return "more than a week ago";
+  return t("time.overWeek");
 }
 
-export function timeShort(date: Date | null | undefined): string {
+export function timeShort(
+  date: Date | null | undefined,
+  locale: string = dateLocale(),
+): string {
   if (!date) return "";
-  return date.toLocaleTimeString(undefined, {
+  return date.toLocaleTimeString(locale, {
     hour: "numeric",
     minute: "2-digit",
   });

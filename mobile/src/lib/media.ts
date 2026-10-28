@@ -1,5 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
+import i18n from "@/lib/i18n";
 
 export async function pickImage(): Promise<string | null> {
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -32,23 +33,23 @@ export async function takePhoto(): Promise<string | null> {
 export function choosePhoto(): Promise<string | null> {
   return new Promise((resolve) => {
     Alert.alert(
-      "Add a photo",
+      i18n.t("media.addPhoto"),
       undefined,
       [
         {
-          text: "Take photo",
+          text: i18n.t("media.takePhoto"),
           onPress: () => {
             void takePhoto().then(resolve);
           },
         },
         {
-          text: "Choose from library",
+          text: i18n.t("media.chooseLibrary"),
           onPress: () => {
             void pickImage().then(resolve);
           },
         },
         {
-          text: "Cancel",
+          text: i18n.t("common.cancel"),
           style: "cancel",
           onPress: () => resolve(null),
         },
@@ -97,23 +98,23 @@ export async function recordVideo(): Promise<PickedVideo | null> {
 export function chooseVideo(): Promise<PickedVideo | null> {
   return new Promise((resolve) => {
     Alert.alert(
-      "Add a video",
-      "Videos can be up to 90 seconds.",
+      i18n.t("media.addVideo"),
+      i18n.t("media.videoLimit", { count: MAX_VIDEO_SECONDS }),
       [
         {
-          text: "Record video",
+          text: i18n.t("media.recordVideo"),
           onPress: () => {
             void recordVideo().then(resolve);
           },
         },
         {
-          text: "Choose from library",
+          text: i18n.t("media.chooseLibrary"),
           onPress: () => {
             void pickVideo().then(resolve);
           },
         },
         {
-          text: "Cancel",
+          text: i18n.t("common.cancel"),
           style: "cancel",
           onPress: () => resolve(null),
         },

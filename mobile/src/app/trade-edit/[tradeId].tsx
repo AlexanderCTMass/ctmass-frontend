@@ -37,13 +37,20 @@ import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
 import { errorFeedback, successFeedback, tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
 import { type TradeProfile, updateTrade } from "@/lib/trades";
 import { useTradeById } from "@/queries/use-trade";
 
 const schema = tradeFormSchema(false);
 
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
+function Group({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   const styles = useStyles();
   return (
     <View style={styles.group}>
@@ -56,6 +63,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 function EditForm({ trade }: { trade: TradeProfile }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const queryClient = useQueryClient();
   const {
     control,
@@ -73,7 +81,14 @@ function EditForm({ trade }: { trade: TradeProfile }) {
   const sectionProps = { control, errors, setValue };
 
   const onSubmit = async (values: TradeFormValues) => {
-    if (findObjectionable(values.title, values.about, values.customSpecialty, ...values.services)) {
+    if (
+      findObjectionable(
+        values.title,
+        values.about,
+        values.customSpecialty,
+        ...values.services,
+      )
+    ) {
       analyticsEvents.contentFilterBlocked({
         screen: "trade_edit",
         fields: [
@@ -84,7 +99,7 @@ function EditForm({ trade }: { trade: TradeProfile }) {
         ].filter((field): field is string => field !== null),
       });
       errorFeedback();
-      setFilterError("Please remove inappropriate language from your trade details.");
+      setFilterError(t("tradeSetup.filterError"));
       return;
     }
     setFilterError(null);
@@ -120,7 +135,7 @@ function EditForm({ trade }: { trade: TradeProfile }) {
       });
       errorFeedback();
       setSaving(false);
-      setFilterError("Could not save your changes. Please try again.");
+      setFilterError(t("tradeEdit.saveFailed"));
     }
   };
 
@@ -132,7 +147,7 @@ function EditForm({ trade }: { trade: TradeProfile }) {
     >
       <View style={styles.header}>
         <BackButton onPress={() => router.back()} />
-        <Text style={styles.headerTitle}>Edit trade</Text>
+        <Text style={styles.headerTitle}>{t("tradePage.editTrade")}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -144,40 +159,44 @@ function EditForm({ trade }: { trade: TradeProfile }) {
       >
         <TradeCompleteness trade={trade} />
         <PressableScale
-          accessibilityLabel="License and insurance"
+          accessibilityLabel={t("tradePage.licenseInsurance")}
           onPress={() => {
             tapFeedback();
             router.push(
-              toHref(`/trade-credentials/${encodeURIComponent(trade.tradeId)}?source=trade_edit`),
+              toHref(
+                `/trade-credentials/${encodeURIComponent(trade.tradeId)}?source=trade_edit`,
+              ),
             );
           }}
         >
           <View style={styles.linkRow}>
             <ShieldCheckIcon size={20} color={colors.accent} />
             <View style={styles.linkBody}>
-              <Text style={styles.linkTitle}>License & insurance</Text>
+              <Text style={styles.linkTitle}>
+                {t("tradePage.licenseInsurance")}
+              </Text>
               <Text style={styles.linkHint}>
                 {trade.details.license || trade.details.insurance
-                  ? "Provided — tap to update"
-                  : "Not provided — add to build trust"}
+                  ? t("tradeEdit.credProvided")
+                  : t("tradeEdit.credMissing")}
               </Text>
             </View>
             <Text style={styles.linkChevron}>›</Text>
           </View>
         </PressableScale>
-        <Group title="Trade">
+        <Group title={t("tradeEdit.groups.trade")}>
           <IdentitySection {...sectionProps} />
         </Group>
-        <Group title="Services & experience">
+        <Group title={t("tradeSetup.steps.services.title")}>
           <ServicesSection {...sectionProps} />
         </Group>
-        <Group title="Pricing">
+        <Group title={t("trade.sections.pricing")}>
           <PricingSection {...sectionProps} />
         </Group>
-        <Group title="Service area & availability">
+        <Group title={t("tradeEdit.groups.area")}>
           <AreaAvailabilitySection {...sectionProps} />
         </Group>
-        <Group title="Details">
+        <Group title={t("videoStory.details")}>
           <DetailsSection {...sectionProps} />
         </Group>
       </ScrollView>
@@ -187,7 +206,7 @@ function EditForm({ trade }: { trade: TradeProfile }) {
           <Text style={styles.filterError}>{filterError}</Text>
         ) : null}
         <PrimaryButton
-          label={saving ? "Saving…" : "Save changes"}
+          label={saving ? t("setup.saving") : t("portfolio.saveChanges")}
           onPress={() => void handleSubmit(onSubmit)()}
           disabled={!isDirty || saving}
           loading={saving}
@@ -200,6 +219,7 @@ function EditForm({ trade }: { trade: TradeProfile }) {
 export default function TradeEditScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const params = useLocalSearchParams<{ tradeId?: string }>();
   const tradeId =
     typeof params.tradeId === "string" ? params.tradeId : undefined;
@@ -219,7 +239,7 @@ export default function TradeEditScreen() {
               <View style={styles.headerSpacer} />
             </View>
             <View style={styles.center}>
-              <Text style={styles.missing}>This trade isn&apos;t available.</Text>
+              <Text style={styles.missing}>{t("tradeEdit.unavailable")}</Text>
             </View>
           </>
         ) : (

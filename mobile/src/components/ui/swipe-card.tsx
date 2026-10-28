@@ -18,6 +18,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import { ArchiveIcon, HeartIcon, RestoreIcon } from "@/components/icons";
 import { Brand, Radius, makeStyles, useTheme } from "@/constants/theme";
 import { tickFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 
 export type SwipeSide = {
   label: string;
@@ -30,6 +31,7 @@ export type SwipeSide = {
 
 export function useSwipeSides() {
   const { isDark } = useTheme();
+  const { t } = useT();
   return {
     like: (
       liked: boolean,
@@ -38,7 +40,7 @@ export function useSwipeSides() {
     ): SwipeSide =>
       liked
         ? {
-            label: "Unlike",
+            label: t("ui.unlike"),
             icon: <HeartIcon size={24} color="#FFFFFF" strokeWidth={2.2} />,
             background: isDark ? "#2A3646" : "#5E7166",
             tint: "#FFFFFF",
@@ -46,14 +48,14 @@ export function useSwipeSides() {
             onTrigger,
           }
         : {
-            label: "Like",
+            label: t("ui.like"),
             icon: <HeartIcon size={24} color="#FFFFFF" filled />,
             background: Brand.primary,
             tint: "#FFFFFF",
             onTrigger,
           },
     archive: (onTrigger: () => void): SwipeSide => ({
-      label: "Archive",
+      label: t("home.archive"),
       icon: <ArchiveIcon size={24} color="#FFFFFF" strokeWidth={2} />,
       background: isDark ? "#2A3646" : "#3F5448",
       tint: "#FFFFFF",
@@ -61,7 +63,7 @@ export function useSwipeSides() {
       onTrigger,
     }),
     restore: (onTrigger: () => void): SwipeSide => ({
-      label: "Restore",
+      label: t("ui.restore"),
       icon: <RestoreIcon size={24} color="#FFFFFF" strokeWidth={2} />,
       background: Brand.primaryDark,
       tint: "#FFFFFF",

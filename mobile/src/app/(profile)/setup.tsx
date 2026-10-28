@@ -50,6 +50,7 @@ import {
 import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { deleteCertificate } from "@/lib/certificates";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import type { GeoPlace } from "@/lib/mapbox";
 import { toHref } from "@/lib/navigation";
 import { isValidUSPhone } from "@/lib/shop-form";
@@ -61,46 +62,52 @@ import { useProfile } from "@/queries/use-profile";
 import { useUserVideos, userVideosKey } from "@/queries/use-videos";
 import { useAuthStore } from "@/store/use-auth-store";
 
-const schema = businessFieldsSchema.extend({
-  name: z.string().trim().min(1, "Name is required"),
-  businessName: z.string().optional(),
-  professionalRole: z.string().optional(),
-  shortBio: z.string().optional(),
-  email: z
-    .string()
-    .trim()
-    .min(1, "Email is required")
-    .email("Enter a valid email address"),
-  phone: z
-    .string()
-    .optional()
-    .refine(
-      (value) => !value?.trim() || isValidUSPhone(value),
-      "Enter a valid US phone number (+1 and 10 digits)",
-    ),
-  location: z.custom<GeoPlace | null>().nullable().optional(),
-}).superRefine((values, ctx) => {
-  if (values.preferredContact === "phone" && (!values.phone?.trim() || !values.showPhone)) {
-    ctx.addIssue({
-      code: "custom",
-      path: ["preferredContact"],
-      message: "Add and show your phone to make it preferred.",
-    });
-  }
-  if (values.preferredContact === "email" && !values.showEmail) {
-    ctx.addIssue({
-      code: "custom",
-      path: ["preferredContact"],
-      message: "Show your email to make it preferred.",
-    });
-  }
-});
+const schema = businessFieldsSchema
+  .extend({
+    name: z.string().trim().min(1, "setup.validation.name"),
+    businessName: z.string().optional(),
+    professionalRole: z.string().optional(),
+    shortBio: z.string().optional(),
+    email: z
+      .string()
+      .trim()
+      .min(1, "shop.validation.emailRequired")
+      .email("shop.validation.emailInvalid"),
+    phone: z
+      .string()
+      .optional()
+      .refine(
+        (value) => !value?.trim() || isValidUSPhone(value),
+        "validation.usPhone",
+      ),
+    location: z.custom<GeoPlace | null>().nullable().optional(),
+  })
+  .superRefine((values, ctx) => {
+    if (
+      values.preferredContact === "phone" &&
+      (!values.phone?.trim() || !values.showPhone)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["preferredContact"],
+        message: "setup.validation.phonePreferred",
+      });
+    }
+    if (values.preferredContact === "email" && !values.showEmail) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["preferredContact"],
+        message: "setup.validation.emailPreferred",
+      });
+    }
+  });
 
 type FormValues = z.infer<typeof schema>;
 
 export default function SetupProfileScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const uid = useAuthStore((state) => state.user?.uid);
   const role = useAuthStore((state) => state.user?.role ?? null);
   const isContractor = role === "WORKER";
@@ -202,7 +209,7 @@ export default function SetupProfileScreen() {
         error_message: errorMessage(error),
       });
       setSaving(false);
-      setTopError("Couldn't save your profile. Please try again.");
+      setTopError(t("setup.saveFailed"));
     }
   };
 
@@ -213,9 +220,9 @@ export default function SetupProfileScreen() {
     if (!uid) return;
     tapFeedback();
     analyticsEvents.certificateDeleteTapped({ certificate_id: certificateId });
-    Alert.alert("Delete certificate?", "This removes it from your profile.", [
+    Alert.alert(t("setup.deleteCertTitle"), t("setup.removesFromProfile"), [
       {
-        text: "Cancel",
+        text: t("common.cancel"),
         style: "cancel",
         onPress: () =>
           analyticsEvents.certificateDeleteCancelled({
@@ -223,7 +230,7 @@ export default function SetupProfileScreen() {
           }),
       },
       {
-        text: "Delete",
+        text: t("common.delete"),
         style: "destructive",
         onPress: () => {
           void deleteCertificate(uid, certificateId, fileUrls)
@@ -239,7 +246,10 @@ export default function SetupProfileScreen() {
               analyticsEvents.certificateDeleteFailed({
                 certificate_id: certificateId,
               });
-              Alert.alert("Couldn't delete", "Please try again.");
+              Alert.alert(
+                t("tradePage.deleteFailed"),
+                t("common.pleaseTryAgain"),
+              );
             });
         },
       },
@@ -250,10 +260,10 @@ export default function SetupProfileScreen() {
     if (!uid) return;
     tapFeedback();
     analyticsEvents.videoDeleteTapped({ video_id: video.id });
-    Alert.alert("Delete video story?", "This removes it from your profile.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("setup.deleteVideoTitle"), t("setup.removesFromProfile"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("common.delete"),
         style: "destructive",
         onPress: () => {
           void deleteVideo(video)
@@ -265,7 +275,10 @@ export default function SetupProfileScreen() {
             })
             .catch(() => {
               analyticsEvents.videoDeleteFailed({ video_id: video.id });
-              Alert.alert("Couldn't delete", "Please try again.");
+              Alert.alert(
+                t("tradePage.deleteFailed"),
+                t("common.pleaseTryAgain"),
+              );
             });
         },
       },
@@ -277,7 +290,7 @@ export default function SetupProfileScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>Setup your profile</Text>
+          <Text style={styles.headerTitle}>{t("profile.tab.setupTitle")}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -299,134 +312,137 @@ export default function SetupProfileScreen() {
             ) : null}
 
             <Text style={styles.intro}>
-              This information is used across CTMASS — your chats, orders, and
               {isContractor
-                ? " your public specialist profile."
-                : " your requests."}
+                ? t("setup.introContractor")
+                : t("setup.introHomeowner")}
             </Text>
 
             <View style={styles.formSection}>
               <View style={styles.certHeader}>
                 <UserIcon size={18} color={colors.accent} />
-                <Text style={styles.certHeaderText}>Basic information</Text>
+                <Text style={styles.certHeaderText}>
+                  {t("setup.basicInfo")}
+                </Text>
               </View>
 
-            <Controller
-              control={control}
-              name="name"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextField
-                  label="Full name"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.name?.message}
-                  placeholder="Your name"
-                  autoCapitalize="words"
-                />
-              )}
-            />
+              <Controller
+                control={control}
+                name="name"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextField
+                    label={t("setup.fullName")}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={errors.name?.message}
+                    placeholder={t("setup.namePlaceholder")}
+                    autoCapitalize="words"
+                  />
+                )}
+              />
 
-            {isContractor ? (
-              <>
-                <Controller
-                  control={control}
-                  name="businessName"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextField
-                      label="Business / Company name"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={errors.businessName?.message}
-                      placeholder="e.g. Bay State Renovations"
-                      autoCapitalize="words"
-                    />
-                  )}
-                />
-                <Controller
-                  control={control}
-                  name="professionalRole"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextField
-                      label="Professional title"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={errors.professionalRole?.message}
-                      placeholder="e.g. Licensed Electrician"
-                      autoCapitalize="words"
-                    />
-                  )}
-                />
-                <Controller
-                  control={control}
-                  name="shortBio"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextField
-                      label="About / Bio"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={errors.shortBio?.message}
-                      placeholder="Tell homeowners about your experience and specialties."
-                      multiline
-                      autoCapitalize="sentences"
-                    />
-                  )}
-                />
-              </>
-            ) : null}
+              {isContractor ? (
+                <>
+                  <Controller
+                    control={control}
+                    name="businessName"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextField
+                        label={t("setup.businessName")}
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={errors.businessName?.message}
+                        placeholder={t("setup.businessPlaceholder")}
+                        autoCapitalize="words"
+                      />
+                    )}
+                  />
+                  <Controller
+                    control={control}
+                    name="professionalRole"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextField
+                        label={t("setup.professionalTitle")}
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={errors.professionalRole?.message}
+                        placeholder={t("setup.titlePlaceholder")}
+                        autoCapitalize="words"
+                      />
+                    )}
+                  />
+                  <Controller
+                    control={control}
+                    name="shortBio"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextField
+                        label={t("setup.bio")}
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={errors.shortBio?.message}
+                        placeholder={t("setup.bioPlaceholder")}
+                        multiline
+                        autoCapitalize="sentences"
+                      />
+                    )}
+                  />
+                </>
+              ) : null}
             </View>
 
             <View style={styles.formSection}>
               <View style={styles.certHeader}>
                 <MailIcon size={18} color={colors.accent} />
-                <Text style={styles.certHeaderText}>Contact</Text>
+                <Text style={styles.certHeaderText}>{t("setup.contact")}</Text>
               </View>
 
-            <Controller
-              control={control}
-              name="email"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextField
-                  label="Email"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.email?.message}
-                  placeholder="you@email.com"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              )}
-            />
-            <Controller
-              control={control}
-              name="phone"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextField
-                  label="Phone"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.phone?.message}
-                  placeholder="+1 (555) 123-4567"
-                  keyboardType="phone-pad"
-                  hint="US number: +1 followed by 10 digits"
-                />
-              )}
-            />
-            {isContractor ? (
-              <ContactVisibilityFields control={control} errors={errors} />
-            ) : null}
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextField
+                    label={t("compare.values.email")}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={errors.email?.message}
+                    placeholder="you@email.com"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                )}
+              />
+              <Controller
+                control={control}
+                name="phone"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextField
+                    label={t("compare.values.phone")}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={errors.phone?.message}
+                    placeholder="+1 (555) 123-4567"
+                    keyboardType="phone-pad"
+                    hint={t("setup.phoneHint")}
+                  />
+                )}
+              />
+              {isContractor ? (
+                <ContactVisibilityFields control={control} errors={errors} />
+              ) : null}
             </View>
 
             {isContractor ? (
               <View style={styles.formSection}>
                 <View style={styles.certHeader}>
                   <BuildingIcon size={18} color={colors.accent} />
-                  <Text style={styles.certHeaderText}>Business details</Text>
+                  <Text style={styles.certHeaderText}>
+                    {t("setup.businessDetails")}
+                  </Text>
                 </View>
                 <BusinessDetailsFields control={control} errors={errors} />
               </View>
@@ -435,26 +451,28 @@ export default function SetupProfileScreen() {
             <View style={styles.formSection}>
               <View style={styles.certHeader}>
                 <MapPinIcon size={18} color={colors.accent} />
-                <Text style={styles.certHeaderText}>Location</Text>
+                <Text style={styles.certHeaderText}>{t("setup.location")}</Text>
               </View>
 
-            <Controller
-              control={control}
-              name="location"
-              render={({ field: { onChange, value } }) => (
-                <LocationPicker
-                  value={value ?? null}
-                  onChange={onChange}
-                  analyticsContext="profile_setup"
-                />
-              )}
-            />
+              <Controller
+                control={control}
+                name="location"
+                render={({ field: { onChange, value } }) => (
+                  <LocationPicker
+                    value={value ?? null}
+                    onChange={onChange}
+                    analyticsContext="profile_setup"
+                  />
+                )}
+              />
             </View>
 
             <View style={styles.certSection}>
               <View style={styles.certHeader}>
                 <UsersIcon size={18} color={colors.accent} />
-                <Text style={styles.certHeaderText}>Social groups</Text>
+                <Text style={styles.certHeaderText}>
+                  {t("setup.socialGroups")}
+                </Text>
               </View>
 
               {socialGroups.length > 0 ? (
@@ -463,20 +481,19 @@ export default function SetupProfileScreen() {
                     <View key={group.value} style={styles.sgChip}>
                       <Text style={styles.sgChipIcon}>{group.icon}</Text>
                       <Text style={styles.sgChipText} numberOfLines={1}>
-                        {group.label}
+                        {tx(group.label)}
                       </Text>
                     </View>
                   ))}
                 </View>
               ) : (
                 <Text style={styles.certEmpty}>
-                  Add the roles and communities that describe you. Shown on your
-                  public profile.
+                  {t("setup.socialGroupsHint")}
                 </Text>
               )}
 
               <PressableScale
-                accessibilityLabel="Edit social groups"
+                accessibilityLabel={t("setup.editSocialGroups")}
                 onPress={() => {
                   tapFeedback();
                   analyticsEvents.socialGroupsOpened({
@@ -489,8 +506,8 @@ export default function SetupProfileScreen() {
                 <View style={styles.certAdd}>
                   <Text style={styles.certAddText}>
                     {socialGroups.length
-                      ? "Edit social groups"
-                      : "+ Add social groups"}
+                      ? t("setup.editSocialGroups")
+                      : t("setup.addSocialGroups")}
                   </Text>
                 </View>
               </PressableScale>
@@ -500,7 +517,7 @@ export default function SetupProfileScreen() {
               <View style={styles.certHeader}>
                 <AwardIcon size={18} color={colors.accent} />
                 <Text style={styles.certHeaderText}>
-                  Certificates &amp; documents
+                  {t("publicProfile.certificates")}
                 </Text>
               </View>
 
@@ -524,18 +541,20 @@ export default function SetupProfileScreen() {
                       )}
                       <View style={styles.certItemBody}>
                         <Text style={styles.certItemTitle} numberOfLines={1}>
-                          {cert.institution || cert.documentType || "Document"}
+                          {cert.institution ||
+                            tx(cert.documentType) ||
+                            t("tradePage.document")}
                         </Text>
                         {cert.documentType ? (
                           <Text style={styles.certItemSub} numberOfLines={1}>
-                            {cert.documentType}
+                            {tx(cert.documentType)}
                             {cert.year ? ` · ${cert.year}` : ""}
                           </Text>
                         ) : null}
                       </View>
                       <Pressable
                         accessibilityRole="button"
-                        accessibilityLabel="Delete certificate"
+                        accessibilityLabel={t("setup.deleteCertA11y")}
                         hitSlop={8}
                         onPress={() =>
                           handleDeleteCertificate(
@@ -551,13 +570,11 @@ export default function SetupProfileScreen() {
                   ))}
                 </View>
               ) : (
-                <Text style={styles.certEmpty}>
-                  Add a license, certification or diploma.
-                </Text>
+                <Text style={styles.certEmpty}>{t("setup.certEmpty")}</Text>
               )}
 
               <PressableScale
-                accessibilityLabel="Add certificate"
+                accessibilityLabel={t("setup.addCertA11y")}
                 onPress={() => {
                   tapFeedback();
                   analyticsEvents.certificateAddTapped({
@@ -568,7 +585,7 @@ export default function SetupProfileScreen() {
                 scaleTo={0.98}
               >
                 <View style={styles.certAdd}>
-                  <Text style={styles.certAddText}>+ Add certificate</Text>
+                  <Text style={styles.certAddText}>{t("setup.addCert")}</Text>
                 </View>
               </PressableScale>
             </View>
@@ -577,7 +594,9 @@ export default function SetupProfileScreen() {
               <View style={styles.certSection}>
                 <View style={styles.certHeader}>
                   <PlayIcon size={18} color={colors.accent} />
-                  <Text style={styles.certHeaderText}>Video stories</Text>
+                  <Text style={styles.certHeaderText}>
+                    {t("publicProfile.videoStories")}
+                  </Text>
                 </View>
 
                 {videosLoading ? (
@@ -605,18 +624,17 @@ export default function SetupProfileScreen() {
                         </View>
                         <View style={styles.certItemBody}>
                           <Text style={styles.certItemTitle} numberOfLines={1}>
-                            {video.title || "Video"}
+                            {video.title || t("setup.video")}
                           </Text>
                           <Text style={styles.certItemSub} numberOfLines={1}>
-                            {video.content.length}{" "}
-                            {video.content.length === 1 ? "item" : "items"} ·{" "}
-                            {video.views} views
-                            {video.hidden ? " · Hidden" : ""}
+                            {t("setup.items", { count: video.content.length })}{" "}
+                            · {t("setup.views", { count: video.views })}
+                            {video.hidden ? ` · ${t("setup.hidden")}` : ""}
                           </Text>
                         </View>
                         <Pressable
                           accessibilityRole="button"
-                          accessibilityLabel="Delete video"
+                          accessibilityLabel={t("setup.deleteVideoA11y")}
                           hitSlop={8}
                           onPress={() => handleDeleteVideo(video)}
                           style={styles.certDelete}
@@ -627,13 +645,11 @@ export default function SetupProfileScreen() {
                     ))}
                   </View>
                 ) : (
-                  <Text style={styles.certEmpty}>
-                    Share photos and videos on your public profile.
-                  </Text>
+                  <Text style={styles.certEmpty}>{t("setup.videoEmpty")}</Text>
                 )}
 
                 <PressableScale
-                  accessibilityLabel="Add video"
+                  accessibilityLabel={t("setup.addVideoA11y")}
                   onPress={() => {
                     tapFeedback();
                     analyticsEvents.videoAddTapped({
@@ -644,7 +660,9 @@ export default function SetupProfileScreen() {
                   scaleTo={0.98}
                 >
                   <View style={styles.certAdd}>
-                    <Text style={styles.certAddText}>+ Add video story</Text>
+                    <Text style={styles.certAddText}>
+                      {t("setup.addVideo")}
+                    </Text>
                   </View>
                 </PressableScale>
               </View>
@@ -652,7 +670,7 @@ export default function SetupProfileScreen() {
 
             <View style={styles.submit}>
               <PrimaryButton
-                label={saving ? "Saving…" : "Save profile"}
+                label={saving ? t("setup.saving") : t("setup.save")}
                 withArrow={false}
                 loading={saving}
                 disabled={saving}

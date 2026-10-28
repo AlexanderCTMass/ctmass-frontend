@@ -10,6 +10,7 @@ import {
   successFeedback,
   tapFeedback,
 } from "@/lib/haptics";
+import i18n from "@/lib/i18n";
 import {
   type SwipeRecord,
   type SwipeTarget,
@@ -101,7 +102,7 @@ export function useSwipeActions(uid: string | undefined, screen: string) {
         error_message: errorMessage(error),
       });
       void queryClient.invalidateQueries({ queryKey: key });
-      Alert.alert("Something went wrong", "Please try again.");
+      Alert.alert(i18n.t("ui.errorTitle"), i18n.t("common.pleaseTryAgain"));
     }
   };
 

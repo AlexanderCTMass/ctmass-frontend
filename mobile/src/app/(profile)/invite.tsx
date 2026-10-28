@@ -21,6 +21,7 @@ import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { sendFriendInvite } from "@/lib/friends";
+import { useT } from "@/lib/i18n";
 import { useQueryClient } from "@tanstack/react-query";
 import { useProfile } from "@/queries/use-profile";
 import { useAuthStore } from "@/store/use-auth-store";
@@ -29,8 +30,8 @@ const schema = z.object({
   email: z
     .string()
     .trim()
-    .min(1, "Email is required")
-    .email("Enter a valid email address"),
+    .min(1, "shop.validation.emailRequired")
+    .email("shop.validation.emailInvalid"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -38,6 +39,7 @@ type FormValues = z.infer<typeof schema>;
 export default function InviteScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const uid = useAuthStore((state) => state.user?.uid);
   const storeName = useAuthStore((state) => state.user?.name ?? "");
   const { data: profile } = useProfile(uid);
@@ -70,7 +72,7 @@ export default function InviteScreen() {
     try {
       const result = await sendFriendInvite(uid, inviterName, values.email);
       if (result === "self") {
-        setTopError("That's your own email address.");
+        setTopError(t("invite.ownEmail"));
         return;
       }
       if (result === "connected") {
@@ -86,7 +88,7 @@ export default function InviteScreen() {
       analyticsEvents.friendInviteFailed({
         error_message: errorMessage(error),
       });
-      setTopError("Couldn't send the invite. Please try again.");
+      setTopError(t("invite.failed"));
     } finally {
       setSending(false);
     }
@@ -97,7 +99,7 @@ export default function InviteScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>Invite a friend</Text>
+          <Text style={styles.headerTitle}>{t("invite.title")}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -116,19 +118,16 @@ export default function InviteScreen() {
               <View style={styles.heroIcon}>
                 <UsersIcon size={26} color={colors.accent} />
               </View>
-              <Text style={styles.heroTitle}>Bring a friend to CTMASS</Text>
-              <Text style={styles.heroText}>
-                Enter their email and we&apos;ll send them an invite. When they
-                join, you&apos;ll automatically be connected as friends.
-              </Text>
+              <Text style={styles.heroTitle}>{t("invite.heroTitle")}</Text>
+              <Text style={styles.heroText}>{t("invite.heroText")}</Text>
             </View>
 
             {sentTo ? (
               <View style={styles.successBanner}>
                 <Text style={styles.successText}>
                   {connected
-                    ? `${sentTo} is already on CTMASS — you're now friends.`
-                    : `Invitation sent to ${sentTo}. You'll be connected once they join. If they can't find the email, ask them to check the spam folder.`}
+                    ? t("invite.alreadyFriends", { email: sentTo })
+                    : t("invite.sent", { email: sentTo })}
                 </Text>
               </View>
             ) : null}
@@ -144,7 +143,7 @@ export default function InviteScreen() {
               name="email"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextField
-                  label="Friend's email"
+                  label={t("invite.email")}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -158,7 +157,7 @@ export default function InviteScreen() {
 
             <View style={styles.submit}>
               <PrimaryButton
-                label={sending ? "Sending…" : "Send invite"}
+                label={sending ? t("invite.sending") : t("invite.send")}
                 withArrow={false}
                 loading={sending}
                 disabled={sending}

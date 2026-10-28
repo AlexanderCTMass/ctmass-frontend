@@ -42,14 +42,51 @@ const amplitudeApiKey = "8b7d29a4ff83204a256b894c280e30e5";
 const facebookAppId = "1527159562769011";
 const facebookClientToken = "0fd6d40132d6f001f72b328d7f3d5232";
 
+const SUPPORTED_LOCALES = ["en", "es"];
+
 const trackingPermission =
   "Allow tracking so CTMASS can measure which of its ads brought you to the app. We never sell your data.";
+
+const nativeLocales = {
+  en: {
+    ios: {
+      CFBundleDisplayName: appName,
+      NSCameraUsageDescription:
+        "Allow CTMASS to take photos for your requests and messages.",
+      NSPhotoLibraryUsageDescription:
+        "Allow CTMASS to attach photos to your requests and messages.",
+      NSMicrophoneUsageDescription:
+        "Allow CTMASS to use the microphone to dictate your text.",
+      NSSpeechRecognitionUsageDescription:
+        "Allow CTMASS to recognize speech to turn your voice into text.",
+      NSUserTrackingUsageDescription: trackingPermission,
+    },
+    android: { app_name: appName },
+  },
+  es: {
+    ios: {
+      CFBundleDisplayName: appName,
+      NSCameraUsageDescription:
+        "Permite que CTMASS tome fotos para tus solicitudes y mensajes.",
+      NSPhotoLibraryUsageDescription:
+        "Permite que CTMASS adjunte fotos a tus solicitudes y mensajes.",
+      NSMicrophoneUsageDescription:
+        "Permite que CTMASS use el micrófono para dictar tu texto.",
+      NSSpeechRecognitionUsageDescription:
+        "Permite que CTMASS reconozca tu voz para convertirla en texto.",
+      NSUserTrackingUsageDescription:
+        "Permite el seguimiento para que CTMASS sepa qué anuncios te trajeron a la app. Nunca vendemos tus datos.",
+    },
+    android: { app_name: appName },
+  },
+};
 
 module.exports = ({ config }) => ({
   ...config,
   version: appVersion,
   name: appName,
   slug: config.slug ?? "ctmass",
+  locales: nativeLocales,
   plugins: [
     ...(config.plugins ?? []),
     [
@@ -73,6 +110,15 @@ module.exports = ({ config }) => ({
       "expo-tracking-transparency",
       { userTrackingPermission: trackingPermission },
     ],
+    [
+      "expo-localization",
+      {
+        supportedLocales: {
+          ios: SUPPORTED_LOCALES,
+          android: SUPPORTED_LOCALES,
+        },
+      },
+    ],
   ],
   ios: {
     ...config.ios,
@@ -81,6 +127,9 @@ module.exports = ({ config }) => ({
     infoPlist: {
       ...(config.ios?.infoPlist ?? {}),
       ITSAppUsesNonExemptEncryption: false,
+      CFBundleDevelopmentRegion: "en",
+      CFBundleLocalizations: SUPPORTED_LOCALES,
+      CFBundleAllowMixedLocalizations: true,
     },
   },
   android: {

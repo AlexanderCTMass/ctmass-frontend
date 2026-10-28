@@ -1,0 +1,27 @@
+export const chats = {
+  title: "Messages",
+  noMessages: "No messages yet",
+  photo: "Photo",
+  attachment: "Attachment",
+  selectA11y: "Select chat with {{name}}",
+  deselectA11y: "Deselect chat with {{name}}",
+  openA11y: "Open chat with {{name}}",
+  startA11y: "Start a chat with {{name}}",
+  deleteManyTitle: "Delete {{count}} chats?",
+  deleteOneTitle: "Delete chat?",
+  deleteManyText:
+    "These chats and their history will be removed from your list.",
+  deleteOneText: "This chat and its history will be removed from your list.",
+  chats: "Chats",
+  startNew: "Start a new chat",
+  guestTitle: "Sign in to message",
+  guestText:
+    "Create a free account to start conversations and reply to people you connect with.",
+  cancelSelection: "Cancel selection",
+  selected: "{{count}} selected",
+  deleteSelected: "Delete selected chats",
+  search: "Search people…",
+  nothingFound: "Nothing found",
+  nothingFoundText: "Try a different name or email to start a new chat.",
+  emptyText: "When you connect with someone, your chats appear here.",
+};

@@ -7,6 +7,7 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { shareQrImage } from "@/lib/share";
 
 type QrRef = { toDataURL: (callback: (data: string) => void) => void };
@@ -23,7 +24,7 @@ export function ProfileQrModal({
   targetUid,
   avatar,
   businessName,
-  subtitle = "Scan to open this profile",
+  subtitle,
   showReward = false,
 }: {
   visible: boolean;
@@ -38,6 +39,7 @@ export function ProfileQrModal({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const [sharing, setSharing] = useState(false);
   const qrRef = useRef<QrRef | null>(null);
   const company = businessName?.trim() ?? "";
@@ -70,7 +72,7 @@ export function ProfileQrModal({
         <View style={styles.card}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Close"
+            accessibilityLabel={t("common.close")}
             hitSlop={10}
             onPress={close}
             style={styles.close}
@@ -80,7 +82,7 @@ export function ProfileQrModal({
           <Text style={styles.title} numberOfLines={1}>
             {name}
           </Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
+          <Text style={styles.subtitle}>{subtitle ?? t("qr.subtitle")}</Text>
           <View style={styles.qrWrap}>
             <QRCode
               value={url}
@@ -106,13 +108,11 @@ export function ProfileQrModal({
           {showReward ? (
             <View style={styles.reward}>
               <CoinIcon size={20} />
-              <Text style={styles.rewardText}>
-                Earn CTMASS Coins when someone new joins with your code.
-              </Text>
+              <Text style={styles.rewardText}>{t("qr.reward")}</Text>
             </View>
           ) : null}
           <PrimaryButton
-            label={sharing ? "Sharing…" : "Share QR code"}
+            label={sharing ? t("qr.sharing") : t("share.qrTitle")}
             withArrow={false}
             loading={sharing}
             disabled={sharing}

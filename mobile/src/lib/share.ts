@@ -1,13 +1,14 @@
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { Share } from "react-native";
+import i18n from "@/lib/i18n";
 
 export async function shareProfileLink(
   url: string,
   name: string,
 ): Promise<void> {
   await Share.share({
-    message: `Check out ${name} on CTMASS — ${url}`,
+    message: i18n.t("share.message", { name, url }),
     url,
   });
 }
@@ -22,7 +23,7 @@ export async function shareQrImage(
   file.write(base64Png, { encoding: "base64" });
   await Sharing.shareAsync(file.uri, {
     mimeType: "image/png",
-    dialogTitle: "Share QR code",
+    dialogTitle: i18n.t("share.qrTitle"),
     UTI: "public.png",
   });
 }

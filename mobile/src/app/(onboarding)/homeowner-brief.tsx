@@ -52,6 +52,7 @@ import {
 } from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
 import { selectFeedback, successFeedback, tapFeedback } from "@/lib/haptics";
+import { type Translate, useT } from "@/lib/i18n";
 import type { GeoPlace } from "@/lib/mapbox";
 import { choosePhoto } from "@/lib/media";
 import { chatHref } from "@/lib/navigation";
@@ -77,15 +78,6 @@ type Phase =
   | "photo"
   | "contact"
   | "done";
-
-const BUDGET_QUESTION =
-  "Got it. What's your maximum budget for this job? Type an amount in USD — or tap “Not sure yet”.";
-const LOCATION_QUESTION =
-  "Where should the work be done? Pick the exact address on the map so nearby specialists can find your request.";
-const PHOTO_QUESTION =
-  "Want to add a photo of the job? It helps specialists give accurate quotes.";
-const CONTACT_QUESTION =
-  "Last step — how should contractors contact you? And when is the best time to reach you?";
 
 function Dot({ index }: { index: number }) {
   const styles = useStyles();
@@ -192,14 +184,17 @@ function elapsedSince(startedAt: number | null): number {
   return startedAt ? Date.now() - startedAt : 0;
 }
 
-function contactSummary(preferences: ContactPreferences): string {
-  const methods = preferences.methods.map(contactMethodLabel).join(", ");
-  return `${methods} · ${bestTimeLabel(preferences.bestTime)}`;
+function contactSummary(preferences: ContactPreferences, t: Translate): string {
+  const methods = preferences.methods
+    .map((method) => contactMethodLabel(method, t))
+    .join(", ");
+  return `${methods} · ${bestTimeLabel(preferences.bestTime, t)}`;
 }
 
 export default function BriefScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const specialty = useProjectDraftStore((state) => state.specialty);
   const targetSpecialistId = useProjectDraftStore(
     (state) => state.targetSpecialistId,
@@ -226,10 +221,13 @@ export default function BriefScreen() {
   const { data: profile } = useProfile(uid);
 
   const introText = targetSpecialistId
-    ? `You're requesting ${specialty ?? "services"} from ${targetSpecialistName ?? "this specialist"}. Tell me about the job — and what should I call you? You can type or tap the mic to talk.`
+    ? t("brief.introDirected", {
+        specialty: specialty ? tx(specialty) : t("brief.services"),
+        name: targetSpecialistName ?? t("brief.thisSpecialist"),
+      })
     : specialty
-      ? `You're looking for a ${specialty}. Tell me a bit about the job — and what should I call you? You can type or tap the mic to talk.`
-      : "Tell me about your project — and what should I call you? You can type or tap the mic to talk.";
+      ? t("brief.introSpecialty", { specialty: tx(specialty) })
+      : t("brief.intro");
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -339,9 +337,7 @@ export default function BriefScreen() {
         screen: "project_brief",
         fields: [phase === "intro" ? "description" : "budget"],
       });
-      setVoiceNotice(
-        "Please keep it respectful — remove any inappropriate language.",
-      );
+      setVoiceNotice(t("brief.respectful"));
       return;
     }
 
@@ -349,17 +345,13 @@ export default function BriefScreen() {
       analyticsEvents.projectBriefDescriptionTooShort({
         text_length: value.length,
       });
-      setVoiceNotice(
-        `Please describe the job in a bit more detail — at least ${MIN_DESCRIPTION_LENGTH} characters.`,
-      );
+      setVoiceNotice(t("brief.moreDetail", { count: MIN_DESCRIPTION_LENGTH }));
       return;
     }
 
     if (phase === "budget" && readBudget(value) === null) {
       analyticsEvents.projectBriefBudgetInvalid({ text_length: value.length });
-      setVoiceNotice(
-        "Enter the amount as a number, for example 1500, or tap “Not sure yet”.",
-      );
+      setVoiceNotice(t("brief.budgetInvalid"));
       return;
     }
 
@@ -380,18 +372,22 @@ export default function BriefScreen() {
       userSay(value);
       setName(value);
       setPhase("start");
-      ask("start", "Thanks! When would you like the work to start?");
+      ask("start", t("brief.startQuestion"));
       return;
     }
 
     const budget = readBudget(value);
     if (budget === null) return;
     userSay(formatBudget(budget));
-    analyticsEvents.projectBriefBudgetSet({ specialty, budget, skipped: false });
+    analyticsEvents.projectBriefBudgetSet({
+      specialty,
+      budget,
+      skipped: false,
+    });
     setBudget(budget);
     Keyboard.dismiss();
     setPhase("location");
-    ask("location", LOCATION_QUESTION);
+    ask("location", t("brief.locationQuestion"));
   };
 
   const handleStartSelect = (option: StartOption) => {
@@ -402,9 +398,9 @@ export default function BriefScreen() {
       start_option: option.key,
     });
     setStartOptionKey(option.key);
-    userSay(option.label);
+    userSay(tx(option.label));
     setPhase("budget");
-    ask("budget", BUDGET_QUESTION);
+    ask("budget", t("brief.budgetQuestion"));
   };
 
   const handleBudgetSkip = () => {
@@ -418,10 +414,10 @@ export default function BriefScreen() {
       skipped: true,
     });
     setBudget(null);
-    userSay("Not sure yet");
+    userSay(t("brief.notSure"));
     Keyboard.dismiss();
     setPhase("location");
-    ask("location", LOCATION_QUESTION);
+    ask("location", t("brief.locationQuestion"));
   };
 
   const handleOpenMap = () => {
@@ -445,7 +441,7 @@ export default function BriefScreen() {
     setLocation(place);
     userSay(place.place_name);
     setPhase("photo");
-    ask("photo", PHOTO_QUESTION);
+    ask("photo", t("brief.photoQuestion"));
   };
 
   const sendDirectedRequest = useCallback(async () => {
@@ -493,10 +489,10 @@ export default function BriefScreen() {
       analyticsEvents.directedRequestFailed({
         error_message: errorMessage(error),
       });
-      setVoiceNotice("Couldn't send your request. Please try again.");
+      setVoiceNotice(t("brief.sendFailed"));
       setPhase("contact");
     }
-  }, [uid, userName, userEmail, ensureRequestId, resetDraft]);
+  }, [uid, userName, userEmail, ensureRequestId, resetDraft, t]);
 
   const finishAndMatch = useCallback(() => {
     const draft = useProjectDraftStore.getState();
@@ -512,24 +508,20 @@ export default function BriefScreen() {
     ensureRequestId();
     if (targetSpecialistId && uid) {
       botSay(
-        `Perfect — sending your request to ${targetSpecialistName ?? "the specialist"} now…`,
+        t("brief.sendingTo", {
+          name: targetSpecialistName ?? t("brief.theSpecialist"),
+        }),
         () => {
           void sendDirectedRequest();
         },
       );
       return;
     }
-    botSay(
-      "Perfect — I'm matching you with the best local specialists right now…",
-      () => {
-        successFeedback();
-        const go = setTimeout(
-          () => router.push("/homeowner-specialists"),
-          550,
-        );
-        timers.current.push(go);
-      },
-    );
+    botSay(t("brief.matching"), () => {
+      successFeedback();
+      const go = setTimeout(() => router.push("/homeowner-specialists"), 550);
+      timers.current.push(go);
+    });
   }, [
     botSay,
     ensureRequestId,
@@ -538,11 +530,12 @@ export default function BriefScreen() {
     targetSpecialistName,
     uid,
     sendDirectedRequest,
+    t,
   ]);
 
   const goToContact = () => {
     setPhase("contact");
-    ask("contact", CONTACT_QUESTION);
+    ask("contact", t("brief.contactQuestion"));
   };
 
   const handlePickPhoto = () => {
@@ -563,7 +556,7 @@ export default function BriefScreen() {
     tapFeedback();
     analyticsEvents.projectBriefPhotoSkipped({ specialty });
     setPhotoUri(null);
-    userSay("No photo for now");
+    userSay(t("brief.noPhoto"));
     goToContact();
   };
 
@@ -581,7 +574,7 @@ export default function BriefScreen() {
       phone_filled: Boolean(phone),
     });
     setContact(preferences, phone);
-    userSay(contactSummary(preferences));
+    userSay(contactSummary(preferences, t));
     finishAndMatch();
   };
 
@@ -604,9 +597,7 @@ export default function BriefScreen() {
         reason: dictation.available ? "permission_denied" : "unavailable",
       });
       setVoiceNotice(
-        dictation.available
-          ? "Microphone permission is needed for voice input."
-          : "Voice input needs the latest build. Type your answer for now.",
+        dictation.available ? t("voice.permission") : t("voice.unavailable"),
       );
     });
   };
@@ -641,7 +632,9 @@ export default function BriefScreen() {
           value={input}
           onChangeText={setInput}
           placeholder={
-            phase === "budget" ? "Max budget, e.g. 1500" : "Your reply…"
+            phase === "budget"
+              ? t("brief.budgetPlaceholder")
+              : t("brief.replyPlaceholder")
           }
           placeholderTextColor={colors.textMuted}
           style={styles.input}
@@ -654,7 +647,7 @@ export default function BriefScreen() {
       {hasText && !recording ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Send"
+          accessibilityLabel={t("voice.send")}
           onPress={handleSend}
           style={styles.actionButton}
         >
@@ -667,9 +660,12 @@ export default function BriefScreen() {
       ) : (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={recording ? "Stop recording" : "Voice input"}
+          accessibilityLabel={recording ? t("voice.stop") : t("voice.input")}
           onPress={handleMic}
-          style={[styles.actionButton, recording && styles.actionButtonRecording]}
+          style={[
+            styles.actionButton,
+            recording && styles.actionButtonRecording,
+          ]}
         >
           {recording ? <RecordingPulse /> : null}
           {recording ? (
@@ -698,11 +694,11 @@ export default function BriefScreen() {
             {START_OPTIONS.map((option) => (
               <PressableScale
                 key={option.key}
-                accessibilityLabel={option.label}
+                accessibilityLabel={tx(option.label)}
                 onPress={() => handleStartSelect(option)}
               >
                 <View style={styles.option}>
-                  <Text style={styles.optionText}>{option.label}</Text>
+                  <Text style={styles.optionText}>{tx(option.label)}</Text>
                 </View>
               </PressableScale>
             ))}
@@ -713,11 +709,11 @@ export default function BriefScreen() {
           <Animated.View entering={FadeIn.duration(220)}>
             <View style={styles.quickRow}>
               <PressableScale
-                accessibilityLabel="Not sure yet"
+                accessibilityLabel={t("brief.notSure")}
                 onPress={handleBudgetSkip}
               >
                 <View style={styles.option}>
-                  <Text style={styles.optionText}>Not sure yet</Text>
+                  <Text style={styles.optionText}>{t("brief.notSure")}</Text>
                 </View>
               </PressableScale>
             </View>
@@ -731,12 +727,14 @@ export default function BriefScreen() {
             style={styles.photoActions}
           >
             <PressableScale
-              accessibilityLabel="Choose location on map"
+              accessibilityLabel={t("brief.chooseLocationA11y")}
               onPress={handleOpenMap}
             >
               <View style={styles.photoButton}>
                 <MapPinIcon size={20} color="#04170D" />
-                <Text style={styles.photoButtonText}>Choose on map</Text>
+                <Text style={styles.photoButtonText}>
+                  {t("brief.chooseOnMap")}
+                </Text>
               </View>
             </PressableScale>
           </Animated.View>
@@ -748,12 +746,14 @@ export default function BriefScreen() {
             style={styles.photoActions}
           >
             <PressableScale
-              accessibilityLabel="Add a photo"
+              accessibilityLabel={t("brief.addPhoto")}
               onPress={handlePickPhoto}
             >
               <View style={styles.photoButton}>
                 <ImageIcon size={20} color="#04170D" />
-                <Text style={styles.photoButtonText}>Add a photo</Text>
+                <Text style={styles.photoButtonText}>
+                  {t("brief.addPhoto")}
+                </Text>
               </View>
             </PressableScale>
             <Pressable
@@ -761,7 +761,7 @@ export default function BriefScreen() {
               hitSlop={10}
               onPress={handleSkipPhoto}
             >
-              <Text style={styles.skipText}>Skip</Text>
+              <Text style={styles.skipText}>{t("brief.skip")}</Text>
             </Pressable>
           </Animated.View>
         );
@@ -786,11 +786,11 @@ export default function BriefScreen() {
           <BackButton onPress={() => router.back()} />
           <View style={styles.identity}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>AI</Text>
+              <Text style={styles.avatarText}>{t("brief.ai")}</Text>
             </View>
             <View>
-              <Text style={styles.botName}>Brief bot</Text>
-              <Text style={styles.botRole}>Helps build your request</Text>
+              <Text style={styles.botName}>{t("brief.botName")}</Text>
+              <Text style={styles.botRole}>{t("brief.botRole")}</Text>
             </View>
           </View>
         </View>

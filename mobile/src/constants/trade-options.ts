@@ -1,10 +1,24 @@
+import { type Translate, translateData } from "@/lib/i18n";
+
 export type Option<T extends string = string> = { value: T; label: string };
 
-function labelOf<T extends string>(options: Option<T>[], value: string): string {
-  return options.find((item) => item.value === value)?.label ?? "";
+function labelOf<T extends string>(
+  options: Option<T>[],
+  value: string,
+  t: Translate,
+): string {
+  return translateData(
+    t,
+    options.find((item) => item.value === value)?.label ?? "",
+  );
 }
 
-export type ExperienceTierId = "starter" | "skilled" | "pro" | "expert" | "veteran";
+export type ExperienceTierId =
+  | "starter"
+  | "skilled"
+  | "pro"
+  | "expert"
+  | "veteran";
 
 export type ExperienceTier = {
   id: ExperienceTierId;
@@ -32,12 +46,12 @@ export function tierFor(years: number): ExperienceTier {
   );
 }
 
-export function yearsLabel(years: number): string {
-  return `${years} ${years === 1 ? "yr" : "yrs"}`;
+export function yearsLabel(years: number, t: Translate): string {
+  return t("trade.yearsShort", { count: years });
 }
 
-export function tierBadgeLabel(years: number): string {
-  return `${tierFor(years).label.toUpperCase()} · ${yearsLabel(years).toUpperCase()}`;
+export function tierBadgeLabel(years: number, t: Translate): string {
+  return `${translateData(t, tierFor(years).label).toUpperCase()} · ${yearsLabel(years, t).toUpperCase()}`;
 }
 
 export type PricingModel =
@@ -57,14 +71,24 @@ export const PRICING_MODELS: Option<PricingModel>[] = [
   { value: "not_provided", label: "Not provided" },
 ];
 
-export const pricingModelLabel = (value: string) =>
-  labelOf(PRICING_MODELS, value);
+export const pricingModelLabel = (value: string, t: Translate) =>
+  labelOf(PRICING_MODELS, value, t);
 
 export function modelTakesRate(model: string): boolean {
-  return model === "hourly" || model === "service_call_hourly" || model === "per_unit" || model === "fixed";
+  return (
+    model === "hourly" ||
+    model === "service_call_hourly" ||
+    model === "per_unit" ||
+    model === "fixed"
+  );
 }
 
-export type RateBasis = "technician_hour" | "crew_hour" | "visit" | "unit" | "project";
+export type RateBasis =
+  | "technician_hour"
+  | "crew_hour"
+  | "visit"
+  | "unit"
+  | "project";
 
 export const RATE_BASES: Option<RateBasis>[] = [
   { value: "technician_hour", label: "per technician-hour" },
@@ -106,11 +130,15 @@ const RESPONSE_SHORT: Record<ResponseTime, string> = {
   next_day: "Replies next business day",
 };
 
-export function responseShortLabel(value: string): string {
-  return RESPONSE_SHORT[value as ResponseTime] ?? "";
+export function responseShortLabel(value: string, t: Translate): string {
+  return translateData(t, RESPONSE_SHORT[value as ResponseTime] ?? "");
 }
 
-export type AvailabilityDay = "mon_fri" | "mon_sat" | "weekends" | "by_appointment";
+export type AvailabilityDay =
+  | "mon_fri"
+  | "mon_sat"
+  | "weekends"
+  | "by_appointment";
 
 export const AVAILABILITY_DAYS: Option<AvailabilityDay>[] = [
   { value: "mon_fri", label: "Mon–Fri" },
@@ -127,10 +155,10 @@ export const WORKING_HOURS: Option[] = [
   { value: "flexible", label: "Flexible hours" },
 ];
 
-export const availabilityDayLabel = (value: string) =>
-  labelOf(AVAILABILITY_DAYS, value);
-export const workingHoursLabel = (value: string) =>
-  labelOf(WORKING_HOURS, value);
+export const availabilityDayLabel = (value: string, t: Translate) =>
+  labelOf(AVAILABILITY_DAYS, value, t);
+export const workingHoursLabel = (value: string, t: Translate) =>
+  labelOf(WORKING_HOURS, value, t);
 
 export type EmergencyService = "none" | "after_hours" | "24_7";
 
@@ -140,14 +168,18 @@ export const EMERGENCY_OPTIONS: Option<EmergencyService>[] = [
   { value: "24_7", label: "24/7 emergency" },
 ];
 
-export const emergencyLabel = (value: string) =>
-  labelOf(EMERGENCY_OPTIONS, value);
+export const emergencyLabel = (value: string, t: Translate) =>
+  labelOf(EMERGENCY_OPTIONS, value, t);
 
 export const SERVICE_RADII = [10, 25, 50, 100] as const;
 
 export const DEFAULT_SERVICE_RADIUS = 25;
 
-export type ProjectType = "residential" | "commercial" | "multi_family" | "industrial";
+export type ProjectType =
+  | "residential"
+  | "commercial"
+  | "multi_family"
+  | "industrial";
 
 export const PROJECT_TYPES: Option<ProjectType>[] = [
   { value: "residential", label: "Residential" },
@@ -156,7 +188,8 @@ export const PROJECT_TYPES: Option<ProjectType>[] = [
   { value: "industrial", label: "Industrial" },
 ];
 
-export const projectTypeLabel = (value: string) => labelOf(PROJECT_TYPES, value);
+export const projectTypeLabel = (value: string, t: Translate) =>
+  labelOf(PROJECT_TYPES, value, t);
 
 export type EstimatePolicy = "free" | "paid" | "diagnostic" | "";
 
@@ -166,8 +199,8 @@ export const ESTIMATE_POLICIES: Option<Exclude<EstimatePolicy, "">>[] = [
   { value: "diagnostic", label: "Paid diagnostic visit" },
 ];
 
-export const estimateLabel = (value: string) =>
-  labelOf(ESTIMATE_POLICIES, value);
+export const estimateLabel = (value: string, t: Translate) =>
+  labelOf(ESTIMATE_POLICIES, value, t);
 
 export const WARRANTY_OPTIONS: Option[] = [
   { value: "none", label: "No written warranty" },
@@ -177,8 +210,8 @@ export const WARRANTY_OPTIONS: Option[] = [
   { value: "2y", label: "2+ years" },
 ];
 
-export const warrantyLabel = (value: string) =>
-  labelOf(WARRANTY_OPTIONS, value);
+export const warrantyLabel = (value: string, t: Translate) =>
+  labelOf(WARRANTY_OPTIONS, value, t);
 
 export type PermitsPolicy = "yes" | "no" | "depends" | "";
 
@@ -188,7 +221,8 @@ export const PERMIT_OPTIONS: Option<Exclude<PermitsPolicy, "">>[] = [
   { value: "no", label: "Homeowner pulls permits" },
 ];
 
-export const permitsLabel = (value: string) => labelOf(PERMIT_OPTIONS, value);
+export const permitsLabel = (value: string, t: Translate) =>
+  labelOf(PERMIT_OPTIONS, value, t);
 
 export type WorkBy = "owner" | "employees" | "subcontractors" | "mixed";
 
@@ -199,7 +233,8 @@ export const WORK_BY_OPTIONS: Option<WorkBy>[] = [
   { value: "mixed", label: "Mixed crew" },
 ];
 
-export const workByLabel = (value: string) => labelOf(WORK_BY_OPTIONS, value);
+export const workByLabel = (value: string, t: Translate) =>
+  labelOf(WORK_BY_OPTIONS, value, t);
 
 export type BusinessStructure =
   | "sole_proprietor"
@@ -218,8 +253,8 @@ export const BUSINESS_STRUCTURES: Option<BusinessStructure>[] = [
   { value: "undisclosed", label: "Prefer not to say" },
 ];
 
-export const businessStructureLabel = (value: string) =>
-  value === "undisclosed" ? "" : labelOf(BUSINESS_STRUCTURES, value);
+export const businessStructureLabel = (value: string, t: Translate) =>
+  value === "undisclosed" ? "" : labelOf(BUSINESS_STRUCTURES, value, t);
 
 export type CrewSize = "solo" | "2_5" | "6_15" | "16_plus";
 
@@ -230,7 +265,8 @@ export const CREW_SIZES: Option<CrewSize>[] = [
   { value: "16_plus", label: "16+ people" },
 ];
 
-export const crewSizeLabel = (value: string) => labelOf(CREW_SIZES, value);
+export const crewSizeLabel = (value: string, t: Translate) =>
+  labelOf(CREW_SIZES, value, t);
 
 export type BusinessRole =
   | "owner"
@@ -249,8 +285,8 @@ export const BUSINESS_ROLES: Option<BusinessRole>[] = [
   { value: "apprentice", label: "Apprentice" },
 ];
 
-export const businessRoleLabel = (value: string) =>
-  labelOf(BUSINESS_ROLES, value);
+export const businessRoleLabel = (value: string, t: Translate) =>
+  labelOf(BUSINESS_ROLES, value, t);
 
 export const LANGUAGES: string[] = [
   "English",
@@ -275,8 +311,8 @@ export const PAYMENT_METHODS: Option[] = [
   { value: "financing", label: "Financing" },
 ];
 
-export const paymentMethodLabel = (value: string) =>
-  labelOf(PAYMENT_METHODS, value);
+export const paymentMethodLabel = (value: string, t: Translate) =>
+  labelOf(PAYMENT_METHODS, value, t);
 
 export type PreferredContact = "message" | "phone" | "email";
 
@@ -287,10 +323,57 @@ export const PREFERRED_CONTACTS: Option<PreferredContact>[] = [
 ];
 
 export const US_STATE_CODES = [
-  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "HI", "ID",
-  "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO",
-  "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA",
-  "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+  "AL",
+  "AK",
+  "AZ",
+  "AR",
+  "CA",
+  "CO",
+  "CT",
+  "DE",
+  "DC",
+  "FL",
+  "GA",
+  "HI",
+  "ID",
+  "IL",
+  "IN",
+  "IA",
+  "KS",
+  "KY",
+  "LA",
+  "ME",
+  "MD",
+  "MA",
+  "MI",
+  "MN",
+  "MS",
+  "MO",
+  "MT",
+  "NE",
+  "NV",
+  "NH",
+  "NJ",
+  "NM",
+  "NY",
+  "NC",
+  "ND",
+  "OH",
+  "OK",
+  "OR",
+  "PA",
+  "RI",
+  "SC",
+  "SD",
+  "TN",
+  "TX",
+  "UT",
+  "VT",
+  "VA",
+  "WA",
+  "WV",
+  "WI",
+  "WY",
 ] as const;
 
 export const PROJECT_COST_RANGES: Option[] = [
@@ -301,8 +384,8 @@ export const PROJECT_COST_RANGES: Option[] = [
   { value: "50k_plus", label: "$50,000+" },
 ];
 
-export const projectCostLabel = (value: string) =>
-  labelOf(PROJECT_COST_RANGES, value);
+export const projectCostLabel = (value: string, t: Translate) =>
+  labelOf(PROJECT_COST_RANGES, value, t);
 
 export const PROJECT_DURATIONS: Option[] = [
   { value: "1d", label: "1 day" },
@@ -313,8 +396,8 @@ export const PROJECT_DURATIONS: Option[] = [
   { value: "3m_plus", label: "3+ months" },
 ];
 
-export const projectDurationLabel = (value: string) =>
-  labelOf(PROJECT_DURATIONS, value);
+export const projectDurationLabel = (value: string, t: Translate) =>
+  labelOf(PROJECT_DURATIONS, value, t);
 
 export const PRICE_DISCLAIMER =
   "Prices are provided by the contractor. The final price may change after a site visit, scope, access, parts, permits or hidden conditions.";

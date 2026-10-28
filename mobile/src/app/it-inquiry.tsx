@@ -24,6 +24,7 @@ import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import i18n, { useT } from "@/lib/i18n";
 import {
   INQUIRY_SOURCES,
   type InquirySource,
@@ -42,8 +43,8 @@ const IT_SERVICES = DEFAULT_SHOP_ITEMS.filter(
 const SUPPORT_EMAIL = "support@ctmass.com";
 
 const schema = z.object({
-  name: z.string().trim().min(1, "Enter your name"),
-  email: z.string().trim().email("Enter a valid email"),
+  name: z.string().trim().min(1, "setup.validation.name"),
+  email: z.string().trim().email("shop.validation.emailInvalid"),
   message: z.string().optional(),
 });
 
@@ -72,13 +73,17 @@ async function openMailFallback(
     }
     await Linking.openURL(gmail);
   } catch {
-    Alert.alert("Contact us", `Please email us at ${SUPPORT_EMAIL}`);
+    Alert.alert(
+      i18n.t("it.contactUs"),
+      i18n.t("it.emailUs", { email: SUPPORT_EMAIL }),
+    );
   }
 }
 
 export default function ItInquiryScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const storeEmail = useAuthStore((state) => state.user?.email ?? "");
   const storeName = useAuthStore((state) =>
     state.isGuest ? "" : (state.user?.name ?? ""),
@@ -89,7 +94,9 @@ export default function ItInquiryScreen() {
   const openedAt = useRef(0);
   const params = useLocalSearchParams<{ source?: string; service?: string }>();
   const rawSource = typeof params.source === "string" ? params.source : "";
-  const source: InquirySource = INQUIRY_SOURCES.includes(rawSource as InquirySource)
+  const source: InquirySource = INQUIRY_SOURCES.includes(
+    rawSource as InquirySource,
+  )
     ? (rawSource as InquirySource)
     : "app";
   const initialService =
@@ -176,7 +183,7 @@ export default function ItInquiryScreen() {
     const message = values.message?.trim() ?? "";
     if (selected.length === 0 && !message) {
       analyticsEvents.itInquiryValidationFailed({ fields: ["services"] });
-      setTopError("Choose a service or write a message.");
+      setTopError(t("it.chooseOrWrite"));
       return;
     }
     analyticsEvents.itInquirySubmitted({
@@ -196,25 +203,19 @@ export default function ItInquiryScreen() {
         meta: collectInquiryMeta(openedAt.current, signedIn),
       });
       analyticsEvents.itInquirySent({ services_count: selected.length });
-      Alert.alert(
-        "Message sent",
-        "Thanks! Our team will get back to you by email soon.",
-        [{ text: "Done", onPress: () => router.back() }],
-      );
+      Alert.alert(t("it.sentTitle"), t("it.sentText"), [
+        { text: t("common.done"), onPress: () => router.back() },
+      ]);
     } catch (error) {
       analyticsEvents.itInquiryFailed({ error_message: errorMessage(error) });
       setSending(false);
-      Alert.alert(
-        "Couldn't send",
-        "We couldn't send your message right now. You can email us directly instead.",
-        [
-          {
-            text: "Email us directly",
-            onPress: () => void openMailFallback(email, selected, message),
-          },
-          { text: "Cancel", style: "cancel" },
-        ],
-      );
+      Alert.alert(t("it.failedTitle"), t("it.failedText"), [
+        {
+          text: t("it.emailDirect"),
+          onPress: () => void openMailFallback(email, selected, message),
+        },
+        { text: t("common.cancel"), style: "cancel" },
+      ]);
     }
   };
 
@@ -223,7 +224,7 @@ export default function ItInquiryScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>Talk to our IT team</Text>
+          <Text style={styles.headerTitle}>{t("it.inquiryTitle")}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -242,11 +243,8 @@ export default function ItInquiryScreen() {
               <View style={styles.heroIcon}>
                 <CodeBadgeIcon size={24} color={colors.accent} />
               </View>
-              <Text style={styles.heroTitle}>Book a free 30-min consultation</Text>
-              <Text style={styles.heroText}>
-                Tell us what you need, then pick a time that works for you.
-                We&apos;ll meet on Google Meet — no coins required.
-              </Text>
+              <Text style={styles.heroTitle}>{t("it.heroTitle")}</Text>
+              <Text style={styles.heroText}>{t("it.heroText")}</Text>
             </View>
 
             {topError ? (
@@ -256,7 +254,9 @@ export default function ItInquiryScreen() {
             ) : null}
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Services</Text>
+              <Text style={styles.sectionTitle}>
+                {t("compare.rows.services")}
+              </Text>
               <View style={styles.chips}>
                 {serviceOptions.map((service) => {
                   const active = selected.includes(service);
@@ -264,7 +264,7 @@ export default function ItInquiryScreen() {
                     <Pressable
                       key={service}
                       accessibilityRole="button"
-                      accessibilityLabel={service}
+                      accessibilityLabel={tx(service)}
                       onPress={() => toggleService(service)}
                       style={[styles.chip, active && styles.chipActive]}
                     >
@@ -272,9 +272,12 @@ export default function ItInquiryScreen() {
                         <CheckIcon size={14} color={colors.accent} />
                       ) : null}
                       <Text
-                        style={[styles.chipText, active && styles.chipTextActive]}
+                        style={[
+                          styles.chipText,
+                          active && styles.chipTextActive,
+                        ]}
                       >
-                        {service}
+                        {tx(service)}
                       </Text>
                     </Pressable>
                   );
@@ -283,18 +286,18 @@ export default function ItInquiryScreen() {
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Your details</Text>
+              <Text style={styles.sectionTitle}>{t("it.yourDetails")}</Text>
               <Controller
                 control={control}
                 name="name"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextField
-                    label="Name"
+                    label={t("it.name")}
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     error={errors.name?.message}
-                    placeholder="Your name"
+                    placeholder={t("setup.namePlaceholder")}
                     autoCapitalize="words"
                   />
                 )}
@@ -304,7 +307,7 @@ export default function ItInquiryScreen() {
                 name="email"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextField
-                    label="Email"
+                    label={t("compare.values.email")}
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
@@ -320,12 +323,12 @@ export default function ItInquiryScreen() {
                 name="message"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextField
-                    label="Message"
+                    label={t("chat.message")}
                     value={value ?? ""}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     error={errors.message?.message}
-                    placeholder="Tell us about your project or question"
+                    placeholder={t("it.messagePlaceholder")}
                     autoCapitalize="sentences"
                     multiline
                   />
@@ -336,7 +339,7 @@ export default function ItInquiryScreen() {
 
           <View style={styles.footer}>
             <PrimaryButton
-              label="Choose a time"
+              label={t("it.chooseTime")}
               disabled={sending}
               onPress={() =>
                 void handleSubmit(book, (fieldErrors) =>
@@ -348,7 +351,7 @@ export default function ItInquiryScreen() {
             />
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Send a message without booking a call"
+              accessibilityLabel={t("it.sendWithoutA11y")}
               disabled={sending}
               onPress={() =>
                 void handleSubmit(submit, (fieldErrors) =>
@@ -360,7 +363,7 @@ export default function ItInquiryScreen() {
               style={styles.secondaryBtn}
             >
               <Text style={styles.secondaryText}>
-                {sending ? "Sending…" : "Just send a message instead"}
+                {sending ? t("invite.sending") : t("it.sendInstead")}
               </Text>
             </Pressable>
           </View>

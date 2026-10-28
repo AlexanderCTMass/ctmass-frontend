@@ -13,8 +13,15 @@ import {
   findGroup,
   findTrade,
 } from "@/constants/trade-taxonomy";
-import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
 import { selectFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 
 function ItemCard({
   label,
@@ -33,12 +40,13 @@ function ItemCard({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { tx } = useT();
   return (
     <Animated.View
       entering={FadeIn.delay(Math.min(index, 10) * 30).duration(260)}
       style={styles.cardWrap}
     >
-      <PressableScale accessibilityLabel={label} onPress={onPress}>
+      <PressableScale accessibilityLabel={tx(label)} onPress={onPress}>
         <View style={[styles.card, selected && styles.cardSelected]}>
           <TradeGroupIcon
             groupId={groupId}
@@ -47,7 +55,7 @@ function ItemCard({
           />
           <View style={styles.cardText}>
             <Text style={styles.cardLabel} numberOfLines={2}>
-              {label}
+              {tx(label)}
             </Text>
             {hint ? (
               <Text style={styles.cardHint} numberOfLines={1}>
@@ -77,6 +85,7 @@ export function TradePicker({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const current = findTrade(value);
   const isOther = value === OTHER_TRADE_LABEL;
   const [groupId, setGroupId] = useState<TradeGroupId>(
@@ -90,12 +99,17 @@ export function TradePicker({
       return TRADE_ITEMS.filter(
         (item) =>
           item.label.toLowerCase().includes(query) ||
+          tx(item.label).toLowerCase().includes(query) ||
           item.aliases.some((alias) => alias.toLowerCase().includes(query)) ||
-          (findGroup(item.groupId)?.label.toLowerCase().includes(query) ?? false),
+          (findGroup(item.groupId)?.label.toLowerCase().includes(query) ??
+            false) ||
+          tx(findGroup(item.groupId)?.label ?? "")
+            .toLowerCase()
+            .includes(query),
       );
     }
     return findGroup(groupId)?.items ?? [];
-  }, [groupId, query]);
+  }, [groupId, query, tx]);
 
   const choose = (label: string, item: TradeItem | null) => {
     selectFeedback();
@@ -109,7 +123,7 @@ export function TradePicker({
         <TextInput
           value={search}
           onChangeText={setSearch}
-          placeholder="Search trades, e.g. EV charger"
+          placeholder={t("tradePicker.search")}
           placeholderTextColor={colors.textMuted}
           style={styles.searchInput}
           returnKeyType="search"
@@ -146,7 +160,7 @@ export function TradePicker({
                   style={[styles.groupText, active && styles.groupTextActive]}
                   numberOfLines={1}
                 >
-                  {group.label}
+                  {tx(group.label)}
                 </Text>
               </Pressable>
             );
@@ -159,7 +173,7 @@ export function TradePicker({
           <ItemCard
             key={`${groupId}-${item.id}`}
             label={item.label}
-            hint={query ? findGroup(item.groupId)?.label : undefined}
+            hint={query ? tx(findGroup(item.groupId)?.label ?? "") : undefined}
             groupId={item.groupId}
             index={index}
             selected={current?.id === item.id}
@@ -169,7 +183,7 @@ export function TradePicker({
         {allowOther ? (
           <ItemCard
             label={OTHER_TRADE_LABEL}
-            hint="Not on the list"
+            hint={t("tradePicker.notOnList")}
             groupId="other"
             index={items.length}
             selected={isOther}
@@ -178,9 +192,7 @@ export function TradePicker({
         ) : null}
       </View>
       {query && items.length === 0 ? (
-        <Text style={styles.empty}>
-          No trades match. Pick “Other” and describe it.
-        </Text>
+        <Text style={styles.empty}>{t("tradePicker.noMatch")}</Text>
       ) : null}
     </View>
   );

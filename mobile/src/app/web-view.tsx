@@ -8,10 +8,12 @@ import { BackButton } from "@/components/ui/back-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
+import { useT } from "@/lib/i18n";
 
 export default function WebViewScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const params = useLocalSearchParams<{ url?: string; title?: string }>();
   const url = typeof params.url === "string" ? params.url : "";
   const title = typeof params.title === "string" ? params.title : "";
@@ -53,7 +55,7 @@ export default function WebViewScreen() {
               startInLoadingState
             />
           ) : (
-            <Text style={styles.error}>Nothing to show.</Text>
+            <Text style={styles.error}>{t("ui.nothingToShow")}</Text>
           )}
           {loading && url ? (
             <View style={styles.loader}>

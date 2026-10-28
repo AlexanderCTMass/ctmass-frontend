@@ -15,6 +15,7 @@ import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { SOCIAL_GROUP_SECTIONS } from "@/constants/social-groups";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import {
   type SocialGroup,
   buildSocialGroupPayload,
@@ -29,9 +30,14 @@ type Props = {
   onSaved: (groups: SocialGroup[]) => void;
 };
 
-function SocialGroupsPanel({ initial, onClose, onSaved }: Omit<Props, "visible">) {
+function SocialGroupsPanel({
+  initial,
+  onClose,
+  onSaved,
+}: Omit<Props, "visible">) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const uid = useAuthStore((state) => state.user?.uid);
 
   const [selected, setSelected] = useState<string[]>(() =>
@@ -48,10 +54,12 @@ function SocialGroupsPanel({ initial, onClose, onSaved }: Omit<Props, "visible">
       options: section.options.filter(
         (option) =>
           option.label.toLowerCase().includes(query) ||
-          option.description.toLowerCase().includes(query),
+          option.description.toLowerCase().includes(query) ||
+          tx(option.label).toLowerCase().includes(query) ||
+          tx(option.description).toLowerCase().includes(query),
       ),
     })).filter((section) => section.options.length > 0);
-  }, [search]);
+  }, [search, tx]);
 
   const toggle = (value: string) => {
     tapFeedback();
@@ -83,15 +91,12 @@ function SocialGroupsPanel({ initial, onClose, onSaved }: Omit<Props, "visible">
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <View style={styles.header}>
         <View style={styles.headerText}>
-          <Text style={styles.title}>Social groups</Text>
-          <Text style={styles.subtitle}>
-            Select the roles and communities that describe you. Shown on your
-            public profile.
-          </Text>
+          <Text style={styles.title}>{t("setup.socialGroups")}</Text>
+          <Text style={styles.subtitle}>{t("socialGroups.subtitle")}</Text>
         </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close"
+          accessibilityLabel={t("common.close")}
           hitSlop={10}
           onPress={onClose}
           style={styles.close}
@@ -104,12 +109,14 @@ function SocialGroupsPanel({ initial, onClose, onSaved }: Omit<Props, "visible">
         <TextInput
           value={search}
           onChangeText={setSearch}
-          placeholder="Search groups…"
+          placeholder={t("socialGroups.search")}
           placeholderTextColor={colors.textMuted}
           style={styles.search}
           autoCapitalize="none"
         />
-        <Text style={styles.count}>Selected: {selected.length}</Text>
+        <Text style={styles.count}>
+          {t("socialGroups.selected", { count: selected.length })}
+        </Text>
       </View>
 
       <ScrollView
@@ -119,34 +126,32 @@ function SocialGroupsPanel({ initial, onClose, onSaved }: Omit<Props, "visible">
         showsVerticalScrollIndicator={false}
       >
         {filteredSections.length === 0 ? (
-          <Text style={styles.empty}>Nothing found.</Text>
+          <Text style={styles.empty}>{t("socialGroups.nothing")}</Text>
         ) : (
           filteredSections.map((section) => (
             <View key={section.title} style={styles.section}>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
+              <Text style={styles.sectionTitle}>{tx(section.title)}</Text>
               {section.options.map((option) => {
                 const active = selected.includes(option.value);
                 return (
                   <Pressable
                     key={option.value}
                     accessibilityRole="button"
-                    accessibilityLabel={option.label}
+                    accessibilityLabel={tx(option.label)}
                     onPress={() => toggle(option.value)}
                     style={[styles.option, active && styles.optionActive]}
                   >
                     <Text style={styles.optionIcon}>{option.icon}</Text>
                     <View style={styles.optionBody}>
-                      <Text style={styles.optionLabel}>{option.label}</Text>
+                      <Text style={styles.optionLabel}>{tx(option.label)}</Text>
                       <Text style={styles.optionDesc} numberOfLines={2}>
-                        {option.description}
+                        {tx(option.description)}
                       </Text>
                     </View>
                     <View
                       style={[styles.checkbox, active && styles.checkboxActive]}
                     >
-                      {active ? (
-                        <CheckIcon size={14} color="#FFFFFF" />
-                      ) : null}
+                      {active ? <CheckIcon size={14} color="#FFFFFF" /> : null}
                     </View>
                   </Pressable>
                 );
@@ -158,7 +163,7 @@ function SocialGroupsPanel({ initial, onClose, onSaved }: Omit<Props, "visible">
 
       <View style={styles.footer}>
         <PrimaryButton
-          label={saving ? "Saving…" : "Save selections"}
+          label={saving ? t("setup.saving") : t("socialGroups.save")}
           withArrow={false}
           loading={saving}
           disabled={saving}
@@ -169,7 +174,12 @@ function SocialGroupsPanel({ initial, onClose, onSaved }: Omit<Props, "visible">
   );
 }
 
-export function SocialGroupsModal({ visible, initial, onClose, onSaved }: Props) {
+export function SocialGroupsModal({
+  visible,
+  initial,
+  onClose,
+  onSaved,
+}: Props) {
   return (
     <Modal
       visible={visible}

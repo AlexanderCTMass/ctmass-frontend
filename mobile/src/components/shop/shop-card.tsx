@@ -12,6 +12,7 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
+import { useT } from "@/lib/i18n";
 import {
   CATEGORY_COLORS,
   CATEGORY_COLORS_LIGHT,
@@ -37,6 +38,7 @@ export const ShopCard = memo(function ShopCard({
 }: ShopCardProps) {
   const { colors, isDark } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const effectivePrice = getEffectivePrice(feature);
   const hasDiscount = effectivePrice < feature.pricing.basePrice;
   const isFree = effectivePrice === 0;
@@ -50,10 +52,16 @@ export const ShopCard = memo(function ShopCard({
   const showManage = isPurchased && !isSpecialOffer;
   const actionEnabled = showManage || isSpecialOffer || canAfford;
 
-  let actionLabel = "Redeem";
-  if (showManage) actionLabel = feature.isOneTime ? "Manage" : "Buy more";
-  else if (isSpecialOffer) actionLabel = "Post Offer";
-  else if (!canAfford) actionLabel = "Not enough";
+  let actionKey:
+    | "redeem"
+    | "manage"
+    | "buy_more"
+    | "post_offer"
+    | "not_enough" = "redeem";
+  if (showManage) actionKey = feature.isOneTime ? "manage" : "buy_more";
+  else if (isSpecialOffer) actionKey = "post_offer";
+  else if (!canAfford) actionKey = "not_enough";
+  const actionLabel = t(`shop.card.actions.${actionKey}`);
 
   const isPrimaryAction = !showManage && (isSpecialOffer || canAfford);
 
@@ -64,7 +72,7 @@ export const ShopCard = memo(function ShopCard({
       <View style={styles.body}>
         <View style={styles.titleRow}>
           <Text style={styles.title} numberOfLines={2}>
-            {feature.displayName}
+            {tx(feature.displayName)}
           </Text>
           <View
             style={[styles.chip, { backgroundColor: `${categoryColor}22` }]}
@@ -79,19 +87,19 @@ export const ShopCard = memo(function ShopCard({
         </View>
 
         <Text style={styles.description} numberOfLines={3}>
-          {feature.description}
+          {tx(feature.description)}
         </Text>
 
         {feature.isOneTime ? (
           <View style={styles.oneTime}>
-            <Text style={styles.oneTimeText}>One-time purchase</Text>
+            <Text style={styles.oneTimeText}>{t("shop.card.oneTime")}</Text>
           </View>
         ) : null}
 
         <View style={styles.footer}>
           <View style={styles.priceBlock}>
             {isFree ? (
-              <Text style={styles.freeText}>Free</Text>
+              <Text style={styles.freeText}>{t("shop.free")}</Text>
             ) : (
               <>
                 <CoinIcon size={20} />
@@ -103,13 +111,13 @@ export const ShopCard = memo(function ShopCard({
                     {formatCoins(feature.pricing.basePrice)}
                   </Text>
                 ) : null}
-                <Text style={styles.priceUnit}>coins</Text>
+                <Text style={styles.priceUnit}>{t("shop.coins")}</Text>
               </>
             )}
           </View>
 
           <PressableScale
-            accessibilityLabel={`${actionLabel} ${feature.displayName}`}
+            accessibilityLabel={`${actionLabel} ${tx(feature.displayName)}`}
             disabled={!actionEnabled}
             onPress={() => {
               analyticsEvents.shopItemActionTapped({
@@ -117,7 +125,7 @@ export const ShopCard = memo(function ShopCard({
                 name: feature.displayName,
                 category: feature.category,
                 price: effectivePrice,
-                action: actionLabel.toLowerCase().replace(/\s+/g, "_"),
+                action: actionKey,
                 can_afford: canAfford,
                 is_purchased: isPurchased,
                 balance,

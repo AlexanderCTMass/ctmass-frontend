@@ -1,3 +1,5 @@
+import i18n from "@/lib/i18n";
+
 const BLOCKLIST: string[] = [
   "fuck",
   "motherfucker",
@@ -45,7 +47,9 @@ const PATTERNS = BLOCKLIST.map((term) => ({
   regex: new RegExp(`\\b${escapeRegExp(term)}\\b`, "i"),
 }));
 
-export function findObjectionable(...texts: (string | null | undefined)[]): string | null {
+export function findObjectionable(
+  ...texts: (string | null | undefined)[]
+): string | null {
   for (const text of texts) {
     if (!text) continue;
     for (const { term, regex } of PATTERNS) {
@@ -57,7 +61,7 @@ export function findObjectionable(...texts: (string | null | undefined)[]): stri
 
 export class ContentBlockedError extends Error {
   constructor() {
-    super("Please remove inappropriate language before posting.");
+    super(i18n.t("media.contentBlocked"));
     this.name = "ContentBlockedError";
   }
 }

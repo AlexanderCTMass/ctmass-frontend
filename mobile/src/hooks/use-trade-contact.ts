@@ -3,13 +3,17 @@ import { useState } from "react";
 import { Alert, Linking } from "react-native";
 
 import { useRequireAuth } from "@/hooks/use-require-auth";
-import { type TradeActionSource, analyticsEvents } from "@/lib/analytics-events";
+import {
+  type TradeActionSource,
+  analyticsEvents,
+} from "@/lib/analytics-events";
 import type { OwnerPublic } from "@/lib/business-profile";
 import { startChat } from "@/lib/chat";
 import { tapFeedback } from "@/lib/haptics";
 import { chatHref, toHref } from "@/lib/navigation";
 import { useAuthStore } from "@/store/use-auth-store";
 import { useProjectDraftStore } from "@/store/use-project-draft-store";
+import i18n from "@/lib/i18n";
 
 export type ContactTarget = {
   tradeId: string;
@@ -53,7 +57,10 @@ export function useTradeContact(source: TradeActionSource) {
       const threadId = await startChat(uid, target.ownerId, projectId);
       router.push(chatHref(threadId, target.name, target.avatarUrl || null));
     } catch {
-      Alert.alert("Couldn't open the chat", "Please try again.");
+      Alert.alert(
+        i18n.t("contact.chatFailed"),
+        i18n.t("common.pleaseTryAgain"),
+      );
     } finally {
       setOpening(false);
     }
@@ -68,7 +75,7 @@ export function useTradeContact(source: TradeActionSource) {
       source,
     });
     void Linking.openURL(`tel:${phoneDigits(phone)}`).catch(() =>
-      Alert.alert("Can't place a call", phone),
+      Alert.alert(i18n.t("contact.callFailed"), phone),
     );
   };
 
@@ -93,5 +100,11 @@ export function useTradeContact(source: TradeActionSource) {
     router.push(toHref("/homeowner-brief"));
   };
 
-  return { message, call, requestQuote, opening, isSelf: (ownerId: string) => uid === ownerId };
+  return {
+    message,
+    call,
+    requestQuote,
+    opening,
+    isSelf: (ownerId: string) => uid === ownerId,
+  };
 }

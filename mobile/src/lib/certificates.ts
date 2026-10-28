@@ -9,6 +9,7 @@ import {
 
 import { getDb } from "@/lib/firebase";
 import { deleteImage } from "@/lib/storage-upload";
+import i18n from "@/lib/i18n";
 
 export type CertificateFile = {
   id: string;
@@ -64,7 +65,7 @@ function mapFiles(data: Record<string, unknown>): CertificateFile[] {
       const file = asRecord(item);
       return {
         id: str(file.id) || String(index),
-        name: str(file.name) || "Document",
+        name: str(file.name) || i18n.t("tradePage.document"),
         url: str(file.url),
         type: str(file.type),
         isPublic: file.isPublic !== false,
@@ -73,7 +74,10 @@ function mapFiles(data: Record<string, unknown>): CertificateFile[] {
     .filter((file) => file.url.length > 0);
 }
 
-function mapCertificate(id: string, data: Record<string, unknown>): Certificate {
+function mapCertificate(
+  id: string,
+  data: Record<string, unknown>,
+): Certificate {
   return {
     id,
     documentType: str(data.documentType) || str(data.certificateType),

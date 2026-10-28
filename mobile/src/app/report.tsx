@@ -17,6 +17,7 @@ import {
 } from "@/constants/theme";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { choosePhoto } from "@/lib/media";
 import { reportUser } from "@/lib/moderation";
 import { uploadImage } from "@/lib/storage-upload";
@@ -34,9 +35,11 @@ const REASONS = [
 export default function ReportScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const params = useLocalSearchParams<{ uid?: string; name?: string }>();
   const reportedId = typeof params.uid === "string" ? params.uid : "";
-  const reportedName = typeof params.name === "string" ? params.name : "User";
+  const reportedName =
+    typeof params.name === "string" ? params.name : t("publicProfile.user");
   const uid = useAuthStore((state) => state.user?.uid) ?? "";
 
   const [reason, setReason] = useState<string | null>(null);
@@ -81,18 +84,16 @@ export default function ReportScreen() {
         comment: comment.trim(),
         has_photo: Boolean(photoUri),
       });
-      Alert.alert(
-        "Report submitted",
-        "Thanks — our team will review it shortly.",
-        [{ text: "OK", onPress: () => router.back() }],
-      );
+      Alert.alert(t("report.submittedTitle"), t("report.submittedText"), [
+        { text: t("common.ok"), onPress: () => router.back() },
+      ]);
     } catch (error) {
       analyticsEvents.reportFailed({
         target_uid: reportedId,
         error_message: errorMessage(error),
       });
       setSubmitting(false);
-      Alert.alert("Couldn't submit", "Please try again.");
+      Alert.alert(t("report.failed"), t("common.pleaseTryAgain"));
     }
   };
 
@@ -101,7 +102,9 @@ export default function ReportScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>Report {reportedName}</Text>
+          <Text style={styles.headerTitle}>
+            {t("report.title", { name: reportedName })}
+          </Text>
           <View style={styles.spacer} />
         </View>
 
@@ -110,12 +113,12 @@ export default function ReportScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.label}>Reason</Text>
+          <Text style={styles.label}>{t("report.reason")}</Text>
           <View style={styles.reasons}>
             {REASONS.map((item) => (
               <PressableScale
                 key={item}
-                accessibilityLabel={item}
+                accessibilityLabel={tx(item)}
                 onPress={() => {
                   tapFeedback();
                   analyticsEvents.reportReasonSelected({
@@ -134,29 +137,29 @@ export default function ReportScreen() {
                       reason === item && styles.chipTextSelected,
                     ]}
                   >
-                    {item}
+                    {tx(item)}
                   </Text>
                 </View>
               </PressableScale>
             ))}
           </View>
 
-          <Text style={styles.label}>Details</Text>
+          <Text style={styles.label}>{t("videoStory.details")}</Text>
           <TextInput
             value={comment}
             onChangeText={setComment}
-            placeholder="Describe what happened…"
+            placeholder={t("report.placeholder")}
             placeholderTextColor={colors.textMuted}
             style={styles.input}
             multiline
           />
 
-          <Text style={styles.label}>Attach a photo (optional)</Text>
+          <Text style={styles.label}>{t("report.attach")}</Text>
           {photoUri ? (
             <View style={styles.photoWrap}>
               <Image source={{ uri: photoUri }} style={styles.photo} />
               <PressableScale
-                accessibilityLabel="Remove photo"
+                accessibilityLabel={t("profile.tab.removePhoto")}
                 onPress={() => {
                   analyticsEvents.reportPhotoRemoved({
                     target_uid: reportedId,
@@ -165,18 +168,20 @@ export default function ReportScreen() {
                 }}
               >
                 <View style={styles.removeChip}>
-                  <Text style={styles.removeText}>Remove</Text>
+                  <Text style={styles.removeText}>
+                    {t("videoStory.remove")}
+                  </Text>
                 </View>
               </PressableScale>
             </View>
           ) : (
             <PressableScale
-              accessibilityLabel="Add a photo"
+              accessibilityLabel={t("media.addPhoto")}
               onPress={() => void handleAddPhoto()}
             >
               <View style={styles.addPhoto}>
                 <ImageIcon size={20} color={colors.textSecondary} />
-                <Text style={styles.addPhotoText}>Add a photo</Text>
+                <Text style={styles.addPhotoText}>{t("media.addPhoto")}</Text>
               </View>
             </PressableScale>
           )}
@@ -184,7 +189,7 @@ export default function ReportScreen() {
 
         <View style={styles.footer}>
           <PrimaryButton
-            label={submitting ? "Submitting…" : "Submit report"}
+            label={submitting ? t("shop.submitting") : t("report.submit")}
             withArrow={false}
             loading={submitting}
             disabled={!reason || submitting}

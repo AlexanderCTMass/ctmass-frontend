@@ -10,6 +10,7 @@ import Animated, {
 
 import { HeartIcon } from "@/components/icons";
 import { Brand, makeStyles, useTheme } from "@/constants/theme";
+import { useT } from "@/lib/i18n";
 
 export function LikeButton({
   liked,
@@ -22,6 +23,7 @@ export function LikeButton({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const scale = useSharedValue(1);
   const was = useRef(liked);
 
@@ -42,7 +44,7 @@ export function LikeButton({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={liked ? "Remove like" : "Like"}
+      accessibilityLabel={liked ? t("ui.removeLike") : t("ui.like")}
       accessibilityState={{ selected: liked }}
       hitSlop={8}
       onPress={onPress}

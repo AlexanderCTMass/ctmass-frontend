@@ -60,6 +60,7 @@ import { analyticsEvents } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
 import { distanceBetweenCenters } from "@/lib/geo";
 import { tapFeedback } from "@/lib/haptics";
+import { type Translate, useT } from "@/lib/i18n";
 import { chatHref, toHref } from "@/lib/navigation";
 import type { ProjectDetail } from "@/lib/projects";
 import { rankByAffinity } from "@/lib/swipes";
@@ -93,10 +94,11 @@ function statusMeta(
   state: string,
   responseCount: number,
   colors: ThemeColors,
+  t: Translate,
 ): CardBadge {
   if (state === "published" && responseCount > 0) {
     return {
-      label: `${responseCount} ${responseCount === 1 ? "response" : "responses"}`,
+      label: t("project.responses", { count: responseCount }),
       tint: colors.info,
       bg: "rgba(41,112,255,0.16)",
     };
@@ -104,37 +106,37 @@ function statusMeta(
   switch (state) {
     case "in_progress":
       return {
-        label: "in progress",
+        label: t("home.status.inProgress"),
         tint: colors.accent,
         bg: "rgba(22,179,100,0.14)",
       };
     case "published":
       return {
-        label: "open",
+        label: t("home.status.open"),
         tint: colors.coin,
         bg: "rgba(255,193,7,0.14)",
       };
     case "completed":
       return {
-        label: "completed",
+        label: t("home.status.completed"),
         tint: colors.accent,
         bg: "rgba(22,179,100,0.14)",
       };
     case "cancelled":
       return {
-        label: "cancelled",
+        label: t("home.status.cancelled"),
         tint: colors.textSecondary,
         bg: colors.surfaceStrong,
       };
     case "moderate":
       return {
-        label: "in review",
+        label: t("home.status.inReview"),
         tint: colors.info,
         bg: "rgba(41,112,255,0.16)",
       };
     default:
       return {
-        label: "draft",
+        label: t("home.status.draft"),
         tint: colors.textSecondary,
         bg: colors.surfaceStrong,
       };
@@ -149,6 +151,7 @@ function SegmentedControl({
   onChange: (mode: Mode) => void;
 }) {
   const styles = useStyles();
+  const { t } = useT();
   const index = mode === "contractor" ? 1 : 0;
   const [width, setWidth] = useState(0);
   const pillWidth = width > 0 ? (width - 8) / 2 : 0;
@@ -212,7 +215,9 @@ function SegmentedControl({
             <Text
               style={[styles.segmentText, active && styles.segmentTextActive]}
             >
-              {value === "homeowner" ? "Homeowner" : "Contractor"}
+              {value === "homeowner"
+                ? t("common.roles.homeowner")
+                : t("common.roles.contractor")}
             </Text>
           </Pressable>
         );
@@ -247,13 +252,14 @@ function InvitedRow({
   onDelete: () => void;
 }) {
   const { colors } = useTheme();
+  const { t, tx } = useT();
   const sides = useSwipeSides();
   const openMenu = () => {
     tapFeedback();
-    Alert.alert(project.title, "What would you like to do with this request?", [
-      { text: "Archive", onPress: () => onArchive("menu") },
-      { text: "Delete", style: "destructive", onPress: onDelete },
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(tx(project.title), t("home.menuQuestion"), [
+      { text: t("home.archive"), onPress: () => onArchive("menu") },
+      { text: t("common.delete"), style: "destructive", onPress: onDelete },
+      { text: t("common.cancel"), style: "cancel" },
     ]);
   };
   return (
@@ -268,12 +274,12 @@ function InvitedRow({
       <ProjectCard
         project={project}
         badge={{
-          label: "Invited",
+          label: t("home.invited"),
           tint: colors.accent,
           bg: "rgba(22,179,100,0.18)",
         }}
         distance={distance}
-        ctaLabel="Open chat"
+        ctaLabel={t("home.openChat")}
         showResponses={false}
         highlighted
         liked={liked}
@@ -289,36 +295,28 @@ const HOMEOWNER_STEPS = [
   {
     key: "describe",
     icon: SubmitRequestIcon,
-    title: "Describe the job",
-    text: "Answer a few quick questions about what you need.",
   },
   {
     key: "offers",
     icon: ResponsesIcon,
-    title: "Get responses",
-    text: "Local specialists reach out to you in chat.",
   },
   {
     key: "hire",
     icon: SelectSpecialistIcon,
-    title: "Hire the right pro",
-    text: "Compare ratings and reviews, then choose.",
   },
 ] as const;
 
 function HomeownerEmptyState() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   return (
     <View style={styles.heroCard}>
       <View style={styles.heroBadge}>
         <SubmitRequestIcon size={34} color={colors.accent} />
       </View>
-      <Text style={styles.heroTitle}>What needs doing?</Text>
-      <Text style={styles.heroText}>
-        Post a request and local specialists will reach out to you. You decide
-        who to hire.
-      </Text>
+      <Text style={styles.heroTitle}>{t("home.heroTitle")}</Text>
+      <Text style={styles.heroText}>{t("home.heroText")}</Text>
       <View style={styles.steps}>
         {HOMEOWNER_STEPS.map((step, index) => {
           const Icon = step.icon;
@@ -329,9 +327,11 @@ function HomeownerEmptyState() {
               </View>
               <View style={styles.stepBody}>
                 <Text style={styles.stepTitle}>
-                  {index + 1}. {step.title}
+                  {index + 1}. {t(`home.steps.${step.key}.title`)}
                 </Text>
-                <Text style={styles.stepText}>{step.text}</Text>
+                <Text style={styles.stepText}>
+                  {t(`home.steps.${step.key}.text`)}
+                </Text>
               </View>
             </View>
           );
@@ -362,6 +362,7 @@ function Pagination({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   if (totalPages <= 1) return null;
   return (
     <View style={styles.paginationWrap}>
@@ -375,7 +376,7 @@ function Pagination({
           <ChevronLeftIcon size={18} color={colors.text} />
         </Pressable>
         <Text style={styles.pageLabel}>
-          Page {page} of {totalPages}
+          {t("home.page", { page, total: totalPages })}
         </Text>
         <Pressable
           accessibilityRole="button"
@@ -396,7 +397,7 @@ function Pagination({
           hitSlop={8}
           onPress={() => onChange(1)}
         >
-          <Text style={styles.firstPageLink}>Back to first page</Text>
+          <Text style={styles.firstPageLink}>{t("home.firstPage")}</Text>
         </Pressable>
       ) : null}
     </View>
@@ -432,6 +433,7 @@ function SkeletonList() {
 export default function HomeTab() {
   const styles = useStyles();
   const { colors } = useTheme();
+  const { t } = useT();
   const role = useAppStore((state) => state.role);
   const params = useLocalSearchParams<{ mode?: string }>();
   const uid = useAuthStore((state) => state.user?.uid);
@@ -576,7 +578,7 @@ export default function HomeTab() {
     const invitedOne = isInvited(project);
     const revert = swipe.archive(subject, source);
     if (invitedOne) invitedActions.archive(project);
-    undo.show("Request archived", () => {
+    undo.show(t("home.archived"), () => {
       revert();
       if (invitedOne) invitedActions.restore(project);
     });
@@ -730,8 +732,9 @@ export default function HomeTab() {
                     row.item.state,
                     row.item.responseCount,
                     colors,
+                    t,
                   )}
-                  ctaLabel="View request"
+                  ctaLabel={t("home.viewRequest")}
                   likeCount={likeStats.data?.[row.item.id] ?? 0}
                   onPress={() => openMyRequest(row.item, row.index)}
                 />
@@ -775,7 +778,7 @@ export default function HomeTab() {
                     badge={
                       uid && row.item.responders.some((r) => r.userId === uid)
                         ? {
-                            label: "Responded",
+                            label: t("home.responded"),
                             tint: colors.accent,
                             bg: "rgba(22,179,100,0.14)",
                           }
@@ -783,13 +786,14 @@ export default function HomeTab() {
                             row.item.state,
                             row.item.responseCount,
                             colors,
+                            t,
                           )
                     }
                     distance={distanceTo(row.item)}
                     ctaLabel={
                       uid && row.item.responders.some((r) => r.userId === uid)
-                        ? "Open chat"
-                        : "View details & respond"
+                        ? t("home.openChat")
+                        : t("home.viewRespond")
                     }
                     liked={liked.has(row.item.id)}
                     onPress={() => openNearby(row.item, row.index)}
@@ -806,11 +810,10 @@ export default function HomeTab() {
                 {invitedItems.length > 0 ? (
                   <View style={styles.invitedSection}>
                     <Text style={styles.invitedSectionTitle}>
-                      Direct requests
+                      {t("home.directRequests")}
                     </Text>
                     <Text style={styles.invitedHint}>
-                      Homeowners sent these to you directly. Swipe right to
-                      like, left to archive, or reply in chat.
+                      {t("home.directHint")}
                     </Text>
                     {invitedItems.map((project) => (
                       <InvitedRow
@@ -833,10 +836,10 @@ export default function HomeTab() {
                   <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitle}>
                       {isHomeowner
-                        ? "My requests"
+                        ? t("home.myRequests")
                         : showLiked
-                          ? "Liked requests"
-                          : "Requests nearby"}
+                          ? t("home.likedRequests")
+                          : t("home.nearby")}
                     </Text>
                     {!isHomeowner && archivedCount > 0 ? (
                       <Pressable
@@ -847,7 +850,7 @@ export default function HomeTab() {
                       >
                         <ArchiveIcon size={16} color={colors.accent} />
                         <Text style={styles.archiveLinkText}>
-                          Archive ({archivedCount})
+                          {t("home.archiveCount", { count: archivedCount })}
                         </Text>
                       </Pressable>
                     ) : null}
@@ -858,10 +861,10 @@ export default function HomeTab() {
                     value={tab}
                     onChange={changeTab}
                     tabs={[
-                      { key: "all", label: "All" },
+                      { key: "all", label: t("home.all") },
                       {
                         key: "liked",
-                        label: "Liked",
+                        label: t("home.liked"),
                         count: liked.size,
                         icon: (color) => (
                           <HeartIcon size={14} color={color} filled />
@@ -871,7 +874,11 @@ export default function HomeTab() {
                     trailing={
                       showLiked ? null : (
                         <SortChip
-                          label={sort === "for_you" ? "For you" : "Newest"}
+                          label={
+                            sort === "for_you"
+                              ? t("home.forYou")
+                              : t("home.newest")
+                          }
                           onPress={toggleSort}
                         />
                       )
@@ -891,14 +898,14 @@ export default function HomeTab() {
                   <SkeletonList />
                 ) : (
                   <EmptyState
-                    title="No liked requests yet"
-                    text="Swipe a request right or tap the heart to save it here. Your likes are private."
+                    title={t("home.noLikedTitle")}
+                    text={t("home.noLikedText")}
                   />
                 )
               ) : (
                 <EmptyState
-                  title="No open requests nearby"
-                  text="New jobs in your area will show up here. Check back soon."
+                  title={t("home.noNearbyTitle")}
+                  text={t("home.noNearbyText")}
                 />
               )
             }
@@ -919,12 +926,12 @@ export default function HomeTab() {
           {isHomeowner ? (
             <>
               <PrimaryButton
-                label={isEmpty ? "Post a request" : "New request"}
+                label={isEmpty ? t("home.postRequest") : t("home.newRequest")}
                 onPress={newRequest}
               />
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Browse specialists and request one directly"
+                accessibilityLabel={t("home.browseA11y")}
                 onPress={findSpecialist}
                 style={({ pressed }) => [
                   styles.browseButton,
@@ -933,30 +940,30 @@ export default function HomeTab() {
               >
                 <SelectSpecialistIcon size={18} color={colors.accent} />
                 <Text style={styles.browseText}>
-                  Or choose a specialist yourself
+                  {t("home.chooseYourself")}
                 </Text>
               </Pressable>
             </>
           ) : hasTrade ? (
             <>
-              <PrimaryButton label="My jobs" onPress={openMyJobs} />
+              <PrimaryButton label={t("home.myJobs")} onPress={openMyJobs} />
               <Pressable
                 accessibilityRole="button"
                 hitSlop={8}
                 onPress={newTrade}
               >
-                <Text style={styles.findLink}>Create a new trade</Text>
+                <Text style={styles.findLink}>{t("home.createTrade")}</Text>
               </Pressable>
             </>
           ) : (
             <>
-              <PrimaryButton label="New trade" onPress={newTrade} />
+              <PrimaryButton label={t("home.newTrade")} onPress={newTrade} />
               <Pressable
                 accessibilityRole="button"
                 hitSlop={8}
                 onPress={openMyJobs}
               >
-                <Text style={styles.findLink}>My jobs</Text>
+                <Text style={styles.findLink}>{t("home.myJobs")}</Text>
               </Pressable>
             </>
           )}
@@ -1170,7 +1177,9 @@ const useStyles = makeStyles((t) => ({
     borderRadius: Radius.pill,
     borderWidth: 1.5,
     borderColor: "rgba(22,179,100,0.45)",
-    backgroundColor: t.isDark ? "rgba(22,179,100,0.08)" : "rgba(255,255,255,0.7)",
+    backgroundColor: t.isDark
+      ? "rgba(22,179,100,0.08)"
+      : "rgba(255,255,255,0.7)",
   },
   browseButtonPressed: {
     opacity: 0.7,

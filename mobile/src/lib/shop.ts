@@ -11,6 +11,7 @@ import {
 } from "@react-native-firebase/firestore";
 
 import { getDb } from "@/lib/firebase";
+import i18n, { type Translate } from "@/lib/i18n";
 import type { Role } from "@/lib/roles";
 
 export const SHOP_CATEGORIES = {
@@ -109,9 +110,7 @@ export type ShopOrder = {
 
 export class PurchaseUnconfirmedError extends Error {
   constructor() {
-    super(
-      "We couldn't confirm your order because the connection dropped. Check your internet and tap the button again — you won't be charged twice.",
-    );
+    super(i18n.t("shop.errors.unconfirmed"));
     this.name = "PurchaseUnconfirmedError";
   }
 }
@@ -150,7 +149,12 @@ export const DEFAULT_SHOP_ITEMS: ShopFeature[] = [
     imageUrl2:
       "https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Ft-shirtOldOne.jpg?alt=media&token=8b9adb08-3367-455a-a4a6-b06cd4609abc",
     imageUrl3: "",
-    pricing: { basePrice: 2500, currency: "COINS", discount: null, packages: null },
+    pricing: {
+      basePrice: 2500,
+      currency: "COINS",
+      discount: null,
+      packages: null,
+    },
     availability: {
       roles: ["homeowner", "contractor", "partner"],
       requireVerified: false,
@@ -173,7 +177,12 @@ export const DEFAULT_SHOP_ITEMS: ShopFeature[] = [
       "https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fcap-white.jpg?alt=media&token=7eb1ade0-c66d-47b6-990c-fd5f460f5495",
     imageUrl3:
       "https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2FbaseballCapClean.jpg?alt=media&token=0764fe3e-9941-461d-825c-694ccd21c2b7",
-    pricing: { basePrice: 2000, currency: "COINS", discount: null, packages: null },
+    pricing: {
+      basePrice: 2000,
+      currency: "COINS",
+      discount: null,
+      packages: null,
+    },
     availability: {
       roles: ["homeowner", "contractor", "partner"],
       requireVerified: false,
@@ -207,7 +216,12 @@ export const DEFAULT_SHOP_ITEMS: ShopFeature[] = [
       "https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fhoodie.jpg?alt=media&token=0ba4d0cc-c75f-4f8e-8771-6189e9f8be3a",
     imageUrl2: "",
     imageUrl3: "",
-    pricing: { basePrice: 5000, currency: "COINS", discount: null, packages: null },
+    pricing: {
+      basePrice: 5000,
+      currency: "COINS",
+      discount: null,
+      packages: null,
+    },
     availability: {
       roles: ["homeowner", "contractor", "partner"],
       requireVerified: false,
@@ -230,7 +244,12 @@ export const DEFAULT_SHOP_ITEMS: ShopFeature[] = [
       "https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2FcupOld.jpg?alt=media&token=09e83e90-a041-461d-af5f-13b3850f256e",
     imageUrl3:
       "https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fcup2New.jpg?alt=media&token=26dcc0fc-dc44-44bb-a301-7453ae0edfe8",
-    pricing: { basePrice: 2000, currency: "COINS", discount: null, packages: null },
+    pricing: {
+      basePrice: 2000,
+      currency: "COINS",
+      discount: null,
+      packages: null,
+    },
     availability: {
       roles: ["homeowner", "contractor", "partner"],
       requireVerified: false,
@@ -252,7 +271,12 @@ export const DEFAULT_SHOP_ITEMS: ShopFeature[] = [
       "https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fceiling.jpg?alt=media&token=68322b36-cc33-4c71-af59-fc3dcd17c13d",
     imageUrl2: "",
     imageUrl3: "",
-    pricing: { basePrice: 5000, currency: "COINS", discount: null, packages: null },
+    pricing: {
+      basePrice: 5000,
+      currency: "COINS",
+      discount: null,
+      packages: null,
+    },
     availability: {
       roles: ["homeowner", "contractor", "partner"],
       requireVerified: false,
@@ -280,8 +304,20 @@ export const DEFAULT_SHOP_ITEMS: ShopFeature[] = [
       currency: "COINS",
       discount: null,
       packages: [
-        { id: "basic", quantity: 1, price: 8000, displayName: "Basic Landing Page", isRecommended: false },
-        { id: "premium", quantity: 1, price: 20000, displayName: "Premium Landing Page", isRecommended: true },
+        {
+          id: "basic",
+          quantity: 1,
+          price: 8000,
+          displayName: "Basic Landing Page",
+          isRecommended: false,
+        },
+        {
+          id: "premium",
+          quantity: 1,
+          price: 20000,
+          displayName: "Premium Landing Page",
+          isRecommended: true,
+        },
       ],
     },
     availability: {
@@ -310,8 +346,20 @@ export const DEFAULT_SHOP_ITEMS: ShopFeature[] = [
       currency: "COINS",
       discount: null,
       packages: [
-        { id: "mvp", quantity: 1, price: 15000, displayName: "MVP App", isRecommended: false },
-        { id: "full", quantity: 1, price: 40000, displayName: "Full-Featured App", isRecommended: true },
+        {
+          id: "mvp",
+          quantity: 1,
+          price: 15000,
+          displayName: "MVP App",
+          isRecommended: false,
+        },
+        {
+          id: "full",
+          quantity: 1,
+          price: 40000,
+          displayName: "Full-Featured App",
+          isRecommended: true,
+        },
       ],
     },
     availability: {
@@ -335,7 +383,12 @@ export const DEFAULT_SHOP_ITEMS: ShopFeature[] = [
       "https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fbackend.jpg?alt=media&token=7a87ec97-2ba6-4b7f-b775-56b2b07dd3ff",
     imageUrl2: "",
     imageUrl3: "",
-    pricing: { basePrice: 22000, currency: "COINS", discount: null, packages: null },
+    pricing: {
+      basePrice: 22000,
+      currency: "COINS",
+      discount: null,
+      packages: null,
+    },
     availability: {
       roles: ["homeowner", "contractor", "partner"],
       requireVerified: false,
@@ -357,7 +410,12 @@ export const DEFAULT_SHOP_ITEMS: ShopFeature[] = [
       "https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2FCRM.jpg?alt=media&token=35487c56-1b91-467f-ba43-8d7ffbac0b30",
     imageUrl2: "",
     imageUrl3: "",
-    pricing: { basePrice: 24000, currency: "COINS", discount: null, packages: null },
+    pricing: {
+      basePrice: 24000,
+      currency: "COINS",
+      discount: null,
+      packages: null,
+    },
     availability: {
       roles: ["homeowner", "contractor", "partner"],
       requireVerified: false,
@@ -379,7 +437,12 @@ export const DEFAULT_SHOP_ITEMS: ShopFeature[] = [
       "https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fmini-game.jpg?alt=media&token=1c23e6c6-ed77-4e65-8136-4d01ec89b851",
     imageUrl2: "",
     imageUrl3: "",
-    pricing: { basePrice: 9000, currency: "COINS", discount: null, packages: null },
+    pricing: {
+      basePrice: 9000,
+      currency: "COINS",
+      discount: null,
+      packages: null,
+    },
     availability: {
       roles: ["homeowner", "contractor", "partner"],
       requireVerified: false,
@@ -401,7 +464,12 @@ export const DEFAULT_SHOP_ITEMS: ShopFeature[] = [
       "https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fchatbot.jpg?alt=media&token=def58143-1054-4466-947d-ddf0e6dfc19d",
     imageUrl2: "",
     imageUrl3: "",
-    pricing: { basePrice: 7000, currency: "COINS", discount: null, packages: null },
+    pricing: {
+      basePrice: 7000,
+      currency: "COINS",
+      discount: null,
+      packages: null,
+    },
     availability: {
       roles: ["homeowner", "contractor", "partner"],
       requireVerified: false,
@@ -423,7 +491,12 @@ export const DEFAULT_SHOP_ITEMS: ShopFeature[] = [
       "https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fstore.jpg?alt=media&token=c86d4060-e4fc-496c-abaa-7d7f1c84f7e5",
     imageUrl2: "",
     imageUrl3: "",
-    pricing: { basePrice: 30000, currency: "COINS", discount: null, packages: null },
+    pricing: {
+      basePrice: 30000,
+      currency: "COINS",
+      discount: null,
+      packages: null,
+    },
     availability: {
       roles: ["homeowner", "contractor", "partner"],
       requireVerified: false,
@@ -445,7 +518,12 @@ export const DEFAULT_SHOP_ITEMS: ShopFeature[] = [
       "https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2FcustomWebApp.jpg?alt=media&token=c4caadee-8aec-4c0b-92d4-da144119d4ca",
     imageUrl2: "",
     imageUrl3: "",
-    pricing: { basePrice: 11000, currency: "COINS", discount: null, packages: null },
+    pricing: {
+      basePrice: 11000,
+      currency: "COINS",
+      discount: null,
+      packages: null,
+    },
     availability: {
       roles: ["homeowner", "contractor", "partner"],
       requireVerified: false,
@@ -467,7 +545,12 @@ export const DEFAULT_SHOP_ITEMS: ShopFeature[] = [
       "https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Ftech-support.jpg?alt=media&token=4ac9f4f1-cc39-45f2-a313-f8041218bee6",
     imageUrl2: "",
     imageUrl3: "",
-    pricing: { basePrice: 3000, currency: "COINS", discount: null, packages: null },
+    pricing: {
+      basePrice: 3000,
+      currency: "COINS",
+      discount: null,
+      packages: null,
+    },
     availability: {
       roles: ["homeowner", "contractor", "partner"],
       requireVerified: false,
@@ -489,7 +572,12 @@ export const DEFAULT_SHOP_ITEMS: ShopFeature[] = [
       "https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fgroupon.jpg?alt=media&token=6d7d6159-763d-4e80-96ea-01f3e2a1acb5",
     imageUrl2: "",
     imageUrl3: "",
-    pricing: { basePrice: 0, currency: "COINS", discount: null, packages: null },
+    pricing: {
+      basePrice: 0,
+      currency: "COINS",
+      discount: null,
+      packages: null,
+    },
     availability: {
       roles: ["homeowner", "contractor", "partner"],
       requireVerified: false,
@@ -559,7 +647,12 @@ function normalizePackages(value: unknown): ShopPackage[] | null {
 function normalizeDiscount(value: unknown): ShopDiscount | null {
   if (!value || typeof value !== "object") return null;
   const raw = value as Raw;
-  const type = raw.type === "fixed" ? "fixed" : raw.type === "percentage" ? "percentage" : null;
+  const type =
+    raw.type === "fixed"
+      ? "fixed"
+      : raw.type === "percentage"
+        ? "percentage"
+        : null;
   if (!type) return null;
   return {
     type,
@@ -624,7 +717,10 @@ export function getEffectivePrice(feature: ShopFeature): number {
   return basePrice;
 }
 
-export function isRoleAllowed(role: Role | null | undefined, feature: ShopFeature): boolean {
+export function isRoleAllowed(
+  role: Role | null | undefined,
+  feature: ShopFeature,
+): boolean {
   const roleKey = (role ?? "").toLowerCase();
   if (roleKey === "admin") return true;
   const roles = feature.availability?.roles ?? [];
@@ -664,7 +760,9 @@ export async function fetchShopFeatures(): Promise<ShopFeature[]> {
   }
 }
 
-export async function fetchUserPurchases(userId: string): Promise<ShopPurchase[]> {
+export async function fetchUserPurchases(
+  userId: string,
+): Promise<ShopPurchase[]> {
   const db = getDb();
   const snapshot = await getDocs(
     query(collection(db, PURCHASES_COLLECTION), where("userId", "==", userId)),
@@ -722,7 +820,8 @@ export async function fetchUserOrders(
   return snapshot.docs
     .map((docSnap) => normalizeOrder(docSnap.id, docSnap.data()))
     .sort(
-      (a, b) => (b.purchasedAt?.getTime() ?? 0) - (a.purchasedAt?.getTime() ?? 0),
+      (a, b) =>
+        (b.purchasedAt?.getTime() ?? 0) - (a.purchasedAt?.getTime() ?? 0),
     );
 }
 
@@ -760,7 +859,12 @@ function buildInitialUsageData(
   selectedPackage: ShopPackage | null,
 ): Record<string, unknown> {
   if (feature.featureKey === "CUSTOM_PROFILE_URL") {
-    return { customSlug: null, previousSlug: null, changedAt: null, changeCount: 0 };
+    return {
+      customSlug: null,
+      previousSlug: null,
+      changedAt: null,
+      changeCount: 0,
+    };
   }
   if (feature.featureKey === "AI_AVATAR_GENERATION") {
     const qty = selectedPackage ? selectedPackage.quantity : 1;
@@ -797,7 +901,13 @@ export async function purchaseShopFeature(
 
   for (let attempt = 0; ; attempt += 1) {
     try {
-      return await runPurchase(userId, userRole, feature, selectedPackage, options);
+      return await runPurchase(
+        userId,
+        userRole,
+        feature,
+        selectedPackage,
+        options,
+      );
     } catch (error) {
       if (!isTransientError(error)) throw error;
       const existing = await lookup();
@@ -815,18 +925,26 @@ async function runPurchase(
   options: PurchaseOptions,
 ): Promise<PurchaseResult> {
   const db = getDb();
-  const { formData = null, ticketNumber = null, totalPrice = null, totalQuantity = 1 } = options;
-  const unitPrice = selectedPackage ? selectedPackage.price : feature.pricing.basePrice;
-  const price = totalPrice !== null && totalPrice !== undefined ? totalPrice : unitPrice;
+  const {
+    formData = null,
+    ticketNumber = null,
+    totalPrice = null,
+    totalQuantity = 1,
+  } = options;
+  const unitPrice = selectedPackage
+    ? selectedPackage.price
+    : feature.pricing.basePrice;
+  const price =
+    totalPrice !== null && totalPrice !== undefined ? totalPrice : unitPrice;
 
   return runTransaction(db, async (transaction) => {
     const profileRef = doc(db, "profiles", userId);
     const profileSnap = await transaction.get(profileRef);
-    if (!profileSnap.exists()) throw new Error("User profile not found");
+    if (!profileSnap.exists()) throw new Error(i18n.t("shop.errors.noProfile"));
 
     const profileData: Raw = profileSnap.data() ?? {};
     const balance = asNum(profileData.loyaltyBalance);
-    if (balance < price) throw new Error("Insufficient coin balance");
+    if (balance < price) throw new Error(i18n.t("shop.errors.insufficient"));
 
     const txRef = doc(collection(db, TRANSACTIONS_COLLECTION));
     const purchaseRef = doc(
@@ -839,7 +957,7 @@ async function runPurchase(
     if (feature.isOneTime && existingPurchase.exists()) {
       const existingData: Raw = existingPurchase.data() ?? {};
       if (existingData.status === "active") {
-        throw new Error("This feature is already purchased");
+        throw new Error(i18n.t("shop.errors.alreadyPurchased"));
       }
     }
 
@@ -899,7 +1017,11 @@ async function runPurchase(
       });
     }
 
-    return { transactionId: txRef.id, price, ticketNumber: ticketNumber ?? null };
+    return {
+      transactionId: txRef.id,
+      price,
+      ticketNumber: ticketNumber ?? null,
+    };
   });
 }
 
@@ -912,17 +1034,17 @@ export function generateTicketNumber(): string {
   return `${y}${m}${day}-${rand}`;
 }
 
-export function purchaseErrorText(error: unknown): string {
+export function purchaseErrorText(error: unknown, t: Translate): string {
   if (error instanceof PurchaseUnconfirmedError) return error.message;
   const code =
     error && typeof error === "object"
       ? (error as { code?: unknown }).code
       : undefined;
   if (typeof code === "string" && code.includes("/")) {
-    return "We couldn't complete your order. Please check your connection and try again.";
+    return t("shop.errors.network");
   }
   if (error instanceof Error && error.message) return error.message;
-  return "Something went wrong, please try again.";
+  return t("common.somethingWrong");
 }
 
 export function formatCoins(value: number): string {

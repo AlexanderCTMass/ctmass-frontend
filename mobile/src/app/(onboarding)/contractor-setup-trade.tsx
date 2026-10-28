@@ -35,22 +35,24 @@ import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, locationProps } from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
 import { errorFeedback, tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
 import { useAuthStore } from "@/store/use-auth-store";
 import { useTradeDraftStore } from "@/store/use-trade-draft-store";
 
 const STEPS = [
-  { name: "trade", title: "What's your trade?", subtitle: "Start with one trade. You can add more trades to your profile later." },
-  { name: "services", title: "Services & experience", subtitle: "Experience counts only for this trade." },
-  { name: "pricing", title: "Pricing", subtitle: "Clear pricing helps homeowners compare. Amounts are optional." },
-  { name: "area", title: "Where & when you work", subtitle: "Homeowners see your city, radius and schedule." },
-  { name: "details", title: "Final details", subtitle: "Optional, but complete profiles get more requests." },
+  { name: "trade" },
+  { name: "services" },
+  { name: "pricing" },
+  { name: "area" },
+  { name: "details" },
 ] as const;
 
 const schema = tradeFormSchema(true);
 
 export default function ContractorSetupTradeScreen() {
   const styles = useStyles();
+  const { t } = useT();
   const patch = useTradeDraftStore((state) => state.patch);
   const scrollRef = useRef<ScrollView>(null);
   const [step, setStep] = useState(0);
@@ -90,7 +92,14 @@ export default function ContractorSetupTradeScreen() {
   };
 
   const onSubmit = (values: TradeFormValues) => {
-    if (findObjectionable(values.title, values.about, values.customSpecialty, ...values.services)) {
+    if (
+      findObjectionable(
+        values.title,
+        values.about,
+        values.customSpecialty,
+        ...values.services,
+      )
+    ) {
       analyticsEvents.contentFilterBlocked({
         screen: "trade_setup",
         fields: [
@@ -101,7 +110,7 @@ export default function ContractorSetupTradeScreen() {
         ].filter((field): field is string => field !== null),
       });
       errorFeedback();
-      setFilterError("Please remove inappropriate language from your trade details.");
+      setFilterError(t("tradeSetup.filterError"));
       return;
     }
     setFilterError(null);
@@ -184,16 +193,28 @@ export default function ContractorSetupTradeScreen() {
             keyboardDismissMode="on-drag"
             showsVerticalScrollIndicator={false}
           >
-            <Animated.View key={current.name} entering={FadeInRight.duration(260)}>
-              <Animated.Text entering={FadeIn.duration(360)} style={styles.eyebrow}>
-                Your trade
+            <Animated.View
+              key={current.name}
+              entering={FadeInRight.duration(260)}
+            >
+              <Animated.Text
+                entering={FadeIn.duration(360)}
+                style={styles.eyebrow}
+              >
+                {t("tradeSetup.yourTrade")}
               </Animated.Text>
-              <Text style={styles.title}>{current.title}</Text>
-              <Text style={styles.subtitle}>{current.subtitle}</Text>
+              <Text style={styles.title}>
+                {t(`tradeSetup.steps.${current.name}.title`)}
+              </Text>
+              <Text style={styles.subtitle}>
+                {t(`tradeSetup.steps.${current.name}.subtitle`)}
+              </Text>
               {step === 0 ? <IdentitySection {...sectionProps} /> : null}
               {step === 1 ? <ServicesSection {...sectionProps} /> : null}
               {step === 2 ? <PricingSection {...sectionProps} /> : null}
-              {step === 3 ? <AreaAvailabilitySection {...sectionProps} /> : null}
+              {step === 3 ? (
+                <AreaAvailabilitySection {...sectionProps} />
+              ) : null}
               {step === 4 ? <DetailsSection {...sectionProps} /> : null}
             </Animated.View>
           </ScrollView>
@@ -203,7 +224,7 @@ export default function ContractorSetupTradeScreen() {
               <Text style={styles.filterError}>{filterError}</Text>
             ) : null}
             <PrimaryButton
-              label={isLast ? "Publish trade" : "Continue"}
+              label={isLast ? t("tradeSetup.publish") : t("common.continue")}
               onPress={() => void goNext()}
             />
           </View>

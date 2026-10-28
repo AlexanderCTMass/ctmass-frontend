@@ -1,0 +1,63 @@
+export const profile = {
+  tab: {
+    title: "Profile",
+    yourProfile: "Your profile",
+    removePhotoFailed: "Couldn't remove photo",
+    photoTitle: "Profile photo",
+    viewPhoto: "View photo",
+    choosePhoto: "Choose new photo",
+    removePhoto: "Remove photo",
+    uploadPhotoFailed: "Couldn't upload photo",
+    leaveFeedback: "Leave feedback",
+    ratingUnavailable:
+      "Rating isn't available on this device. Please email us at support@ctmass.com",
+    storeOpenFailed: "Couldn't open the store",
+    contactSupport: "Contact support",
+    emailSupport: "Please email us at support@ctmass.com",
+    deleteFailed: "Couldn't delete account",
+    logoutFailed: "Couldn't log out",
+    logoutConfirmTitle: "Log out?",
+    logoutConfirmText: "You can sign back in anytime.",
+    logout: "Log out",
+    deleteConfirmTitle: "Delete account?",
+    deleteConfirmText:
+      "This permanently deletes your account and all of your data — profile, messages, projects, and coins. This can't be undone.",
+    guestTitle: "Sign in to your profile",
+    guestText:
+      "Create a free account to set up your profile, manage notifications, and more.",
+    changePhotoA11y: "Change profile photo",
+    uploadPhotoA11y: "Upload profile photo",
+    showQrA11y: "Show my QR code",
+    myQr: "My QR",
+    setupTitle: "Setup your profile",
+    setupSub: "Add your details so people recognize you.",
+    viewPublic: "View public profile",
+    notifications: "Notifications",
+    invite: "Invite friends & earn coins",
+    friends: "Friends",
+    itServices: "Our IT Services",
+    deleteAccount: "Delete account",
+    deleting: "Deleting your account…",
+    loggingOut: "Logging out…",
+    qrSubtitle: "Scan to open my profile and connect",
+  },
+  theme: {
+    title: "Appearance",
+    options: {
+      system: "System",
+      light: "Light",
+      dark: "Dark",
+    },
+    optionA11y: "{{label}} theme",
+    systemHint:
+      "System keeps the theme your phone used when you chose it. Tap System again to pick up a change.",
+    fixedHint: {
+      light: "The app always uses the light theme.",
+      dark: "The app always uses the dark theme.",
+    },
+  },
+  language: {
+    title: "Language",
+    hint: "Swipe or tap to switch the app language.",
+  },
+};

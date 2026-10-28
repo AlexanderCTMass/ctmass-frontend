@@ -1,8 +1,12 @@
 import { Alert } from "react-native";
 
-import { type TradeActionSource, analyticsEvents } from "@/lib/analytics-events";
+import {
+  type TradeActionSource,
+  analyticsEvents,
+} from "@/lib/analytics-events";
 import { selectFeedback, warningFeedback } from "@/lib/haptics";
 import { MAX_COMPARE, useCompareStore } from "@/store/use-compare-store";
+import i18n from "@/lib/i18n";
 
 export function useCompare(source: TradeActionSource) {
   const tradeIds = useCompareStore((state) => state.tradeIds);
@@ -11,12 +15,17 @@ export function useCompare(source: TradeActionSource) {
   const toggle = (tradeId: string) => {
     const result = toggleStore(tradeId);
     const count = useCompareStore.getState().tradeIds.length;
-    analyticsEvents.compareToggled({ trade_id: tradeId, action: result, count, source });
+    analyticsEvents.compareToggled({
+      trade_id: tradeId,
+      action: result,
+      count,
+      source,
+    });
     if (result === "full") {
       warningFeedback();
       Alert.alert(
-        `Compare up to ${MAX_COMPARE}`,
-        "Remove a contractor from your comparison to add another one.",
+        i18n.t("contact.compareFullTitle", { count: MAX_COMPARE }),
+        i18n.t("contact.compareFullText"),
       );
       return;
     }

@@ -22,6 +22,7 @@ import {
   locationProps,
 } from "@/lib/analytics-events";
 import { successFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
 import { emptyDetailsInput } from "@/lib/trade-details";
 import { coinsForRole, isRuleEnabledForRole } from "@/lib/loyalty-config";
@@ -33,14 +34,15 @@ import { useAuthStore } from "@/store/use-auth-store";
 import { useTradeDraftStore } from "@/store/use-trade-draft-store";
 
 const BONUSES = [
-  { actionType: "ADD_PORTFOLIO", label: "Add a project to your portfolio" },
-  { actionType: "COMPLETE_PROJECT", label: "Complete a job through CTMASS" },
-  { actionType: "INVITE_USER_REGISTERS", label: "Invite a friend who joins" },
-];
+  { actionType: "ADD_PORTFOLIO", label: "portfolio" },
+  { actionType: "COMPLETE_PROJECT", label: "complete" },
+  { actionType: "INVITE_USER_REGISTERS", label: "invite" },
+] as const;
 
 export default function ContractorTradeCompletedScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const uid = useAuthStore((state) => state.user?.uid);
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
@@ -60,7 +62,9 @@ export default function ContractorTradeCompletedScreen() {
   const bonuses = useMemo(
     () =>
       BONUSES.flatMap((bonus) => {
-        const rule = rules?.find((item) => item.actionType === bonus.actionType);
+        const rule = rules?.find(
+          (item) => item.actionType === bonus.actionType,
+        );
         if (!rule || !isRuleEnabledForRole(rule, "contractor")) return [];
         const coins = coinsForRole(rule, "contractor");
         return coins > 0 ? [{ ...bonus, coins }] : [];
@@ -174,17 +178,20 @@ export default function ContractorTradeCompletedScreen() {
               style={styles.center}
             >
               <ActivityIndicator size="large" color={colors.accent} />
-              <Text style={styles.creatingText}>Publishing your trade…</Text>
+              <Text style={styles.creatingText}>
+                {t("tradeSetup.done.publishing")}
+              </Text>
             </Animated.View>
           ) : failed ? (
             <Animated.View
               entering={FadeIn.duration(300)}
               style={styles.center}
             >
-              <Text style={styles.title}>Couldn&apos;t publish your trade</Text>
+              <Text style={styles.title}>
+                {t("tradeSetup.done.failedTitle")}
+              </Text>
               <Text style={styles.subtitle}>
-                Check your internet connection and try again. Everything you
-                entered is saved.
+                {t("tradeSetup.done.failedText")}
               </Text>
             </Animated.View>
           ) : (
@@ -202,14 +209,13 @@ export default function ContractorTradeCompletedScreen() {
                 entering={FadeInDown.delay(120).duration(520)}
                 style={styles.title}
               >
-                Trade created
+                {t("tradeSetup.done.title")}
               </Animated.Text>
               <Animated.Text
                 entering={FadeInDown.delay(180).duration(520)}
                 style={styles.subtitle}
               >
-                Your trade is live in the app right away — homeowners can
-                find it in search, and you can already respond to nearby jobs.
+                {t("tradeSetup.done.subtitle")}
               </Animated.Text>
 
               {bonuses.length > 0 ? (
@@ -218,14 +224,16 @@ export default function ContractorTradeCompletedScreen() {
                   style={styles.card}
                 >
                   <Text style={styles.cardTitle}>
-                    Earn CTMASS Coins with your trade
+                    {t("tradeSetup.done.coinsTitle")}
                   </Text>
                   <Text style={styles.cardNote}>
-                    Spend them on rewards in the Shop.
+                    {t("tradeSetup.done.coinsNote")}
                   </Text>
                   {bonuses.map((bonus) => (
                     <View key={bonus.actionType} style={styles.perkRow}>
-                      <Text style={styles.perkText}>{bonus.label}</Text>
+                      <Text style={styles.perkText}>
+                        {t(`tradeSetup.done.bonus.${bonus.label}`)}
+                      </Text>
                       <View style={styles.coinPill}>
                         <CoinIcon size={14} />
                         <Text style={styles.coinText}>
@@ -244,14 +252,14 @@ export default function ContractorTradeCompletedScreen() {
           <View style={styles.footer}>
             {failed ? (
               <PrimaryButton
-                label="Try again"
+                label={t("common.tryAgainButton")}
                 withArrow={false}
                 onPress={handleRetry}
               />
             ) : (
               <>
                 <PrimaryButton
-                  label="Go to my dashboard"
+                  label={t("tradeSetup.done.dashboard")}
                   onPress={handleGoHome}
                 />
                 <Pressable
@@ -259,7 +267,9 @@ export default function ContractorTradeCompletedScreen() {
                   hitSlop={10}
                   onPress={handleViewTrades}
                 >
-                  <Text style={styles.secondaryLink}>View my trades</Text>
+                  <Text style={styles.secondaryLink}>
+                    {t("tradeSetup.done.viewTrades")}
+                  </Text>
                 </Pressable>
               </>
             )}

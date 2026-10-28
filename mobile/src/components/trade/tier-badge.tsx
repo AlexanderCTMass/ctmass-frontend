@@ -4,9 +4,11 @@ import { TierIcon } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { tierBadgeLabel, tierFor } from "@/constants/trade-options";
 import { Radius, makeStyles, useTheme } from "@/constants/theme";
+import { useT } from "@/lib/i18n";
 
 export function TierBadge({ years }: { years: number }) {
   const styles = useStyles();
+  const { t, tx } = useT();
   const { isDark } = useTheme();
   const tier = tierFor(years);
   const ink = isDark ? tier.color : "#04170D";
@@ -17,11 +19,14 @@ export function TierBadge({ years }: { years: number }) {
         { borderColor: tier.color },
         !isDark && { backgroundColor: tier.color },
       ]}
-      accessibilityLabel={`${tier.label}, ${years} years in this trade`}
+      accessibilityLabel={t("trade.tierA11y", {
+        tier: tx(tier.label),
+        count: years,
+      })}
     >
       <TierIcon tierId={tier.id} size={14} color={ink} strokeWidth={2.2} />
       <Text style={[styles.badgeText, { color: ink }]}>
-        {tierBadgeLabel(years)}
+        {tierBadgeLabel(years, t)}
       </Text>
     </View>
   );
@@ -39,11 +44,14 @@ export function TierAvatar({
   size?: number;
 }) {
   const styles = useStyles();
+  const { t } = useT();
   const tier = years === null ? null : tierFor(years);
   const ring = tier ? 3 : 0;
   const outer = size + ring * 2 + (tier ? 4 : 0);
   return (
-    <View style={[styles.avatarWrap, { width: outer, paddingBottom: tier ? 9 : 0 }]}>
+    <View
+      style={[styles.avatarWrap, { width: outer, paddingBottom: tier ? 9 : 0 }]}
+    >
       <View
         style={[
           styles.ring,
@@ -61,7 +69,7 @@ export function TierAvatar({
       {tier && years !== null ? (
         <View style={[styles.photoLabel, { backgroundColor: tier.color }]}>
           <Text style={styles.photoLabelText} numberOfLines={1}>
-            {tierBadgeLabel(years)}
+            {tierBadgeLabel(years, t)}
           </Text>
         </View>
       ) : null}

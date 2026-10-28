@@ -15,8 +15,15 @@ import { shortPlace } from "@/components/project/project-card";
 import { TierAvatar } from "@/components/trade/tier-badge";
 import { LikeButton } from "@/components/ui/like-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
-import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
 import { formatMiles } from "@/lib/geo";
+import { useT } from "@/lib/i18n";
 import {
   availabilityLine,
   hasListedRate,
@@ -97,17 +104,22 @@ export function TradeCard({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const details = specialist.details;
   const place = specialist.placeName ? shortPlace(specialist.placeName) : "";
-  const placeLine = [specialist.specialtyLabel, place, formatMiles(distance)]
+  const placeLine = [
+    tx(specialist.specialtyLabel),
+    place,
+    formatMiles(distance),
+  ]
     .filter(Boolean)
     .join(" · ");
   const rated = specialist.rating > 0;
   const services = servicesPreview(details.services, 3);
-  const trust = trustItems(details);
-  const response = responseLine(details);
-  const schedule = availabilityLine(details.availability);
-  const subPrice = priceSubline(details.rates);
+  const trust = trustItems(details, t);
+  const response = responseLine(details, t);
+  const schedule = availabilityLine(details.availability, t);
+  const subPrice = priceSubline(details.rates, t);
   const listed = hasListedRate(details.rates);
   const iconColor = colors.textSecondary;
   const others = otherTrades.slice(0, 2);
@@ -144,7 +156,9 @@ export function TradeCard({
                   <Text style={styles.ratingCount}>({specialist.reviews})</Text>
                 </>
               ) : (
-                <Text style={styles.newText}>New on CTMASS</Text>
+                <Text style={styles.newText}>
+                  {t("compare.values.newOnCtmass")}
+                </Text>
               )}
             </View>
             {placeLine ? (
@@ -167,7 +181,11 @@ export function TradeCard({
             {onToggleCompare ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={compared ? "Remove from compare" : "Add to compare"}
+                accessibilityLabel={
+                  compared
+                    ? t("trade.removeFromCompare")
+                    : t("trade.addToCompare")
+                }
                 accessibilityState={{ selected: Boolean(compared) }}
                 hitSlop={8}
                 onPress={onToggleCompare}
@@ -188,7 +206,7 @@ export function TradeCard({
             {services.shown.map((service) => (
               <View key={service} style={styles.chip}>
                 <Text style={styles.chipText} numberOfLines={1}>
-                  {service}
+                  {tx(service)}
                 </Text>
               </View>
             ))}
@@ -202,12 +220,16 @@ export function TradeCard({
 
         <View style={styles.facts}>
           <View style={styles.fact}>
-            <DollarIcon size={15} color={listed ? colors.accent : iconColor} strokeWidth={2} />
+            <DollarIcon
+              size={15}
+              color={listed ? colors.accent : iconColor}
+              strokeWidth={2}
+            />
             <Text
               style={[styles.factText, listed && styles.priceText]}
               numberOfLines={1}
             >
-              {priceLine(details.rates)}
+              {priceLine(details.rates, t)}
             </Text>
           </View>
           {subPrice ? <Text style={styles.subPrice}>{subPrice}</Text> : null}
@@ -243,7 +265,7 @@ export function TradeCard({
             <View style={styles.fact}>
               <MapPinIcon size={15} color={iconColor} />
               <Text style={styles.factText} numberOfLines={1}>
-                Serves within {details.radiusMiles} mi
+                {t("trade.servesWithin", { miles: details.radiusMiles })}
               </Text>
             </View>
           ) : null}
@@ -251,18 +273,27 @@ export function TradeCard({
 
         {others.length > 0 ? (
           <View style={styles.alsoRow}>
-            <Text style={styles.alsoLabel}>Also:</Text>
+            <Text style={styles.alsoLabel}>{t("trade.also")}</Text>
             {others.map((trade) => (
               <Pressable
                 key={trade.tradeId}
                 accessibilityRole="button"
-                accessibilityLabel={`Open ${trade.specialtyLabel}`}
+                accessibilityLabel={t("compare.openA11y", {
+                  name: tx(trade.specialtyLabel),
+                })}
                 onPress={() => onOpenTrade?.(trade)}
-                style={({ pressed }) => [styles.alsoChip, pressed && styles.pressed]}
+                style={({ pressed }) => [
+                  styles.alsoChip,
+                  pressed && styles.pressed,
+                ]}
               >
-                <TradeGroupIcon groupId={trade.details.groupId} size={13} color={colors.accent} />
+                <TradeGroupIcon
+                  groupId={trade.details.groupId}
+                  size={13}
+                  color={colors.accent}
+                />
                 <Text style={styles.alsoText} numberOfLines={1}>
-                  {trade.specialtyLabel || trade.name}
+                  {tx(trade.specialtyLabel) || trade.name}
                 </Text>
               </Pressable>
             ))}
@@ -276,20 +307,24 @@ export function TradeCard({
           <View style={styles.actions}>
             {onMessage ? (
               <ActionButton
-                label="Message"
+                label={t("trade.message")}
                 icon={<ResponsesIcon size={15} color={colors.text} />}
                 onPress={onMessage}
               />
             ) : null}
             {phone && onCall ? (
               <ActionButton
-                label="Call"
+                label={t("trade.call")}
                 icon={<PhoneIcon size={15} color={colors.text} />}
                 onPress={onCall}
               />
             ) : null}
             {onRequestQuote ? (
-              <ActionButton label="Request quote" primary onPress={onRequestQuote} />
+              <ActionButton
+                label={t("compare.requestQuote")}
+                primary
+                onPress={onRequestQuote}
+              />
             ) : null}
           </View>
         ) : null}

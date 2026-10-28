@@ -32,8 +32,9 @@ import {
   projectDurationLabel,
   projectTypeLabel,
 } from "@/constants/trade-options";
-import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
 import {
   type PortfolioItem,
@@ -44,14 +45,15 @@ import {
 import { usePortfolioItem } from "@/queries/use-portfolio";
 import { useAuthStore } from "@/store/use-auth-store";
 
-function formatDate(date: Date | null): string {
+function formatDate(date: Date | null, locale: string): string {
   if (!date) return "";
-  return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  return date.toLocaleDateString(locale, { month: "long", year: "numeric" });
 }
 
 export default function PortfolioItemScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx, locale } = useT();
   const { width } = useWindowDimensions();
   const queryClient = useQueryClient();
   const params = useLocalSearchParams<{
@@ -71,9 +73,9 @@ export default function PortfolioItemScreen() {
   const mediaHeight = Math.round((width - Spacing.base * 2) * 0.78);
   const projectFacts = item
     ? [
-        projectTypeLabel(item.projectType),
-        projectCostLabel(item.costRange),
-        projectDurationLabel(item.duration),
+        projectTypeLabel(item.projectType, t),
+        projectCostLabel(item.costRange, t),
+        projectDurationLabel(item.duration, t),
       ]
         .filter(Boolean)
         .join(" · ")
@@ -102,7 +104,7 @@ export default function PortfolioItemScreen() {
       });
       refresh({ ...item, isPublic: next });
     } catch {
-      Alert.alert("Couldn't update", "Please try again.");
+      Alert.alert(t("portfolio.updateFailed"), t("common.pleaseTryAgain"));
     } finally {
       setBusy(false);
     }
@@ -121,7 +123,7 @@ export default function PortfolioItemScreen() {
       });
       refresh({ ...item, isFavorite: next });
     } catch {
-      Alert.alert("Couldn't update", "Please try again.");
+      Alert.alert(t("portfolio.updateFailed"), t("common.pleaseTryAgain"));
     } finally {
       setBusy(false);
     }
@@ -141,23 +143,23 @@ export default function PortfolioItemScreen() {
         queryKey: ["portfolio-item", item.ownerId, item.id],
       });
       router.back();
-    } catch (error) {
+    } catch {
       setBusy(false);
-      Alert.alert("Couldn't delete", errorMessage(error) || "Please try again.");
+      Alert.alert(t("tradePage.deleteFailed"), t("common.pleaseTryAgain"));
     }
   };
 
   const confirmDelete = () => {
     if (!item || busy) return;
     tapFeedback();
-    Alert.alert(
-      "Delete this project?",
-      "It will be removed from your portfolio. This can't be undone.",
-      [
-        { text: "Keep", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: () => void runDelete() },
-      ],
-    );
+    Alert.alert(t("portfolio.deleteTitle"), t("portfolio.deleteText"), [
+      { text: t("archive.keep"), style: "cancel" },
+      {
+        text: t("common.delete"),
+        style: "destructive",
+        onPress: () => void runDelete(),
+      },
+    ]);
   };
 
   const openEdit = () => {
@@ -176,7 +178,7 @@ export default function PortfolioItemScreen() {
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
           <Text style={styles.headerTitle} numberOfLines={1}>
-            Portfolio
+            {t("tradePage.portfolio")}
           </Text>
           <View style={styles.headerSpacer} />
         </View>
@@ -187,7 +189,7 @@ export default function PortfolioItemScreen() {
           </View>
         ) : !item || (!item.isPublic && !isOwner) ? (
           <View style={styles.center}>
-            <Text style={styles.missing}>This project isn&apos;t available.</Text>
+            <Text style={styles.missing}>{t("portfolio.unavailable")}</Text>
           </View>
         ) : (
           <>
@@ -205,7 +207,7 @@ export default function PortfolioItemScreen() {
                 ) : item.cover ? (
                   <Pressable
                     accessibilityRole="imagebutton"
-                    accessibilityLabel="Open photo"
+                    accessibilityLabel={t("tradePage.openPhoto")}
                     onPress={() => setViewerUri(item.cover)}
                   >
                     <Image
@@ -221,17 +223,27 @@ export default function PortfolioItemScreen() {
               {item.beforeImage && item.afterImage ? (
                 <View style={styles.thumbs}>
                   <Text style={styles.sliderHint}>
-                    Drag the slider to compare. Tap a photo to zoom.
+                    {t("portfolio.sliderHint")}
                   </Text>
                   <View style={styles.thumbRow}>
                     {[
-                      { label: "Before", uri: item.beforeImage },
-                      { label: "After", uri: item.afterImage },
+                      {
+                        key: "before",
+                        label: t("portfolio.before"),
+                        uri: item.beforeImage,
+                      },
+                      {
+                        key: "after",
+                        label: t("portfolio.after"),
+                        uri: item.afterImage,
+                      },
                     ].map((photo) => (
                       <Pressable
-                        key={photo.label}
+                        key={photo.key}
                         accessibilityRole="imagebutton"
-                        accessibilityLabel={`Open ${photo.label.toLowerCase()} photo`}
+                        accessibilityLabel={t("portfolio.openPhotoA11y", {
+                          label: photo.label,
+                        })}
                         onPress={() => setViewerUri(photo.uri)}
                         style={styles.thumb}
                       >
@@ -248,7 +260,7 @@ export default function PortfolioItemScreen() {
                 </View>
               ) : null}
 
-              <Text style={styles.title}>{item.title}</Text>
+              <Text style={styles.title}>{tx(item.title)}</Text>
 
               {item.location || item.date || projectFacts ? (
                 <View style={styles.metaList}>
@@ -261,14 +273,17 @@ export default function PortfolioItemScreen() {
                   {item.date ? (
                     <View style={styles.metaRow}>
                       <CalendarIcon size={15} color={colors.textSecondary} />
-                      <Text style={styles.metaText}>{formatDate(item.date)}</Text>
+                      <Text style={styles.metaText}>
+                        {formatDate(item.date, locale)}
+                      </Text>
                     </View>
                   ) : null}
                   {projectFacts ? (
                     <View style={styles.metaRow}>
                       <ToolsIcon size={15} color={colors.textSecondary} />
                       <Text style={styles.metaText}>
-                        {projectFacts} · Provided by contractor
+                        {projectFacts} ·{" "}
+                        {t("trade.sections.providedByContractor")}
                       </Text>
                     </View>
                   ) : null}
@@ -300,12 +315,14 @@ export default function PortfolioItemScreen() {
                     <EyeIcon size={18} color={colors.textSecondary} />
                     <View style={styles.ownerRowBody}>
                       <Text style={styles.ownerRowTitle}>
-                        {item.isPublic ? "Visible to everyone" : "Hidden"}
+                        {item.isPublic
+                          ? t("portfolio.visible")
+                          : t("setup.hidden")}
                       </Text>
                       <Text style={styles.ownerRowHint}>
                         {item.isPublic
-                          ? "Tap to hide it from your public trade."
-                          : "Only you can see it. Tap to show it."}
+                          ? t("portfolio.tapToHide")
+                          : t("portfolio.tapToShow")}
                       </Text>
                     </View>
                   </Pressable>
@@ -318,14 +335,18 @@ export default function PortfolioItemScreen() {
                   >
                     <ReviewIcon
                       size={18}
-                      color={item.isFavorite ? colors.coin : colors.textSecondary}
+                      color={
+                        item.isFavorite ? colors.coin : colors.textSecondary
+                      }
                     />
                     <View style={styles.ownerRowBody}>
                       <Text style={styles.ownerRowTitle}>
-                        {item.isFavorite ? "Featured" : "Feature this project"}
+                        {item.isFavorite
+                          ? t("portfolio.featured")
+                          : t("portfolio.feature")}
                       </Text>
                       <Text style={styles.ownerRowHint}>
-                        Featured projects are shown first.
+                        {t("portfolio.featuredHint")}
                       </Text>
                     </View>
                   </Pressable>
@@ -336,7 +357,9 @@ export default function PortfolioItemScreen() {
                     style={styles.ownerRow}
                   >
                     <TrashIcon size={18} color={colors.destructive} />
-                    <Text style={styles.deleteText}>Delete project</Text>
+                    <Text style={styles.deleteText}>
+                      {t("portfolio.delete")}
+                    </Text>
                   </Pressable>
                 </View>
               ) : null}
@@ -345,7 +368,7 @@ export default function PortfolioItemScreen() {
             {isOwner ? (
               <View style={styles.footer}>
                 <PrimaryButton
-                  label="Edit project"
+                  label={t("portfolio.edit")}
                   onPress={openEdit}
                   disabled={busy}
                 />

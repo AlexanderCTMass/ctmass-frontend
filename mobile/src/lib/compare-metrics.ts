@@ -6,12 +6,12 @@ import {
   emergencyLabel,
   modelTakesRate,
   pricingModelLabel,
-  responseShortLabel,
   warrantyLabel,
 } from "@/constants/trade-options";
 import { publicPhone } from "@/hooks/use-trade-contact";
 import { yearsInBusiness } from "@/lib/business-profile";
 import { formatMiles } from "@/lib/geo";
+import { type Translate, translateData } from "@/lib/i18n";
 import { isCredentialCurrent } from "@/lib/trade-details";
 import {
   availabilityLine,
@@ -21,20 +21,20 @@ import {
 } from "@/lib/trade-display";
 import type { Specialist } from "@/lib/trades";
 
-export const NOT_PROVIDED = "Not provided";
+const MUTED_KEYS = [
+  "compare.values.notProvided",
+  "compare.values.notSpecified",
+  "compare.values.notEstablished",
+  "compare.values.noneYet",
+  "compare.values.newOnCtmass",
+  "compare.values.expired",
+] as const;
 
-const MUTED_VALUES = new Set([
-  NOT_PROVIDED,
-  "Not specified",
-  "Not yet established",
-  "None yet",
-  "New on CTMASS",
-  "Expired",
-]);
-
-export function isMutedValue(value: string): boolean {
-  return MUTED_VALUES.has(value);
+export function isMutedValue(value: string, t: Translate): boolean {
+  return MUTED_KEYS.some((key) => t(key) === value);
 }
+
+const notProvided = (t: Translate) => t("compare.values.notProvided");
 
 export type MetricKey =
   | "rate"
@@ -45,9 +45,11 @@ export type MetricKey =
   | "rating"
   | "jobs";
 
+type WinWord = "lowest" | "most" | "fastest" | "highest";
+
 type Metric = {
   better: "low" | "high";
-  winLabel: string | null;
+  winLabel: WinWord | null;
   score: (trade: Specialist, all: Specialist[]) => number | null;
 };
 
@@ -73,17 +75,17 @@ function credentialScore(credential: Specialist["details"]["license"]): number {
 const METRICS: Record<MetricKey, Metric> = {
   rate: {
     better: "low",
-    winLabel: "Lowest",
+    winLabel: "lowest",
     score: (trade, all) => (sharedBasis(all) ? rateScore(trade) : null),
   },
   experience: {
     better: "high",
-    winLabel: "Most",
+    winLabel: "most",
     score: (trade) => trade.details.experienceYears,
   },
   response: {
     better: "low",
-    winLabel: "Fastest",
+    winLabel: "fastest",
     score: (trade) => {
       const index = RESPONSE_TIMES.findIndex(
         (item) => item.value === trade.details.responseTime,
@@ -103,24 +105,35 @@ const METRICS: Record<MetricKey, Metric> = {
   },
   rating: {
     better: "high",
-    winLabel: "Highest",
+    winLabel: "highest",
     score: (trade) => (trade.reviews > 0 ? trade.rating : null),
   },
   jobs: {
     better: "high",
-    winLabel: "Most",
+    winLabel: "most",
     score: (trade) => trade.completedProjects,
   },
 };
+
+export type RankLabel =
+  | { kind: "win"; word: WinWord }
+  | { kind: "ordinal"; rank: number; total: number };
 
 export type MetricRank = {
   rank: number;
   total: number;
   best: boolean;
-  label: string | null;
+  label: RankLabel | null;
 };
 
-const ORDINALS = ["1st", "2nd", "3rd", "4th", "5th"];
+export function rankLabelText(label: RankLabel, t: Translate): string {
+  if (label.kind === "win") return t(`compare.win.${label.word}`);
+  return t("compare.rankOf", {
+    count: label.rank,
+    ordinal: true,
+    total: label.total,
+  });
+}
 
 export function rankMetric(
   key: MetricKey,
@@ -129,30 +142,41 @@ export function rankMetric(
   const metric = METRICS[key];
   const scored = trades
     .map((trade) => ({ id: trade.tradeId, score: metric.score(trade, trades) }))
-    .filter((item): item is { id: string; score: number } => item.score !== null);
+    .filter(
+      (item): item is { id: string; score: number } => item.score !== null,
+    );
   const result = new Map<string, MetricRank>();
   if (scored.length < 2) return result;
   const distinct = new Set(scored.map((item) => item.score));
   if (distinct.size < 2) return result;
   for (const item of scored) {
     const ahead = scored.filter((other) =>
-      metric.better === "low" ? other.score < item.score : other.score > item.score,
+      metric.better === "low"
+        ? other.score < item.score
+        : other.score > item.score,
     ).length;
     const rank = ahead + 1;
     const best = rank === 1;
-    let label: string | null = null;
+    let label: RankLabel | null = null;
     if (metric.winLabel) {
-      if (best) label = metric.winLabel;
-      else if (scored.length > 2) label = `${ORDINALS[rank - 1] ?? `${rank}th`} of ${scored.length}`;
+      if (best) label = { kind: "win", word: metric.winLabel };
+      else if (scored.length > 2) {
+        label = { kind: "ordinal", rank, total: scored.length };
+      }
     }
     result.set(item.id, { rank, total: scored.length, best, label });
   }
   return result;
 }
 
-export function rankAll(trades: Specialist[]): Record<MetricKey, Map<string, MetricRank>> {
+export function rankAll(
+  trades: Specialist[],
+): Record<MetricKey, Map<string, MetricRank>> {
   return Object.fromEntries(
-    (Object.keys(METRICS) as MetricKey[]).map((key) => [key, rankMetric(key, trades)]),
+    (Object.keys(METRICS) as MetricKey[]).map((key) => [
+      key,
+      rankMetric(key, trades),
+    ]),
   ) as Record<MetricKey, Map<string, MetricRank>>;
 }
 
@@ -172,175 +196,249 @@ export function leadsCount(
   return { wins, total };
 }
 
-function plural(value: number, word: string): string {
-  return `${value} ${word}${value === 1 ? "" : "s"}`;
-}
-
-export function rateValue(trade: Specialist): string {
+export function rateValue(trade: Specialist, t: Translate): string {
   const rates = trade.details.rates;
-  if (!rates || rates.model === "not_provided") return NOT_PROVIDED;
-  if (rates.model === "quote") return "Quote only";
+  if (!rates || rates.model === "not_provided") return notProvided(t);
+  if (rates.model === "quote") return t("compare.values.quoteOnly");
   const amount = rateAmount(rates);
-  if (!amount) return pricingModelLabel(rates.model);
-  return `${amount} / ${RATE_BASIS_SHORT[rates.basis]}`;
+  if (!amount) return pricingModelLabel(rates.model, t);
+  return `${amount} / ${translateData(t, RATE_BASIS_SHORT[rates.basis])}`;
 }
 
 function credentialValue(
   credential: Specialist["details"]["license"],
   withState: boolean,
+  t: Translate,
 ): string {
-  if (!credential) return NOT_PROVIDED;
-  if (!isCredentialCurrent(credential)) return "Expired";
-  const parts = ["Provided"];
+  if (!credential) return notProvided(t);
+  if (!isCredentialCurrent(credential)) return t("compare.values.expired");
+  const parts = [t("compare.values.provided")];
   if (withState && credential.state) parts.push(credential.state);
-  if (credential.expiresAt) parts.push(`thru ${shortDate(credential.expiresAt)}`);
+  if (credential.expiresAt) {
+    parts.push(
+      t("compare.values.thru", { date: shortDate(credential.expiresAt) }),
+    );
+  }
   return parts.join(" · ");
 }
 
-export function experienceValue(trade: Specialist): string {
+export function experienceValue(trade: Specialist, t: Translate): string {
   const years = trade.details.experienceYears;
-  return years !== null ? plural(years, "year") : NOT_PROVIDED;
+  return years !== null
+    ? t("compare.values.years", { count: years })
+    : notProvided(t);
 }
 
-export function responseValue(trade: Specialist): string {
-  const label = responseShortLabel(trade.details.responseTime);
-  return label ? label.replace(/^Replies /, "") : "Not yet established";
+export function responseValue(trade: Specialist, t: Translate): string {
+  const value = trade.details.responseTime;
+  return value
+    ? translateData(
+        t,
+        RESPONSE_TIMES.find((item) => item.value === value)?.label ?? "",
+      ) || t("compare.values.notEstablished")
+    : t("compare.values.notEstablished");
 }
 
-export function ratingValue(trade: Specialist): string {
+export function ratingValue(trade: Specialist, t: Translate): string {
   return trade.reviews > 0
     ? `★ ${trade.rating.toFixed(1)} (${trade.reviews})`
-    : "New on CTMASS";
+    : t("compare.values.newOnCtmass");
 }
 
-export function jobsValue(trade: Specialist): string {
-  return trade.completedProjects > 0 ? String(trade.completedProjects) : "None yet";
+export function jobsValue(trade: Specialist, t: Translate): string {
+  return trade.completedProjects > 0
+    ? String(trade.completedProjects)
+    : t("compare.values.noneYet");
 }
 
 export type CompareRow = {
   key: string;
-  label: string;
+  label: (t: Translate) => string;
   metric?: MetricKey;
-  value: (trade: Specialist, distance: number | null) => string;
+  value: (trade: Specialist, distance: number | null, t: Translate) => string;
 };
 
 export const CARD_ROWS: CompareRow[] = [
-  { key: "rate", label: "Rate", metric: "rate", value: rateValue },
-  { key: "experience", label: "In this trade", metric: "experience", value: experienceValue },
-  { key: "response", label: "Replies", metric: "response", value: responseValue },
+  {
+    key: "rate",
+    label: (t) => t("compare.rows.rate"),
+    metric: "rate",
+    value: (trade, _d, t) => rateValue(trade, t),
+  },
+  {
+    key: "experience",
+    label: (t) => t("compare.rows.inThisTrade"),
+    metric: "experience",
+    value: (trade, _d, t) => experienceValue(trade, t),
+  },
+  {
+    key: "response",
+    label: (t) => t("compare.rows.replies"),
+    metric: "response",
+    value: (trade, _d, t) => responseValue(trade, t),
+  },
   {
     key: "license",
-    label: "License",
+    label: (t) => t("compare.rows.license"),
     metric: "license",
-    value: (trade) => credentialValue(trade.details.license, true),
+    value: (trade, _d, t) => credentialValue(trade.details.license, true, t),
   },
   {
     key: "insurance",
-    label: "Insurance",
+    label: (t) => t("compare.rows.insurance"),
     metric: "insurance",
-    value: (trade) => credentialValue(trade.details.insurance, false),
+    value: (trade, _d, t) => credentialValue(trade.details.insurance, false, t),
   },
-  { key: "jobs", label: "Jobs on CTMASS", metric: "jobs", value: jobsValue },
+  {
+    key: "jobs",
+    label: (t) => t("compare.rows.jobs"),
+    metric: "jobs",
+    value: (trade, _d, t) => jobsValue(trade, t),
+  },
 ];
 
 export const DETAIL_ROWS: CompareRow[] = [
-  { key: "rate", label: "Rate", metric: "rate", value: rateValue },
+  {
+    key: "rate",
+    label: (t) => t("compare.rows.rate"),
+    metric: "rate",
+    value: (trade, _d, t) => rateValue(trade, t),
+  },
   {
     key: "experience",
-    label: "Years in this trade",
+    label: (t) => t("compare.rows.yearsInTrade"),
     metric: "experience",
-    value: experienceValue,
+    value: (trade, _d, t) => experienceValue(trade, t),
   },
-  { key: "response", label: "Replies (set by contractor)", metric: "response", value: responseValue },
+  {
+    key: "response",
+    label: (t) => t("compare.rows.repliesSetBy"),
+    metric: "response",
+    value: (trade, _d, t) => responseValue(trade, t),
+  },
   {
     key: "license",
-    label: "License",
+    label: (t) => t("compare.rows.license"),
     metric: "license",
-    value: (trade) => credentialValue(trade.details.license, true),
+    value: (trade, _d, t) => credentialValue(trade.details.license, true, t),
   },
   {
     key: "insurance",
-    label: "Insurance",
+    label: (t) => t("compare.rows.insurance"),
     metric: "insurance",
-    value: (trade) => credentialValue(trade.details.insurance, false),
+    value: (trade, _d, t) => credentialValue(trade.details.insurance, false, t),
   },
-  { key: "rating", label: "Rating", metric: "rating", value: ratingValue },
-  { key: "jobs", label: "Jobs on CTMASS", metric: "jobs", value: jobsValue },
+  {
+    key: "rating",
+    label: (t) => t("compare.rows.rating"),
+    metric: "rating",
+    value: (trade, _d, t) => ratingValue(trade, t),
+  },
+  {
+    key: "jobs",
+    label: (t) => t("compare.rows.jobs"),
+    metric: "jobs",
+    value: (trade, _d, t) => jobsValue(trade, t),
+  },
   {
     key: "business",
-    label: "Years in business",
-    value: (trade) => {
+    label: (t) => t("compare.rows.yearsInBusiness"),
+    value: (trade, _d, t) => {
       const years = trade.owner ? yearsInBusiness(trade.owner.business) : null;
-      return years !== null ? plural(years, "year") : NOT_PROVIDED;
+      return years !== null
+        ? t("compare.values.years", { count: years })
+        : notProvided(t);
     },
   },
   {
     key: "fees",
-    label: "Minimum & service call",
-    value: (trade) => priceSubline(trade.details.rates) || NOT_PROVIDED,
+    label: (t) => t("compare.rows.fees"),
+    value: (trade, _d, t) =>
+      priceSubline(trade.details.rates, t) || notProvided(t),
   },
   {
     key: "emergency",
-    label: "Emergency",
-    value: (trade) => {
+    label: (t) => t("compare.rows.emergency"),
+    value: (trade, _d, t) => {
       const availability = trade.details.availability;
-      if (!availability || availability.emergency === "none") return "No emergency service";
-      return [emergencyLabel(availability.emergency), trade.details.rates?.afterHours]
+      if (!availability || availability.emergency === "none") {
+        return translateData(t, "No emergency service");
+      }
+      return [
+        emergencyLabel(availability.emergency, t),
+        trade.details.rates?.afterHours,
+      ]
         .filter(Boolean)
         .join(" · ");
     },
   },
   {
     key: "availability",
-    label: "Availability",
-    value: (trade) => availabilityLine(trade.details.availability) || NOT_PROVIDED,
+    label: (t) => t("compare.rows.availability"),
+    value: (trade, _d, t) =>
+      availabilityLine(trade.details.availability, t) || notProvided(t),
   },
   {
     key: "area",
-    label: "Service area",
-    value: (trade, distance) => {
+    label: (t) => t("compare.rows.serviceArea"),
+    value: (trade, distance, t) => {
       const radius = trade.details.radiusMiles;
       const away = formatMiles(distance);
       const parts = [
         trade.placeName ? shortPlace(trade.placeName) : "",
         radius ? `+${radius} mi` : "",
       ].filter(Boolean);
-      const area = parts.join(" ") || NOT_PROVIDED;
-      return away ? `${area} · ${away} away` : area;
+      const area = parts.join(" ") || notProvided(t);
+      return away ? t("compare.values.areaAway", { area, away }) : area;
     },
   },
   {
     key: "services",
-    label: "Services",
-    value: (trade) => trade.details.services.join(", ") || NOT_PROVIDED,
+    label: (t) => t("compare.rows.services"),
+    value: (trade, _d, t) =>
+      trade.details.services
+        .map((service) => translateData(t, service))
+        .join(", ") || notProvided(t),
   },
   {
     key: "crew",
-    label: "Crew",
-    value: (trade) => {
+    label: (t) => t("compare.rows.crew"),
+    value: (trade, _d, t) => {
       const business = trade.owner?.business;
-      if (!business?.crewSize) return NOT_PROVIDED;
-      return `${crewSizeLabel(business.crewSize)}${business.usesSubcontractors ? " · subs" : ""}`;
+      if (!business?.crewSize) return notProvided(t);
+      const crew = crewSizeLabel(business.crewSize, t);
+      return business.usesSubcontractors
+        ? `${crew} · ${t("compare.values.subs")}`
+        : crew;
     },
   },
   {
     key: "warranty",
-    label: "Warranty",
-    value: (trade) => {
+    label: (t) => t("compare.rows.warranty"),
+    value: (trade, _d, t) => {
       const policy = trade.details.workPolicy;
-      return policy.warranty ? warrantyLabel(policy.warranty) : "Not specified";
+      return policy.warranty
+        ? warrantyLabel(policy.warranty, t)
+        : t("compare.values.notSpecified");
     },
   },
   {
     key: "languages",
-    label: "Languages",
-    value: (trade) => trade.owner?.business.languages.join(", ") || NOT_PROVIDED,
+    label: (t) => t("compare.rows.languages"),
+    value: (trade, _d, t) =>
+      (trade.owner?.business.languages ?? [])
+        .map((language) => translateData(t, language))
+        .join(", ") || notProvided(t),
   },
   {
     key: "contact",
-    label: "Contact options",
-    value: (trade) =>
-      ["Message", publicPhone(trade.owner) ? "Phone" : "", trade.owner?.email ? "Email" : ""]
+    label: (t) => t("compare.rows.contact"),
+    value: (trade, _d, t) =>
+      [
+        t("compare.values.message"),
+        publicPhone(trade.owner) ? t("compare.values.phone") : "",
+        trade.owner?.email ? t("compare.values.email") : "",
+      ]
         .filter(Boolean)
         .join(", "),
   },

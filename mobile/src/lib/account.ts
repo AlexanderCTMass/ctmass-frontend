@@ -2,16 +2,14 @@ import { getApp } from "@react-native-firebase/app";
 
 import { signOutEverywhere } from "@/lib/auth";
 import { getFirebaseAuth } from "@/lib/firebase";
+import i18n from "@/lib/i18n";
 
 const FUNCTIONS_REGION = "us-central1";
 
 type CallableError = { error?: { message?: string; status?: string } };
 
-const OFFLINE_MESSAGE =
-  "We couldn't reach the server. Check your internet connection and try again.";
-const FAILED_MESSAGE =
-  "We couldn't delete your account right now. Please try again in a moment.";
-const SAFE_STATUSES = new Set(["UNAUTHENTICATED", "FAILED_PRECONDITION"]);
+const offlineMessage = () => i18n.t("account.offline");
+const failedMessage = () => i18n.t("account.deleteFailed");
 
 export class AccountDeletionError extends Error {
   constructor(message: string) {
@@ -23,10 +21,10 @@ export class AccountDeletionError extends Error {
 export async function deleteMyAccount(): Promise<void> {
   const auth = getFirebaseAuth();
   const user = auth.currentUser;
-  if (!user) throw new AccountDeletionError("You are not signed in.");
+  if (!user) throw new AccountDeletionError(i18n.t("account.notSignedIn"));
 
   const projectId = getApp().options.projectId;
-  if (!projectId) throw new AccountDeletionError(FAILED_MESSAGE);
+  if (!projectId) throw new AccountDeletionError(failedMessage());
 
   const url = `https://${FUNCTIONS_REGION}-${projectId}.cloudfunctions.net/deleteMyAccount`;
 
@@ -43,16 +41,17 @@ export async function deleteMyAccount(): Promise<void> {
     });
   } catch (error) {
     console.warn("deleteMyAccount network error", error);
-    throw new AccountDeletionError(OFFLINE_MESSAGE);
+    throw new AccountDeletionError(offlineMessage());
   }
 
   if (!response.ok) {
-    let message = FAILED_MESSAGE;
+    let message = failedMessage();
     try {
       const body = (await response.json()) as CallableError;
       const status = body.error?.status ?? "";
-      if (body.error?.message && SAFE_STATUSES.has(status)) {
-        message = body.error.message;
+      if (status === "UNAUTHENTICATED") message = i18n.t("account.notSignedIn");
+      if (status === "FAILED_PRECONDITION") {
+        message = i18n.t("account.adminCannotDelete");
       }
     } catch {
       // response had no JSON body — keep the default message

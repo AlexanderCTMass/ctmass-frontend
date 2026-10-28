@@ -10,6 +10,7 @@ import { type MapBounds, WebViewMap } from "@/components/ui/webview-map";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents, locationProps } from "@/lib/analytics-events";
 import { selectFeedback, tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import {
   type GeoPlace,
   US_ONLY_LOCATION_MESSAGE,
@@ -42,6 +43,7 @@ function LocationEditor({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const [place, setPlace] = useState<GeoPlace | null>(initial);
   const [text, setText] = useState(initial?.place_name ?? "");
   const [results, setResults] = useState<GeoPlace[]>([]);
@@ -95,7 +97,7 @@ function LocationEditor({
     void reverseGeocode(lng, lat).then((next) => {
       if (!next) {
         analyticsEvents.locationOutsideUsRejected({ context });
-        setError(US_ONLY_LOCATION_MESSAGE);
+        setError(t(US_ONLY_LOCATION_MESSAGE));
         setRecenter((count) => count + 1);
         return;
       }
@@ -112,10 +114,13 @@ function LocationEditor({
     <ScreenBackground>
       <ModalSafeArea style={styles.modalSafe}>
         <View style={styles.modalHeader}>
-          <PressableScale accessibilityLabel="Cancel" onPress={onCancel}>
-            <Text style={styles.cancel}>Cancel</Text>
+          <PressableScale
+            accessibilityLabel={t("common.cancel")}
+            onPress={onCancel}
+          >
+            <Text style={styles.cancel}>{t("common.cancel")}</Text>
           </PressableScale>
-          <Text style={styles.modalTitle}>Set location</Text>
+          <Text style={styles.modalTitle}>{t("location.title")}</Text>
           <View style={styles.cancelSpacer} />
         </View>
 
@@ -129,7 +134,7 @@ function LocationEditor({
                 setError(null);
                 runSearch(next);
               }}
-              placeholder="Search your service address"
+              placeholder={t("location.search")}
               placeholderTextColor={colors.textMuted}
               autoCapitalize="words"
               style={styles.input}
@@ -167,15 +172,13 @@ function LocationEditor({
             onMove={handleMapMove}
           />
           <View style={styles.mapHintWrap} pointerEvents="none">
-            <Text style={styles.mapHint}>
-              Drag the pin or tap the map to fine-tune.
-            </Text>
+            <Text style={styles.mapHint}>{t("location.hint")}</Text>
           </View>
         </View>
 
         <View style={styles.modalFooter}>
           <PrimaryButton
-            label="Use this location"
+            label={t("location.use")}
             disabled={!place}
             onPress={() => {
               if (place) {
@@ -241,12 +244,13 @@ export function LocationPicker({
 }: LocationPickerProps) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <PressableScale
-        accessibilityLabel="Set service location"
+        accessibilityLabel={t("location.setA11y")}
         onPress={() => {
           tapFeedback();
           analyticsEvents.locationPickerOpened({
@@ -262,7 +266,7 @@ export function LocationPicker({
             style={value ? styles.fieldText : styles.fieldPlaceholder}
             numberOfLines={1}
           >
-            {value?.place_name ?? "Set your service address"}
+            {value?.place_name ?? t("location.placeholder")}
           </Text>
         </View>
       </PressableScale>

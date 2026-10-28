@@ -66,6 +66,7 @@ import { specialistSubject, useSwipeActions } from "@/hooks/use-swipe-actions";
 import { publicPhone, useTradeContact } from "@/hooks/use-trade-contact";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
 import type { PortfolioItem } from "@/lib/portfolio";
 import { priceLine, responseLine, trustItems } from "@/lib/trade-display";
@@ -86,9 +87,9 @@ import { useAuthStore } from "@/store/use-auth-store";
 const PORTFOLIO_PREVIEW = 4;
 const REVIEWS_PREVIEW = 3;
 
-function memberSince(date: Date | null): string {
+function memberSince(date: Date | null, locale: string): string {
   if (!date) return "";
-  return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  return date.toLocaleDateString(locale, { month: "short", year: "numeric" });
 }
 
 function Section({
@@ -177,6 +178,7 @@ function PortfolioGrid({
 export default function TradeProfileScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx, locale } = useT();
   const params = useLocalSearchParams<{
     ownerId?: string;
     projectId?: string;
@@ -273,7 +275,9 @@ export default function TradeProfileScreen() {
     if (!trade) return;
     tapFeedback();
     router.push(
-      toHref(`/trade-credentials/${encodeURIComponent(trade.tradeId)}?source=trade_page`),
+      toHref(
+        `/trade-credentials/${encodeURIComponent(trade.tradeId)}?source=trade_page`,
+      ),
     );
   };
 
@@ -293,25 +297,21 @@ export default function TradeProfileScreen() {
         error_message: errorMessage(error),
       });
       setDeleting(false);
-      Alert.alert("Couldn't delete", "Please try again.");
+      Alert.alert(t("tradePage.deleteFailed"), t("common.pleaseTryAgain"));
     }
   };
 
   const handleDelete = () => {
     if (!trade || deleting) return;
     tapFeedback();
-    Alert.alert(
-      "Delete this trade?",
-      "It will be removed from your profile and search. This can't be undone.",
-      [
-        { text: "Keep trade", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => void runDelete(),
-        },
-      ],
-    );
+    Alert.alert(t("tradePage.deleteTitle"), t("tradePage.deleteText"), [
+      { text: t("tradePage.keepTrade"), style: "cancel" },
+      {
+        text: t("common.delete"),
+        style: "destructive",
+        onPress: () => void runDelete(),
+      },
+    ]);
   };
 
   const toggleLike = () => {
@@ -338,7 +338,9 @@ export default function TradeProfileScreen() {
 
   const openOtherTrade = (other: Specialist) => {
     tapFeedback();
-    const project = projectId ? `&projectId=${encodeURIComponent(projectId)}` : "";
+    const project = projectId
+      ? `&projectId=${encodeURIComponent(projectId)}`
+      : "";
     router.push(
       toHref(
         `/trade/${encodeURIComponent(other.ownerId)}?tradeId=${encodeURIComponent(other.tradeId)}${project}`,
@@ -398,9 +400,7 @@ export default function TradeProfileScreen() {
             {isLoading ? (
               <ActivityIndicator color={colors.accent} />
             ) : (
-              <Text style={styles.missing}>
-                This specialist profile isn&apos;t available.
-              </Text>
+              <Text style={styles.missing}>{t("tradePage.unavailable")}</Text>
             )}
           </View>
         </SafeAreaView>
@@ -410,14 +410,16 @@ export default function TradeProfileScreen() {
 
   const details = trade.details;
   const place = trade.placeName ? shortPlace(trade.placeName) : "";
-  const since = memberSince(trade.createdAt);
+  const since = memberSince(trade.createdAt, locale);
   const about = trade.about || trade.shortDescription;
-  const tradeLabel = trade.specialtyLabel || "this trade";
-  const subtitle = [trade.specialtyLabel, place].filter(Boolean).join(" · ");
-  const trust = trustItems(details);
-  const response = responseLine(details);
+  const tradeLabel = tx(trade.specialtyLabel) || t("tradePage.thisTrade");
+  const subtitle = [tx(trade.specialtyLabel), place]
+    .filter(Boolean)
+    .join(" · ");
+  const trust = trustItems(details, t);
+  const response = responseLine(details, t);
   const accepting = details.availability?.acceptingWork !== false;
-  const roleLabel = owner ? businessRoleLabel(owner.business.role) : "";
+  const roleLabel = owner ? businessRoleLabel(owner.business.role, t) : "";
   const tags = [
     roleLabel,
     owner?.businessName && owner.businessName !== trade.name
@@ -431,26 +433,35 @@ export default function TradeProfileScreen() {
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
           <Text style={styles.headerTitle} numberOfLines={1}>
-            {isOwner ? "My trade" : "Services"}
+            {isOwner ? t("tradePage.myTrade") : t("tradePage.services")}
           </Text>
           {!isOwner ? (
             <View style={styles.headerActions}>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={
-                  compare.isCompared(trade.tradeId) ? "Remove from compare" : "Add to compare"
+                  compare.isCompared(trade.tradeId)
+                    ? t("trade.removeFromCompare")
+                    : t("trade.addToCompare")
                 }
-                accessibilityState={{ selected: compare.isCompared(trade.tradeId) }}
+                accessibilityState={{
+                  selected: compare.isCompared(trade.tradeId),
+                }}
                 hitSlop={8}
                 onPress={() => compare.toggle(trade.tradeId)}
                 style={[
                   styles.compareButton,
-                  compare.isCompared(trade.tradeId) && styles.compareButtonActive,
+                  compare.isCompared(trade.tradeId) &&
+                    styles.compareButtonActive,
                 ]}
               >
                 <ScaleIcon
                   size={18}
-                  color={compare.isCompared(trade.tradeId) ? colors.onAccent : colors.textSecondary}
+                  color={
+                    compare.isCompared(trade.tradeId)
+                      ? colors.onAccent
+                      : colors.textSecondary
+                  }
                   strokeWidth={2}
                 />
               </Pressable>
@@ -470,7 +481,7 @@ export default function TradeProfileScreen() {
             {cover ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="See portfolio"
+                accessibilityLabel={t("tradePage.seePortfolio")}
                 onPress={scrollToPortfolio}
               >
                 <Image
@@ -499,7 +510,11 @@ export default function TradeProfileScreen() {
               </Text>
               {subtitle ? (
                 <View style={styles.subtitleRow}>
-                  <TradeGroupIcon groupId={details.groupId} size={15} color={colors.accent} />
+                  <TradeGroupIcon
+                    groupId={details.groupId}
+                    size={15}
+                    color={colors.accent}
+                  />
                   <Text style={styles.subtitle} numberOfLines={2}>
                     {subtitle}
                   </Text>
@@ -513,19 +528,23 @@ export default function TradeProfileScreen() {
                       {trade.rating.toFixed(1)}
                     </Text>
                     <Text style={styles.ratingCount}>
-                      ({trade.reviews} {trade.reviews === 1 ? "review" : "reviews"})
+                      ({t("compare.reviews", { count: trade.reviews })})
                     </Text>
                   </View>
                 ) : (
                   <View style={styles.newPill}>
-                    <Text style={styles.newPillText}>New on CTMASS</Text>
+                    <Text style={styles.newPillText}>
+                      {t("compare.values.newOnCtmass")}
+                    </Text>
                   </View>
                 )}
                 {details.experienceYears !== null ? (
                   <View style={styles.tag}>
                     <Text style={styles.tagText}>
-                      {details.experienceYears}{" "}
-                      {details.experienceYears === 1 ? "year" : "years"} in {tradeLabel}
+                      {t("trade.sections.yearsIn", {
+                        count: details.experienceYears,
+                        trade: tradeLabel,
+                      })}
                     </Text>
                   </View>
                 ) : null}
@@ -553,48 +572,67 @@ export default function TradeProfileScreen() {
               ) : null}
               {!accepting ? (
                 <Text style={styles.unavailable}>
-                  Not accepting new projects right now
+                  {t("trade.notAccepting")}
                 </Text>
               ) : null}
             </View>
           </View>
 
           {isOwner ? (
-            <TradeCompleteness trade={trade} portfolioCount={portfolioItems.length} />
+            <TradeCompleteness
+              trade={trade}
+              portfolioCount={portfolioItems.length}
+            />
           ) : null}
 
           <View style={styles.highlights}>
             <Highlight
               icon={<DollarIcon size={18} color={colors.accent} />}
-              label="Price"
-              value={priceLine(details.rates)}
+              label={t("tradePage.price")}
+              value={priceLine(details.rates, t)}
             />
             <Highlight
               icon={<MapPinIcon size={18} color={colors.accent} />}
-              label="Service area"
-              value={details.radiusMiles ? `Within ${details.radiusMiles} mi` : place || "Ask about your area"}
-              hint={details.radiusMiles && place ? `from ${place}` : undefined}
+              label={t("compare.rows.serviceArea")}
+              value={
+                details.radiusMiles
+                  ? t("tradePage.withinMiles", { miles: details.radiusMiles })
+                  : place || t("tradePage.askArea")
+              }
+              hint={
+                details.radiusMiles && place
+                  ? t("tradePage.fromPlace", { place })
+                  : undefined
+              }
             />
             <Highlight
               icon={<ResponsesIcon size={18} color={colors.accent} />}
-              label="Response"
-              value={response || "Not yet established"}
-              hint={response ? "Set by contractor" : undefined}
+              label={t("tradePage.response")}
+              value={response || t("compare.values.notEstablished")}
+              hint={response ? tx("Set by contractor") : undefined}
             />
             <Highlight
               icon={<ToolsIcon size={18} color={colors.accent} />}
-              label="Jobs on CTMASS"
-              value={trade.completedProjects > 0 ? String(trade.completedProjects) : "—"}
+              label={t("compare.rows.jobs")}
+              value={
+                trade.completedProjects > 0
+                  ? String(trade.completedProjects)
+                  : "—"
+              }
             />
           </View>
 
           <Section
             icon={<ShieldCheckIcon size={18} color={colors.accent} />}
-            title="License & insurance"
+            title={t("tradePage.licenseInsurance")}
             action={
               isOwner ? (
-                <Pressable accessibilityRole="button" hitSlop={8} onPress={openCredentials}>
-                  <Text style={styles.sectionLink}>Edit</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  hitSlop={8}
+                  onPress={openCredentials}
+                >
+                  <Text style={styles.sectionLink}>{t("tradePage.edit")}</Text>
                 </Pressable>
               ) : null
             }
@@ -617,7 +655,9 @@ export default function TradeProfileScreen() {
                       </View>
                       <View style={styles.certBody}>
                         <Text style={styles.certTitle} numberOfLines={1}>
-                          {cert.institution || cert.documentType || "Document"}
+                          {cert.institution ||
+                            cert.documentType ||
+                            t("tradePage.document")}
                         </Text>
                         {cert.documentType && cert.institution ? (
                           <Text style={styles.certSub} numberOfLines={1}>
@@ -633,23 +673,32 @@ export default function TradeProfileScreen() {
             ) : null}
           </Section>
 
-          <Section icon={<DollarIcon size={18} color={colors.accent} />} title="Pricing">
+          <Section
+            icon={<DollarIcon size={18} color={colors.accent} />}
+            title={t("trade.sections.pricing")}
+          >
             <PricingPanel details={details} />
           </Section>
 
           {details.services.length > 0 ? (
-            <Section icon={<ToolsIcon size={18} color={colors.accent} />} title="Services">
+            <Section
+              icon={<ToolsIcon size={18} color={colors.accent} />}
+              title={t("compare.rows.services")}
+            >
               <View style={styles.chipWrap}>
                 {details.services.map((service) => (
                   <View key={service} style={styles.serviceChip}>
-                    <Text style={styles.serviceChipText}>{service}</Text>
+                    <Text style={styles.serviceChipText}>{tx(service)}</Text>
                   </View>
                 ))}
               </View>
             </Section>
           ) : null}
 
-          <Section icon={<AwardIcon size={18} color={colors.accent} />} title="Experience">
+          <Section
+            icon={<AwardIcon size={18} color={colors.accent} />}
+            title={t("tradePage.experience")}
+          >
             <ExperiencePanel
               details={details}
               tradeLabel={tradeLabel}
@@ -660,7 +709,7 @@ export default function TradeProfileScreen() {
           </Section>
 
           {about ? (
-            <Section title="About">
+            <Section title={t("tradePage.about")}>
               <View style={styles.card}>
                 <Text style={styles.about}>{about}</Text>
               </View>
@@ -677,8 +726,10 @@ export default function TradeProfileScreen() {
                 icon={<ImageIcon size={18} color={colors.accent} />}
                 title={
                   portfolioItems.length > 0
-                    ? `Portfolio (${portfolioItems.length})`
-                    : "Portfolio"
+                    ? t("tradePage.portfolioCount", {
+                        count: portfolioItems.length,
+                      })
+                    : t("tradePage.portfolio")
                 }
                 action={
                   isOwner && portfolioItems.length > 0 ? (
@@ -687,7 +738,9 @@ export default function TradeProfileScreen() {
                       hitSlop={8}
                       onPress={addPortfolio}
                     >
-                      <Text style={styles.sectionLink}>+ Add project</Text>
+                      <Text style={styles.sectionLink}>
+                        {t("tradePage.addProject")}
+                      </Text>
                     </Pressable>
                   ) : null
                 }
@@ -696,7 +749,7 @@ export default function TradeProfileScreen() {
                   <ActivityIndicator color={colors.accent} />
                 ) : portfolioItems.length === 0 ? (
                   <PressableScale
-                    accessibilityLabel="Add your first portfolio project"
+                    accessibilityLabel={t("tradePage.addFirstA11y")}
                     onPress={addPortfolio}
                   >
                     <View style={styles.portfolioEmpty}>
@@ -704,13 +757,14 @@ export default function TradeProfileScreen() {
                         <ImageIcon size={26} color={colors.accent} />
                       </View>
                       <Text style={styles.portfolioEmptyTitle}>
-                        Show off your best work
+                        {t("tradePage.portfolioEmptyTitle")}
                       </Text>
                       <Text style={styles.portfolioEmptyText}>
-                        Add before and after photos of finished jobs. Homeowners
-                        trust pros with a portfolio.
+                        {t("tradePage.portfolioEmptyText")}
                       </Text>
-                      <Text style={styles.sectionLink}>+ Add project</Text>
+                      <Text style={styles.sectionLink}>
+                        {t("tradePage.addProject")}
+                      </Text>
                     </View>
                   </PressableScale>
                 ) : (
@@ -728,8 +782,10 @@ export default function TradeProfileScreen() {
                       >
                         <Text style={styles.moreLink}>
                           {showAllPortfolio
-                            ? "Show less"
-                            : `Show all ${portfolioItems.length} projects`}
+                            ? t("tradePage.showLess")
+                            : t("tradePage.showAllProjects", {
+                                count: portfolioItems.length,
+                              })}
                         </Text>
                       </Pressable>
                     ) : null}
@@ -737,8 +793,13 @@ export default function TradeProfileScreen() {
                 )}
               </Section>
             ) : (
-              <Section icon={<ImageIcon size={18} color={colors.accent} />} title="Portfolio">
-                <Text style={styles.emptyNote}>No projects added yet</Text>
+              <Section
+                icon={<ImageIcon size={18} color={colors.accent} />}
+                title={t("tradePage.portfolio")}
+              >
+                <Text style={styles.emptyNote}>
+                  {t("tradePage.noProjects")}
+                </Text>
               </Section>
             )}
           </View>
@@ -746,14 +807,14 @@ export default function TradeProfileScreen() {
           {gallery.length > 0 ? (
             <Section
               icon={<ImageIcon size={18} color={colors.accent} />}
-              title="Photos"
+              title={t("tradePage.photos")}
             >
               <View style={styles.photoGrid}>
                 {gallery.slice(0, 9).map((uri) => (
                   <Pressable
                     key={uri}
                     accessibilityRole="imagebutton"
-                    accessibilityLabel="Open photo"
+                    accessibilityLabel={t("tradePage.openPhoto")}
                     onPress={() => setViewerUri(uri)}
                     style={styles.photoCell}
                   >
@@ -771,7 +832,11 @@ export default function TradeProfileScreen() {
 
           <Section
             icon={<ReviewIcon size={18} color={colors.coin} />}
-            title={reviewTotal > 0 ? `Reviews (${reviewTotal})` : "Reviews"}
+            title={
+              reviewTotal > 0
+                ? t("tradePage.reviewsCount", { count: reviewTotal })
+                : t("tradePage.reviews")
+            }
             action={
               reviewTotal > reviewItems.length ? (
                 <Pressable
@@ -779,26 +844,33 @@ export default function TradeProfileScreen() {
                   hitSlop={8}
                   onPress={openOwner}
                 >
-                  <Text style={styles.sectionLink}>See all</Text>
+                  <Text style={styles.sectionLink}>
+                    {t("tradePage.seeAll")}
+                  </Text>
                 </Pressable>
               ) : null
             }
           >
             {reviewItems.length === 0 ? (
               <Text style={styles.emptyNote}>
-                {isOwner ? "No reviews yet" : "Be the first to leave a review after your project."}
+                {isOwner
+                  ? t("tradePage.noReviews")
+                  : t("tradePage.beFirstReview")}
               </Text>
             ) : (
               <View style={styles.list}>
                 {reviewScope === "all" ? (
-                  <Text style={styles.emptyNote}>Across all of this contractor&apos;s trades</Text>
+                  <Text style={styles.emptyNote}>
+                    {t("tradePage.acrossTrades")}
+                  </Text>
                 ) : null}
                 {reviewItems.map((review) => {
                   const filled = Math.max(
                     0,
                     Math.min(5, Math.round(review.rating)),
                   );
-                  const authorName = review.author?.name || "Client";
+                  const authorName =
+                    review.author?.name || t("tradePage.client");
                   return (
                     <View key={review.id} style={styles.card}>
                       <View style={styles.reviewHead}>
@@ -829,45 +901,69 @@ export default function TradeProfileScreen() {
             )}
           </Section>
 
-          <Section icon={<CalendarIcon size={18} color={colors.accent} />} title="Availability & response">
+          <Section
+            icon={<CalendarIcon size={18} color={colors.accent} />}
+            title={t("tradePage.availabilityResponse")}
+          >
             <AvailabilityPanel details={details} owner={owner} />
           </Section>
 
           {hasWorkProcess(details) ? (
-            <Section icon={<ToolsIcon size={18} color={colors.accent} />} title="How they work">
+            <Section
+              icon={<ToolsIcon size={18} color={colors.accent} />}
+              title={t("tradePage.howTheyWork")}
+            >
               <WorkProcessPanel details={details} />
             </Section>
           ) : null}
 
           {owner && hasBusinessDetails(owner) ? (
-            <Section icon={<BuildingIcon size={18} color={colors.accent} />} title="Business">
+            <Section
+              icon={<BuildingIcon size={18} color={colors.accent} />}
+              title={t("tradePage.business")}
+            >
               <BusinessPanel owner={owner} />
             </Section>
           ) : null}
 
           {otherTrades.length > 0 ? (
-            <Section icon={<TradeGroupIcon groupId={details.groupId} size={18} color={colors.accent} />} title="Other trades">
+            <Section
+              icon={
+                <TradeGroupIcon
+                  groupId={details.groupId}
+                  size={18}
+                  color={colors.accent}
+                />
+              }
+              title={t("tradePage.otherTrades")}
+            >
               <View style={styles.list}>
                 {otherTrades.map((other) => (
                   <PressableScale
                     key={other.tradeId}
-                    accessibilityLabel={other.specialtyLabel || other.name}
+                    accessibilityLabel={tx(other.specialtyLabel) || other.name}
                     onPress={() => openOtherTrade(other)}
                   >
                     <View style={styles.certRow}>
                       <View style={styles.certIcon}>
-                        <TradeGroupIcon groupId={other.details.groupId} size={18} color={colors.accent} />
+                        <TradeGroupIcon
+                          groupId={other.details.groupId}
+                          size={18}
+                          color={colors.accent}
+                        />
                       </View>
                       <View style={styles.certBody}>
                         <Text style={styles.certTitle} numberOfLines={1}>
-                          {other.specialtyLabel || other.name}
+                          {tx(other.specialtyLabel) || other.name}
                         </Text>
                         <Text style={styles.certSub} numberOfLines={1}>
                           {[
                             other.details.experienceYears !== null
-                              ? `${other.details.experienceYears} yrs`
+                              ? t("trade.yearsShort", {
+                                  count: other.details.experienceYears,
+                                })
                               : "",
-                            priceLine(other.details.rates),
+                            priceLine(other.details.rates, t),
                           ]
                             .filter(Boolean)
                             .join(" · ")}
@@ -883,10 +979,10 @@ export default function TradeProfileScreen() {
 
           <Section
             icon={<UsersIcon size={18} color={colors.accent} />}
-            title="About the specialist"
+            title={t("tradePage.aboutSpecialist")}
           >
             <PressableScale
-              accessibilityLabel="Open specialist profile"
+              accessibilityLabel={t("tradePage.openSpecialist")}
               onPress={openOwner}
             >
               <View style={styles.ownerCard}>
@@ -900,7 +996,9 @@ export default function TradeProfileScreen() {
                     {profile?.name || trade.name}
                   </Text>
                   <Text style={styles.ownerHint} numberOfLines={1}>
-                    {isOwner ? "View your public profile" : "View profile & all services"}
+                    {isOwner
+                      ? t("tradePage.viewYourPublic")
+                      : t("tradePage.viewProfileAll")}
                   </Text>
                 </View>
                 <View style={styles.ownerChevron}>
@@ -918,20 +1016,22 @@ export default function TradeProfileScreen() {
           {isOwner ? (
             <>
               <PrimaryButton
-                label="Edit trade"
+                label={t("tradePage.editTrade")}
                 onPress={handleEdit}
                 disabled={deleting}
               />
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Delete trade"
+                accessibilityLabel={t("tradePage.deleteTrade")}
                 hitSlop={8}
                 disabled={deleting}
                 onPress={handleDelete}
                 style={styles.deleteWrap}
               >
                 <Text style={styles.deleteLink}>
-                  {deleting ? "Deleting…" : "Delete trade"}
+                  {deleting
+                    ? t("tradePage.deleting")
+                    : t("tradePage.deleteTrade")}
                 </Text>
               </Pressable>
             </>
@@ -939,7 +1039,7 @@ export default function TradeProfileScreen() {
             <>
               {projectId ? null : (
                 <PrimaryButton
-                  label="Request quote"
+                  label={t("compare.requestQuote")}
                   onPress={() => contact.requestQuote(contactTarget)}
                 />
               )}
@@ -947,7 +1047,7 @@ export default function TradeProfileScreen() {
                 {phone ? (
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel="Call"
+                    accessibilityLabel={t("trade.call")}
                     onPress={() => contact.call(contactTarget, phone)}
                     style={({ pressed }) => [
                       styles.contactButton,
@@ -956,12 +1056,14 @@ export default function TradeProfileScreen() {
                     ]}
                   >
                     <PhoneIcon size={20} color="#FFFFFF" />
-                    <Text style={[styles.contactText, styles.callText]}>Call</Text>
+                    <Text style={[styles.contactText, styles.callText]}>
+                      {t("trade.call")}
+                    </Text>
                   </Pressable>
                 ) : null}
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Message"
+                  accessibilityLabel={t("trade.message")}
                   disabled={contact.opening}
                   onPress={() => void contact.message(contactTarget, projectId)}
                   style={({ pressed }) => [
@@ -976,7 +1078,7 @@ export default function TradeProfileScreen() {
                     <TextMessageIcon size={20} color={colors.accent} />
                   )}
                   <Text style={[styles.contactText, styles.messageText]}>
-                    Message
+                    {t("trade.message")}
                   </Text>
                 </Pressable>
               </View>
@@ -1454,7 +1556,9 @@ const useStyles = makeStyles((t) => ({
   messageButton: {
     borderWidth: 1.5,
     borderColor: "rgba(22,179,100,0.45)",
-    backgroundColor: t.isDark ? "rgba(22,179,100,0.08)" : "rgba(255,255,255,0.75)",
+    backgroundColor: t.isDark
+      ? "rgba(22,179,100,0.08)"
+      : "rgba(255,255,255,0.75)",
   },
   contactPressed: {
     opacity: 0.75,

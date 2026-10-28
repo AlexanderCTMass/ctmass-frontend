@@ -24,6 +24,7 @@ import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { successFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import {
   INQUIRY_SOURCES,
   type InquirySource,
@@ -60,6 +61,7 @@ function isCalendlyUrl(url: string): boolean {
 export default function ItBookingScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const params = useLocalSearchParams<{
     name?: string;
     email?: string;
@@ -67,7 +69,9 @@ export default function ItBookingScreen() {
     source?: string;
   }>();
   const rawSource = asParam(params.source) as InquirySource;
-  const source: InquirySource = INQUIRY_SOURCES.includes(rawSource) ? rawSource : "app";
+  const source: InquirySource = INQUIRY_SOURCES.includes(rawSource)
+    ? rawSource
+    : "app";
 
   const url = useMemo(
     () =>
@@ -151,7 +155,7 @@ export default function ItBookingScreen() {
         <View style={styles.header}>
           <BackButton onPress={close} />
           <Text style={styles.title} numberOfLines={1}>
-            Book a free consultation
+            {t("it.bookingTitle")}
           </Text>
           <View style={styles.spacer} />
         </View>
@@ -159,20 +163,17 @@ export default function ItBookingScreen() {
         <View style={styles.body}>
           {failed ? (
             <View style={styles.errorWrap}>
-              <Text style={styles.errorTitle}>
-                Couldn&apos;t load the calendar
-              </Text>
-              <Text style={styles.errorText}>
-                Check your connection and try again. We already have your
-                request and will reach out by email.
-              </Text>
+              <Text style={styles.errorTitle}>{t("it.calendarFailed")}</Text>
+              <Text style={styles.errorText}>{t("it.calendarFailedText")}</Text>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Try again"
+                accessibilityLabel={t("common.tryAgainButton")}
                 onPress={retry}
                 style={styles.retryBtn}
               >
-                <Text style={styles.retryText}>Try again</Text>
+                <Text style={styles.retryText}>
+                  {t("common.tryAgainButton")}
+                </Text>
               </Pressable>
             </View>
           ) : (
@@ -212,14 +213,15 @@ export default function ItBookingScreen() {
                 <CheckIcon size={22} color={colors.accent} />
               </View>
               <View style={styles.successBody}>
-                <Text style={styles.successTitle}>You&apos;re booked!</Text>
-                <Text style={styles.successText}>
-                  Check your email for the calendar invite and Google Meet link.
-                  See you on the call!
-                </Text>
+                <Text style={styles.successTitle}>{t("it.booked")}</Text>
+                <Text style={styles.successText}>{t("it.bookedText")}</Text>
               </View>
             </View>
-            <PrimaryButton label="Done" withArrow={false} onPress={close} />
+            <PrimaryButton
+              label={t("common.done")}
+              withArrow={false}
+              onPress={close}
+            />
           </Animated.View>
         ) : null}
       </SafeAreaView>

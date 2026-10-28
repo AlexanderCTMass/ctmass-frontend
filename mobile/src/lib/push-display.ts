@@ -3,6 +3,7 @@ import { AppState, Platform } from "react-native";
 
 import type { PushData } from "@/lib/notifications";
 import { routeFromPushData } from "@/lib/push-routing";
+import i18n from "@/lib/i18n";
 
 const CHANNEL_ID = "default";
 const BRAND_COLOR = "#16B364";
@@ -22,7 +23,7 @@ Notifications.setNotificationHandler({
 export async function ensureAndroidChannel(): Promise<void> {
   if (Platform.OS !== "android") return;
   await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-    name: "Notifications",
+    name: i18n.t("profile.tab.notifications"),
     importance: Notifications.AndroidImportance.HIGH,
     enableVibrate: true,
     lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,

@@ -25,6 +25,7 @@ import {
   websiteHost,
   yearsInBusiness,
 } from "@/lib/business-profile";
+import { useT } from "@/lib/i18n";
 import {
   type TradeCredential,
   type TradeDetails,
@@ -36,8 +37,6 @@ import {
   priceLine,
   shortDate,
 } from "@/lib/trade-display";
-
-const NOT_PROVIDED = "Not provided";
 
 export function InfoRow({
   label,
@@ -83,20 +82,26 @@ function CredentialBlock({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const current = isCredentialCurrent(credential);
   const status = !credential
-    ? NOT_PROVIDED
+    ? t("compare.values.notProvided")
     : current
-      ? "Provided by contractor"
-      : "Expired";
+      ? t("trade.sections.providedByContractor")
+      : t("compare.values.expired");
   return (
     <View style={styles.credential}>
       <View style={[styles.credIcon, !current && styles.credIconMuted]}>
-        <ShieldCheckIcon size={18} color={current ? colors.accent : colors.textMuted} />
+        <ShieldCheckIcon
+          size={18}
+          color={current ? colors.accent : colors.textMuted}
+        />
       </View>
       <View style={styles.credBody}>
         <Text style={styles.credTitle}>{title}</Text>
-        <Text style={[styles.credStatus, !current && styles.rowMuted]}>{status}</Text>
+        <Text style={[styles.credStatus, !current && styles.rowMuted]}>
+          {status}
+        </Text>
         {credential
           ? details.filter(Boolean).map((line) => (
               <Text key={line} style={styles.credDetail}>
@@ -108,9 +113,13 @@ function CredentialBlock({
           <Pressable
             accessibilityRole="link"
             hitSlop={6}
-            onPress={() => void Linking.openURL(credential.documentUrl).catch(() => undefined)}
+            onPress={() =>
+              void Linking.openURL(credential.documentUrl).catch(
+                () => undefined,
+              )
+            }
           >
-            <Text style={styles.link}>View document</Text>
+            <Text style={styles.link}>{t("trade.sections.viewDocument")}</Text>
           </Pressable>
         ) : null}
       </View>
@@ -126,79 +135,117 @@ export function CredentialsPanel({
   isOwner?: boolean;
 }) {
   const styles = useStyles();
+  const { t, tx } = useT();
   const license = details.license;
   const insurance = details.insurance;
   return (
     <Panel>
       <CredentialBlock
-        title="License"
+        title={t("compare.rows.license")}
         credential={license}
         showDocument={isOwner}
         details={[
           [license?.state, license?.type].filter(Boolean).join(" · "),
-          license?.number ? `No. ${license.number}` : "",
-          license?.expiresAt ? `Valid through ${shortDate(license.expiresAt)}` : "",
+          license?.number
+            ? t("trade.sections.licenseNumber", { number: license.number })
+            : "",
+          license?.expiresAt
+            ? t("trade.sections.validThrough", {
+                date: shortDate(license.expiresAt),
+              })
+            : "",
         ]}
       />
       <View style={styles.divider} />
       <CredentialBlock
-        title="Insurance"
+        title={t("compare.rows.insurance")}
         credential={insurance}
         showDocument={isOwner}
         details={[
-          insurance?.type ?? "",
-          insurance?.expiresAt ? `Valid through ${shortDate(insurance.expiresAt)}` : "",
+          tx(insurance?.type ?? ""),
+          insurance?.expiresAt
+            ? t("trade.sections.validThrough", {
+                date: shortDate(insurance.expiresAt),
+              })
+            : "",
         ]}
       />
-      <Text style={styles.note}>
-        Documents are provided by the contractor. CTMASS does not verify licenses
-        or insurance — confirm with your state licensing board before hiring.
-      </Text>
+      <Text style={styles.note}>{t("trade.sections.credentialsNote")}</Text>
     </Panel>
   );
 }
 
 export function PricingPanel({ details }: { details: TradeDetails }) {
   const styles = useStyles();
+  const { t, tx } = useT();
   const rates = details.rates;
   const listed = hasListedRate(rates);
   return (
     <Panel>
       <Text style={[styles.price, !listed && styles.priceMuted]}>
-        {priceLine(rates)}
+        {priceLine(rates, t)}
       </Text>
       {rates && rates.model !== "not_provided" ? (
-        <InfoRow label="Pricing" value={pricingModelLabel(rates.model)} />
+        <InfoRow
+          label={t("trade.sections.pricing")}
+          value={pricingModelLabel(rates.model, t)}
+        />
       ) : null}
       {rates?.minimumCharge !== null && rates?.minimumCharge !== undefined ? (
-        <InfoRow label="Minimum charge" value={money(rates.minimumCharge)} />
+        <InfoRow
+          label={t("trade.sections.minimumCharge")}
+          value={money(rates.minimumCharge)}
+        />
       ) : null}
       {rates?.serviceCallFee !== null && rates?.serviceCallFee !== undefined ? (
         <InfoRow
-          label="Service call"
-          value={`${money(rates.serviceCallFee)}${rates.serviceCallCredited ? " · credited toward the repair" : ""}`}
+          label={t("trade.sections.serviceCall")}
+          value={
+            rates.serviceCallCredited
+              ? t("trade.sections.serviceCallCredited", {
+                  fee: money(rates.serviceCallFee),
+                })
+              : money(rates.serviceCallFee)
+          }
         />
       ) : null}
       {rates?.afterHours ? (
-        <InfoRow label="After hours" value={rates.afterHours} />
+        <InfoRow
+          label={t("trade.sections.afterHours")}
+          value={rates.afterHours}
+        />
       ) : null}
-      {rates?.travelFee ? <InfoRow label="Travel" value={rates.travelFee} /> : null}
+      {rates?.travelFee ? (
+        <InfoRow label={t("trade.sections.travel")} value={rates.travelFee} />
+      ) : null}
       {rates?.materials ? (
-        <InfoRow label="Materials" value={rates.materials} />
+        <InfoRow
+          label={t("trade.sections.materials")}
+          value={rates.materials}
+        />
       ) : null}
-      {rates?.note ? <InfoRow label="Note" value={rates.note} /> : null}
+      {rates?.note ? (
+        <InfoRow label={t("trade.sections.note")} value={rates.note} />
+      ) : null}
       {details.workPolicy.estimate ? (
         <InfoRow
-          label="Estimates"
-          value={[estimateLabel(details.workPolicy.estimate), details.workPolicy.estimateNote]
+          label={t("trade.sections.estimates")}
+          value={[
+            estimateLabel(details.workPolicy.estimate, t),
+            details.workPolicy.estimateNote,
+          ]
             .filter(Boolean)
             .join(" · ")}
         />
       ) : null}
       {rates?.updatedAt ? (
-        <Text style={styles.note}>Last updated {shortDate(rates.updatedAt)}</Text>
+        <Text style={styles.note}>
+          {t("trade.sections.lastUpdated", {
+            date: shortDate(rates.updatedAt),
+          })}
+        </Text>
       ) : null}
-      <Text style={styles.note}>{PRICE_DISCLAIMER}</Text>
+      <Text style={styles.note}>{tx(PRICE_DISCLAIMER)}</Text>
     </Panel>
   );
 }
@@ -217,6 +264,7 @@ export function ExperiencePanel({
   since: string;
 }) {
   const styles = useStyles();
+  const { t } = useT();
   const businessYears = owner ? yearsInBusiness(owner.business) : null;
   const years = details.experienceYears;
   return (
@@ -225,24 +273,38 @@ export function ExperiencePanel({
         <View style={styles.tierRow}>
           <TierBadge years={years} />
           <Text style={styles.tierText}>
-            {years} {years === 1 ? "year" : "years"} in {tradeLabel}
+            {t("trade.sections.yearsIn", { count: years, trade: tradeLabel })}
           </Text>
         </View>
       ) : (
-        <InfoRow label={`Years in ${tradeLabel}`} value={NOT_PROVIDED} muted />
+        <InfoRow
+          label={t("trade.sections.yearsInLabel", { trade: tradeLabel })}
+          value={t("compare.values.notProvided")}
+          muted
+        />
       )}
       <InfoRow
-        label="Years in business"
-        value={businessYears !== null ? String(businessYears) : NOT_PROVIDED}
+        label={t("compare.rows.yearsInBusiness")}
+        value={
+          businessYears !== null
+            ? String(businessYears)
+            : t("compare.values.notProvided")
+        }
         muted={businessYears === null}
       />
       <InfoRow
-        label="Completed jobs on CTMASS"
-        value={completedJobs > 0 ? String(completedJobs) : "None yet"}
+        label={t("trade.sections.completedJobs")}
+        value={
+          completedJobs > 0
+            ? String(completedJobs)
+            : t("compare.values.noneYet")
+        }
         muted={completedJobs === 0}
       />
-      {since ? <InfoRow label="On CTMASS since" value={since} /> : null}
-      <Text style={styles.note}>Experience is provided by the contractor.</Text>
+      {since ? (
+        <InfoRow label={t("trade.sections.onSince")} value={since} />
+      ) : null}
+      <Text style={styles.note}>{t("trade.sections.experienceNote")}</Text>
     </Panel>
   );
 }
@@ -254,45 +316,61 @@ export function AvailabilityPanel({
   details: TradeDetails;
   owner: OwnerPublic | null;
 }) {
+  const { t, tx } = useT();
   const availability = details.availability;
-  const schedule = availabilityLine(availability);
-  const response = RESPONSE_TIMES.find((item) => item.value === details.responseTime);
+  const schedule = availabilityLine(availability, t);
+  const response = RESPONSE_TIMES.find(
+    (item) => item.value === details.responseTime,
+  );
   const preferred = owner?.contact.preferred ?? "message";
   return (
     <Panel>
       <InfoRow
-        label="Schedule"
-        value={schedule || NOT_PROVIDED}
+        label={t("trade.sections.schedule")}
+        value={schedule || t("compare.values.notProvided")}
         muted={!schedule}
       />
       {availability && availability.emergency !== "none" ? (
         <InfoRow
-          label="Emergency"
-          value={[emergencyLabel(availability.emergency), availability.emergencyNote]
+          label={t("compare.rows.emergency")}
+          value={[
+            emergencyLabel(availability.emergency, t),
+            availability.emergencyNote,
+          ]
             .filter(Boolean)
             .join(" · ")}
         />
       ) : null}
       <InfoRow
-        label="Typical response"
-        value={response ? `${response.label} · ${RESPONSE_SOURCE_NOTE}` : "Response time not yet established"}
+        label={t("trade.sections.typicalResponse")}
+        value={
+          response
+            ? `${tx(response.label)} · ${tx(RESPONSE_SOURCE_NOTE)}`
+            : t("trade.sections.responseNotEstablished")
+        }
         muted={!response}
       />
       <InfoRow
-        label="Preferred contact"
-        value={
+        label={t("trade.sections.preferredContact")}
+        value={tx(
           preferred === "phone"
             ? "Phone call"
             : preferred === "email"
               ? "Email"
-              : "CTMASS message"
-        }
+              : "CTMASS message",
+        )}
       />
       {details.radiusMiles ? (
-        <InfoRow label="Service radius" value={`${details.radiusMiles} miles`} />
+        <InfoRow
+          label={t("trade.sections.serviceRadius")}
+          value={t("trade.sections.miles", { count: details.radiusMiles })}
+        />
       ) : null}
       {details.areas.length > 0 ? (
-        <InfoRow label="Areas served" value={details.areas.join(", ")} />
+        <InfoRow
+          label={t("trade.sections.areasServed")}
+          value={details.areas.join(", ")}
+        />
       ) : null}
     </Panel>
   );
@@ -301,28 +379,42 @@ export function AvailabilityPanel({
 export function hasWorkProcess(details: TradeDetails): boolean {
   const policy = details.workPolicy;
   return Boolean(
-    policy.permits || policy.warranty || policy.workBy || policy.projectTypes.length,
+    policy.permits ||
+      policy.warranty ||
+      policy.workBy ||
+      policy.projectTypes.length,
   );
 }
 
 export function WorkProcessPanel({ details }: { details: TradeDetails }) {
+  const { t } = useT();
   const policy = details.workPolicy;
   return (
     <Panel>
       {policy.projectTypes.length > 0 ? (
         <InfoRow
-          label="Project types"
-          value={policy.projectTypes.map(projectTypeLabel).join(", ")}
+          label={t("trade.sections.projectTypes")}
+          value={policy.projectTypes
+            .map((type) => projectTypeLabel(type, t))
+            .join(", ")}
         />
       ) : null}
       {policy.workBy ? (
-        <InfoRow label="Work performed by" value={workByLabel(policy.workBy)} />
+        <InfoRow
+          label={t("trade.sections.workBy")}
+          value={workByLabel(policy.workBy, t)}
+        />
       ) : null}
-      {policy.permits ? <InfoRow label="Permits" value={permitsLabel(policy.permits)} /> : null}
+      {policy.permits ? (
+        <InfoRow
+          label={t("trade.sections.permits")}
+          value={permitsLabel(policy.permits, t)}
+        />
+      ) : null}
       {policy.warranty ? (
         <InfoRow
-          label="Workmanship warranty"
-          value={[warrantyLabel(policy.warranty), policy.warrantyTerms]
+          label={t("trade.sections.warranty")}
+          value={[warrantyLabel(policy.warranty, t), policy.warrantyTerms]
             .filter(Boolean)
             .join(" · ")}
         />
@@ -336,7 +428,7 @@ export function hasBusinessDetails(owner: OwnerPublic | null): boolean {
   const business = owner.business;
   return Boolean(
     business.role ||
-      businessStructureLabel(business.structure) ||
+      (business.structure && business.structure !== "undisclosed") ||
       business.crewSize ||
       business.languages.length ||
       business.paymentMethods.length ||
@@ -347,36 +439,62 @@ export function hasBusinessDetails(owner: OwnerPublic | null): boolean {
 
 export function BusinessPanel({ owner }: { owner: OwnerPublic }) {
   const styles = useStyles();
+  const { t, tx } = useT();
   const business = owner.business;
-  const structure = businessStructureLabel(business.structure);
+  const structure = businessStructureLabel(business.structure, t);
   return (
     <Panel>
-      {owner.businessName ? <InfoRow label="Company" value={owner.businessName} /> : null}
-      {business.role ? <InfoRow label="Role" value={businessRoleLabel(business.role)} /> : null}
-      {structure ? <InfoRow label="Business structure" value={structure} /> : null}
+      {owner.businessName ? (
+        <InfoRow
+          label={t("trade.sections.company")}
+          value={owner.businessName}
+        />
+      ) : null}
+      {business.role ? (
+        <InfoRow
+          label={t("trade.sections.role")}
+          value={businessRoleLabel(business.role, t)}
+        />
+      ) : null}
+      {structure ? (
+        <InfoRow label={t("trade.sections.structure")} value={structure} />
+      ) : null}
       {business.crewSize ? (
         <InfoRow
-          label="Crew size"
-          value={`${crewSizeLabel(business.crewSize)}${business.usesSubcontractors ? " · uses subcontractors" : ""}`}
+          label={t("trade.sections.crewSize")}
+          value={
+            business.usesSubcontractors
+              ? t("trade.sections.crewUsesSubs", {
+                  crew: crewSizeLabel(business.crewSize, t),
+                })
+              : crewSizeLabel(business.crewSize, t)
+          }
         />
       ) : null}
       {business.languages.length > 0 ? (
-        <InfoRow label="Languages" value={business.languages.join(", ")} />
+        <InfoRow
+          label={t("compare.rows.languages")}
+          value={business.languages.map(tx).join(", ")}
+        />
       ) : null}
       {business.paymentMethods.length > 0 ? (
         <InfoRow
-          label="Payment methods"
-          value={business.paymentMethods.map(paymentMethodLabel).join(", ")}
+          label={t("trade.sections.paymentMethods")}
+          value={business.paymentMethods
+            .map((method) => paymentMethodLabel(method, t))
+            .join(", ")}
         />
       ) : null}
       {business.website ? (
         <InfoRow
-          label="Website"
+          label={t("trade.sections.website")}
           value={
             <Pressable
               accessibilityRole="link"
               hitSlop={6}
-              onPress={() => void Linking.openURL(business.website).catch(() => undefined)}
+              onPress={() =>
+                void Linking.openURL(business.website).catch(() => undefined)
+              }
             >
               <Text style={styles.link}>{websiteHost(business.website)}</Text>
             </Pressable>
@@ -385,12 +503,16 @@ export function BusinessPanel({ owner }: { owner: OwnerPublic }) {
       ) : null}
       {owner.email ? (
         <InfoRow
-          label="Email"
+          label={t("compare.values.email")}
           value={
             <Pressable
               accessibilityRole="link"
               hitSlop={6}
-              onPress={() => void Linking.openURL(`mailto:${owner.email}`).catch(() => undefined)}
+              onPress={() =>
+                void Linking.openURL(`mailto:${owner.email}`).catch(
+                  () => undefined,
+                )
+              }
             >
               <Text style={styles.link}>{owner.email}</Text>
             </Pressable>

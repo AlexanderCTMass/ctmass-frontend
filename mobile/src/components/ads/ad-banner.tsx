@@ -13,6 +13,7 @@ import {
 } from "@/constants/theme";
 import type { AdPlacement } from "@/lib/ad-placements";
 import { resolveAssetUri } from "@/lib/asset-cache";
+import { useT } from "@/lib/i18n";
 import { openAd, type PartnerAd } from "@/lib/partner-ads";
 
 export const AD_ASPECT_RATIO = 3;
@@ -32,6 +33,7 @@ export const AdBanner = memo(function AdBanner({
 }: AdBannerProps) {
   const { isDark } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const remote = isDark && ad.imageDarkUrl ? ad.imageDarkUrl : ad.imageUrl;
   const source = resolveAssetUri("ads", remote) ?? remote;
   const isLocal = source !== remote;
@@ -46,7 +48,7 @@ export const AdBanner = memo(function AdBanner({
 
   return (
     <PressableScale
-      accessibilityLabel={`Sponsored: ${label}`}
+      accessibilityLabel={t("ads.sponsoredA11y", { label })}
       onPress={() => void openAd(ad, placement, position)}
     >
       <View style={[styles.card, framed && styles.cardFramed]}>
@@ -106,7 +108,7 @@ export const AdBanner = memo(function AdBanner({
         ) : null}
 
         <View style={styles.badge} pointerEvents="none">
-          <Text style={styles.badgeText}>Sponsored</Text>
+          <Text style={styles.badgeText}>{t("ads.sponsored")}</Text>
         </View>
       </View>
     </PressableScale>

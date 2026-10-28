@@ -27,13 +27,14 @@ import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { addCertificate } from "@/lib/certificates";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { choosePhoto } from "@/lib/media";
 import { uploadImage } from "@/lib/storage-upload";
 import { useAuthStore } from "@/store/use-auth-store";
 
 const schema = z.object({
-  documentType: z.string().trim().min(1, "Document type is required"),
-  institution: z.string().trim().min(1, "Issuing organization is required"),
+  documentType: z.string().trim().min(1, "certificate.errors.type"),
+  institution: z.string().trim().min(1, "certificate.errors.institution"),
   specialty: z.string().optional(),
   year: z.string().optional(),
 });
@@ -43,6 +44,7 @@ type FormValues = z.infer<typeof schema>;
 export default function AddCertificateScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const uid = useAuthStore((state) => state.user?.uid);
   const queryClient = useQueryClient();
 
@@ -85,7 +87,7 @@ export default function AddCertificateScreen() {
     if (!uid) return;
     if (photos.length === 0) {
       analyticsEvents.certificateValidationFailed({ fields: ["photos"] });
-      setTopError("Add at least one photo of your certificate.");
+      setTopError(t("certificate.needPhoto"));
       return;
     }
     analyticsEvents.certificateSubmitted({
@@ -127,7 +129,7 @@ export default function AddCertificateScreen() {
         error_message: errorMessage(error),
       });
       setSaving(false);
-      setTopError("Couldn't save the certificate. Please try again.");
+      setTopError(t("certificate.saveFailed"));
     }
   };
 
@@ -136,7 +138,7 @@ export default function AddCertificateScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>Add certificate</Text>
+          <Text style={styles.headerTitle}>{t("certificate.title")}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -157,22 +159,19 @@ export default function AddCertificateScreen() {
               </View>
             ) : null}
 
-            <Text style={styles.intro}>
-              Add a license, certification or diploma. Public documents appear
-              on your public profile.
-            </Text>
+            <Text style={styles.intro}>{t("certificate.intro")}</Text>
 
             <Controller
               control={control}
               name="documentType"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextField
-                  label="Document type"
+                  label={t("certificate.type")}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.documentType?.message}
-                  placeholder="e.g. License, Certificate, Diploma"
+                  placeholder={t("certificate.typePlaceholder")}
                   autoCapitalize="words"
                 />
               )}
@@ -182,12 +181,12 @@ export default function AddCertificateScreen() {
               name="institution"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextField
-                  label="Issuing organization"
+                  label={t("certificate.institution")}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.institution?.message}
-                  placeholder="e.g. State of Massachusetts"
+                  placeholder={t("certificate.institutionPlaceholder")}
                   autoCapitalize="words"
                 />
               )}
@@ -197,12 +196,12 @@ export default function AddCertificateScreen() {
               name="specialty"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextField
-                  label="Specialty / field (optional)"
+                  label={t("certificate.specialty")}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.specialty?.message}
-                  placeholder="e.g. Master Electrician"
+                  placeholder={t("certificate.specialtyPlaceholder")}
                   autoCapitalize="words"
                 />
               )}
@@ -212,19 +211,19 @@ export default function AddCertificateScreen() {
               name="year"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextField
-                  label="Year (optional)"
+                  label={t("certificate.year")}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.year?.message}
-                  placeholder="e.g. 2023"
+                  placeholder={t("tradeForm.example", { value: "2023" })}
                   keyboardType="phone-pad"
                 />
               )}
             />
 
             <View style={styles.photosField}>
-              <Text style={styles.photosLabel}>Photos</Text>
+              <Text style={styles.photosLabel}>{t("tradePage.photos")}</Text>
               <View style={styles.photosGrid}>
                 {photos.map((uri) => (
                   <View key={uri} style={styles.photoWrap}>
@@ -236,7 +235,7 @@ export default function AddCertificateScreen() {
                     />
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Remove photo"
+                      accessibilityLabel={t("profile.tab.removePhoto")}
                       hitSlop={8}
                       onPress={() => handleRemovePhoto(uri)}
                       style={styles.photoRemove}
@@ -246,13 +245,15 @@ export default function AddCertificateScreen() {
                   </View>
                 ))}
                 <PressableScale
-                  accessibilityLabel="Add photo"
+                  accessibilityLabel={t("certificate.addPhoto")}
                   onPress={() => void handleAddPhoto()}
                   scaleTo={0.97}
                 >
                   <View style={styles.addPhoto}>
                     <ImageIcon size={22} color={colors.accent} />
-                    <Text style={styles.addPhotoText}>Add photo</Text>
+                    <Text style={styles.addPhotoText}>
+                      {t("certificate.addPhoto")}
+                    </Text>
                   </View>
                 </PressableScale>
               </View>
@@ -260,13 +261,15 @@ export default function AddCertificateScreen() {
 
             <View style={styles.toggleRow}>
               <View style={styles.toggleBody}>
-                <Text style={styles.toggleTitle}>Show on public profile</Text>
+                <Text style={styles.toggleTitle}>
+                  {t("certificate.public")}
+                </Text>
                 <Text style={styles.toggleSub}>
-                  Others can see this document on your profile.
+                  {t("certificate.publicHint")}
                 </Text>
               </View>
               <Toggle
-                accessibilityLabel="Show on public profile"
+                accessibilityLabel={t("certificate.public")}
                 value={isPublic}
                 onValueChange={(next) => {
                   analyticsEvents.certificateVisibilityToggled({
@@ -279,7 +282,7 @@ export default function AddCertificateScreen() {
 
             <View style={styles.submit}>
               <PrimaryButton
-                label={saving ? "Saving…" : "Save certificate"}
+                label={saving ? t("setup.saving") : t("certificate.save")}
                 withArrow={false}
                 loading={saving}
                 disabled={saving}

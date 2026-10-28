@@ -19,6 +19,7 @@ import { AuthProvider } from "@/providers/auth-provider";
 import { LoyaltyProvider } from "@/providers/loyalty-provider";
 import { NotificationsProvider } from "@/providers/notifications-provider";
 import { useAuthStore } from "@/store/use-auth-store";
+import { initializeLanguage } from "@/store/use-language-store";
 import {
   initializeTheme,
   resolveScheme,
@@ -36,9 +37,12 @@ const initialTheme = initializeTheme();
 if (initialTheme.firstLaunch) {
   analyticsEvents.themeInitialized({ theme: initialTheme.scheme });
 }
+const initialLanguage = initializeLanguage();
 setAnalyticsUserProperties({
   theme: initialTheme.scheme,
   theme_preference: initialTheme.preference,
+  app_language: initialLanguage.language,
+  app_language_source: initialLanguage.source,
 });
 
 const queryClient = new QueryClient({

@@ -9,6 +9,7 @@ import {
   setProjectArchived,
 } from "@/lib/projects";
 import { useAuthStore } from "@/store/use-auth-store";
+import i18n from "@/lib/i18n";
 
 type Action = "archive" | "restore" | "delete";
 type Patch = (project: ProjectDetail) => ProjectDetail;
@@ -33,7 +34,9 @@ export function useInvitedRequestActions(uid: string | undefined) {
       if (action === "delete") successFeedback();
       analyticsEvents.invitedProjectAction({ project_id: project.id, action });
       if (action === "delete") {
-        void queryClient.invalidateQueries({ queryKey: ["project", project.id] });
+        void queryClient.invalidateQueries({
+          queryKey: ["project", project.id],
+        });
         void queryClient.invalidateQueries({ queryKey: ["nearby-projects"] });
       }
     } catch (error) {
@@ -44,7 +47,7 @@ export function useInvitedRequestActions(uid: string | undefined) {
       });
       void queryClient.invalidateQueries({ queryKey: key });
       errorFeedback();
-      Alert.alert("Something went wrong", "Please try again.");
+      Alert.alert(i18n.t("ui.errorTitle"), i18n.t("common.pleaseTryAgain"));
     }
   };
 
@@ -72,37 +75,33 @@ export function useInvitedRequestActions(uid: string | undefined) {
   const remove = (project: ProjectDetail) => {
     if (project.state === "in_progress" && project.contractorId === uid) {
       Alert.alert(
-        "This job is in progress",
-        "You've been selected for this project. Cancel it in the chat first, then you can delete it.",
+        i18n.t("archive.inProgressTitle"),
+        i18n.t("archive.inProgressText"),
       );
       return;
     }
-    Alert.alert(
-      "Delete this request?",
-      "It will be removed from your list, and the homeowner will be told you declined.",
-      [
-        { text: "Keep", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () =>
-            void run(
-              "delete",
-              project,
-              (item) => ({
-                ...item,
-                hiddenBy: [...without(item.hiddenBy), uid ?? ""],
-                archivedBy: without(item.archivedBy),
+    Alert.alert(i18n.t("archive.deleteTitle"), i18n.t("archive.deleteText"), [
+      { text: i18n.t("archive.keep"), style: "cancel" },
+      {
+        text: i18n.t("common.delete"),
+        style: "destructive",
+        onPress: () =>
+          void run(
+            "delete",
+            project,
+            (item) => ({
+              ...item,
+              hiddenBy: [...without(item.hiddenBy), uid ?? ""],
+              archivedBy: without(item.archivedBy),
+            }),
+            (me) =>
+              declineInvitedProject(project, {
+                uid: me,
+                name: userName || "The specialist",
               }),
-              (me) =>
-                declineInvitedProject(project, {
-                  uid: me,
-                  name: userName || "The specialist",
-                }),
-            ),
-        },
-      ],
-    );
+          ),
+      },
+    ]);
   };
 
   return { archive, restore, remove };

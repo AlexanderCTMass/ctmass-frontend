@@ -19,6 +19,7 @@ import {
 } from "@react-native-firebase/firestore";
 
 import { getDb } from "@/lib/firebase";
+import { type Translate, translateData } from "@/lib/i18n";
 
 export type ChatThread = {
   id: string;
@@ -111,6 +112,32 @@ export function parseMessageBody(text: string, mine: boolean): MessageBody {
     };
   }
   return { kind: "text", text };
+}
+
+const REQUEST_INVITE =
+  /^Hi (.+?)! I'd like to request your services for "(.+?)"\.(?: ([\s\S]+))?$/;
+const REQUEST_DECLINED =
+  /^Sorry, I can't take on "(.+?)" — I've declined this request\. It's now open to other specialists nearby, and you can also pick one from your request page\.$/;
+
+export function translateChatText(t: Translate, text: string): string {
+  if (!text) return text;
+  const known = translateData(t, text);
+  if (known !== text) return known;
+  const invite = text.match(REQUEST_INVITE);
+  if (invite) {
+    const base = t("chat.system.requestInvite", {
+      name: invite[1],
+      title: translateData(t, invite[2]),
+    });
+    return invite[3] ? `${base} ${invite[3]}` : base;
+  }
+  const declined = text.match(REQUEST_DECLINED);
+  if (declined) {
+    return t("chat.system.requestDeclined", {
+      title: translateData(t, declined[1]),
+    });
+  }
+  return text;
 }
 
 function clearedAtFor(
@@ -258,7 +285,9 @@ export async function markThreadRead(
     (docSnap) => (docSnap.data().senderId as string) !== uid,
   );
   if (toMark.length === 0) return;
-  await Promise.all(toMark.map((docSnap) => updateDoc(docSnap.ref, { isRead: true })));
+  await Promise.all(
+    toMark.map((docSnap) => updateDoc(docSnap.ref, { isRead: true })),
+  );
   try {
     await updateDoc(doc(db, "Chat", threadId), { [`unread.${uid}`]: 0 });
   } catch (error) {

@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -25,6 +26,7 @@ import {
   UserIcon,
   UsersIcon,
 } from "@/components/icons";
+import { LanguageSelector } from "@/components/profile/language-selector";
 import { ProfileQrModal } from "@/components/profile/profile-qr-modal";
 import { ThemeSelector } from "@/components/profile/theme-selector";
 import { Avatar } from "@/components/ui/avatar";
@@ -36,6 +38,7 @@ import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { AccountDeletionError, deleteMyAccount } from "@/lib/account";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { requestAppReview } from "@/lib/app-review";
+import type { Translate } from "@/lib/i18n";
 import { signOutEverywhere } from "@/lib/auth";
 import { tapFeedback } from "@/lib/haptics";
 import {
@@ -53,15 +56,16 @@ import { useLoyaltyRules } from "@/queries/use-loyalty-config";
 import { useProfile } from "@/queries/use-profile";
 import { useAuthStore } from "@/store/use-auth-store";
 
-function roleLabel(role: string | null): string {
-  if (role === "WORKER") return "Contractor";
-  if (role === "CUSTOMER") return "Homeowner";
-  return "Member";
+function roleLabel(role: string | null, t: Translate): string {
+  if (role === "WORKER") return t("common.roles.contractor");
+  if (role === "CUSTOMER") return t("common.roles.homeowner");
+  return t("common.roles.member");
 }
 
 export default function ProfileTab() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useTranslation();
   const uid = useAuthStore((state) => state.user?.uid);
   const role = useAuthStore((state) => state.user?.role ?? null);
   const storeName = useAuthStore((state) => state.user?.name ?? "");
@@ -76,7 +80,7 @@ export default function ProfileTab() {
 
   const { data: loyaltyRules } = useLoyaltyRules();
 
-  const name = profile?.name || storeName || "Your profile";
+  const name = profile?.name || storeName || t("profile.tab.yourProfile");
   const avatar = profile?.avatar ?? null;
   const inviteRule = loyaltyRules?.find(
     (rule) => rule.actionType === "INVITE_USER_REGISTERS",
@@ -98,7 +102,10 @@ export default function ProfileTab() {
       analyticsEvents.profilePhotoUploadFailed({
         error_message: errorMessage(error),
       });
-      Alert.alert("Couldn't remove photo", "Please try again.");
+      Alert.alert(
+        t("profile.tab.removePhotoFailed"),
+        t("common.pleaseTryAgain"),
+      );
     } finally {
       setUploading(false);
     }
@@ -110,15 +117,18 @@ export default function ProfileTab() {
       return;
     }
     tapFeedback();
-    Alert.alert("Profile photo", undefined, [
-      { text: "View photo", onPress: () => setPhotoOpen(true) },
-      { text: "Choose new photo", onPress: () => void handleUploadPhoto() },
+    Alert.alert(t("profile.tab.photoTitle"), undefined, [
+      { text: t("profile.tab.viewPhoto"), onPress: () => setPhotoOpen(true) },
       {
-        text: "Remove photo",
+        text: t("profile.tab.choosePhoto"),
+        onPress: () => void handleUploadPhoto(),
+      },
+      {
+        text: t("profile.tab.removePhoto"),
         style: "destructive",
         onPress: () => void removePhoto(),
       },
-      { text: "Cancel", style: "cancel" },
+      { text: t("common.cancel"), style: "cancel" },
     ]);
   };
 
@@ -142,8 +152,8 @@ export default function ProfileTab() {
         error_message: errorMessage(error),
       });
       Alert.alert(
-        "Couldn't upload photo",
-        "Check your connection and try again.",
+        t("profile.tab.uploadPhotoFailed"),
+        t("common.checkConnection"),
       );
     } finally {
       setUploading(false);
@@ -164,13 +174,13 @@ export default function ProfileTab() {
       analyticsEvents.appReviewRequested({ method });
       if (method === "unavailable") {
         Alert.alert(
-          "Leave feedback",
-          "Rating isn't available on this device. Please email us at support@ctmass.com",
+          t("profile.tab.leaveFeedback"),
+          t("profile.tab.ratingUnavailable"),
         );
       }
     } catch {
       analyticsEvents.appReviewRequested({ method: "unavailable" });
-      Alert.alert("Couldn't open the store", "Please try again later.");
+      Alert.alert(t("profile.tab.storeOpenFailed"), t("common.tryLater"));
     }
   };
 
@@ -190,7 +200,10 @@ export default function ProfileTab() {
       analyticsEvents.contactSupportOpened({ method: "gmail" });
     } catch {
       analyticsEvents.contactSupportOpened({ method: "fallback" });
-      Alert.alert("Contact support", "Please email us at support@ctmass.com");
+      Alert.alert(
+        t("profile.tab.contactSupport"),
+        t("profile.tab.emailSupport"),
+      );
     }
   };
 
@@ -207,10 +220,10 @@ export default function ProfileTab() {
         error_message: errorMessage(error),
       });
       Alert.alert(
-        "Couldn't delete account",
+        t("profile.tab.deleteFailed"),
         error instanceof AccountDeletionError
           ? error.message
-          : "Something went wrong. Please try again.",
+          : t("common.somethingWrong"),
       );
     } finally {
       setDeleting(false);
@@ -226,7 +239,7 @@ export default function ProfileTab() {
       useAuthStore.getState().signOut();
     } catch (error) {
       analyticsEvents.logOutFailed({ error_message: errorMessage(error) });
-      Alert.alert("Couldn't log out", "Something went wrong. Please try again.");
+      Alert.alert(t("profile.tab.logoutFailed"), t("common.somethingWrong"));
     } finally {
       setLoggingOut(false);
     }
@@ -236,18 +249,22 @@ export default function ProfileTab() {
     if (loggingOut) return;
     tapFeedback();
     analyticsEvents.logOutTapped();
-    Alert.alert("Log out?", "You can sign back in anytime.", [
-      {
-        text: "Cancel",
-        style: "cancel",
-        onPress: () => analyticsEvents.logOutCancelled(),
-      },
-      {
-        text: "Log out",
-        style: "destructive",
-        onPress: () => void runLogout(),
-      },
-    ]);
+    Alert.alert(
+      t("profile.tab.logoutConfirmTitle"),
+      t("profile.tab.logoutConfirmText"),
+      [
+        {
+          text: t("common.cancel"),
+          style: "cancel",
+          onPress: () => analyticsEvents.logOutCancelled(),
+        },
+        {
+          text: t("profile.tab.logout"),
+          style: "destructive",
+          onPress: () => void runLogout(),
+        },
+      ],
+    );
   };
 
   const handleDeleteAccount = () => {
@@ -255,16 +272,16 @@ export default function ProfileTab() {
     tapFeedback();
     analyticsEvents.deleteAccountTapped();
     Alert.alert(
-      "Delete account?",
-      "This permanently deletes your account and all of your data — profile, messages, projects, and coins. This can't be undone.",
+      t("profile.tab.deleteConfirmTitle"),
+      t("profile.tab.deleteConfirmText"),
       [
         {
-          text: "Cancel",
+          text: t("common.cancel"),
           style: "cancel",
           onPress: () => analyticsEvents.deleteAccountCancelled(),
         },
         {
-          text: "Delete",
+          text: t("common.delete"),
           style: "destructive",
           onPress: () => void runDeleteAccount(),
         },
@@ -276,9 +293,10 @@ export default function ProfileTab() {
     return (
       <GuestGate
         gate="profile"
-        title="Sign in to your profile"
-        text="Create a free account to set up your profile, manage notifications, and more."
+        title={t("profile.tab.guestTitle")}
+        text={t("profile.tab.guestText")}
       >
+        <LanguageSelector />
         <ThemeSelector />
       </GuestGate>
     );
@@ -288,7 +306,7 @@ export default function ProfileTab() {
     <ScreenBackground>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.header}>
-          <Text style={styles.heading}>Profile</Text>
+          <Text style={styles.heading}>{t("profile.tab.title")}</Text>
         </View>
 
         <ScrollView
@@ -299,7 +317,9 @@ export default function ProfileTab() {
             <Pressable
               accessibilityRole="imagebutton"
               accessibilityLabel={
-                avatar ? "Change profile photo" : "Upload profile photo"
+                avatar
+                  ? t("profile.tab.changePhotoA11y")
+                  : t("profile.tab.uploadPhotoA11y")
               }
               disabled={uploading}
               onPress={handlePhotoPress}
@@ -319,10 +339,10 @@ export default function ProfileTab() {
               <Text style={styles.name} numberOfLines={1}>
                 {name}
               </Text>
-              <Text style={styles.role}>{roleLabel(role)}</Text>
+              <Text style={styles.role}>{roleLabel(role, t)}</Text>
             </View>
             <PressableScale
-              accessibilityLabel="Show my QR code"
+              accessibilityLabel={t("profile.tab.showQrA11y")}
               onPress={() => {
                 tapFeedback();
                 analyticsEvents.profileTabQrOpened();
@@ -332,13 +352,13 @@ export default function ProfileTab() {
             >
               <View style={styles.qrBtn}>
                 <QrCodeIcon size={22} color={colors.accent} />
-                <Text style={styles.qrText}>My QR</Text>
+                <Text style={styles.qrText}>{t("profile.tab.myQr")}</Text>
               </View>
             </PressableScale>
           </View>
 
           <PressableScale
-            accessibilityLabel="Setup your profile"
+            accessibilityLabel={t("profile.tab.setupTitle")}
             onPress={() => go("/setup", "setup_profile")}
           >
             <View style={styles.setupCard}>
@@ -346,10 +366,10 @@ export default function ProfileTab() {
                 <UserIcon size={22} color={colors.accent} />
               </View>
               <View style={styles.setupBody}>
-                <Text style={styles.setupTitle}>Setup your profile</Text>
-                <Text style={styles.setupSub}>
-                  Add your details so people recognize you.
+                <Text style={styles.setupTitle}>
+                  {t("profile.tab.setupTitle")}
                 </Text>
+                <Text style={styles.setupSub}>{t("profile.tab.setupSub")}</Text>
               </View>
               <ArrowRightIcon size={18} color={colors.textMuted} />
             </View>
@@ -358,70 +378,74 @@ export default function ProfileTab() {
           <View style={styles.list}>
             <ProfileItem
               icon={<ShareIcon size={20} color={colors.accent} />}
-              label="View public profile"
+              label={t("profile.tab.viewPublic")}
               onPress={() => go(`/user/${uid}`, "public_profile")}
             />
             <View style={styles.itemDivider} />
             <ProfileItem
               icon={<BellIcon size={20} color={colors.accent} />}
-              label="Notifications"
+              label={t("profile.tab.notifications")}
               onPress={() => go("/notifications", "notifications")}
             />
             <View style={styles.itemDivider} />
             <ProfileItem
               icon={<UserIcon size={20} color={colors.accent} />}
-              label="Invite friends & earn coins"
+              label={t("profile.tab.invite")}
               coins={inviteCoins}
               onPress={() => go("/invite", "invite_friend")}
             />
             <View style={styles.itemDivider} />
             <ProfileItem
               icon={<UsersIcon size={20} color={colors.accent} />}
-              label="Friends"
+              label={t("profile.tab.friends")}
               onPress={() => go("/friends", "friends")}
             />
             <View style={styles.itemDivider} />
             <ProfileItem
               icon={<CodeBadgeIcon size={20} color={colors.accent} />}
-              label="Our IT Services"
+              label={t("profile.tab.itServices")}
               onPress={() => go("/it-services", "it_services")}
             />
             <View style={styles.itemDivider} />
             <ProfileItem
               icon={<ReviewIcon size={20} color={colors.accent} />}
-              label="Leave feedback"
+              label={t("profile.tab.leaveFeedback")}
               onPress={() => void handleLeaveFeedback()}
             />
             <View style={styles.itemDivider} />
             <ProfileItem
               icon={<MailIcon size={20} color={colors.accent} />}
-              label="Contact support"
+              label={t("profile.tab.contactSupport")}
               onPress={() => void handleContactSupport()}
             />
           </View>
 
+          <LanguageSelector />
+
           <ThemeSelector />
 
           <PressableScale
-            accessibilityLabel="Log out"
+            accessibilityLabel={t("profile.tab.logout")}
             onPress={handleLogout}
             disabled={loggingOut}
             scaleTo={0.98}
           >
             <View style={styles.logoutCard}>
-              <Text style={styles.logoutText}>Log out</Text>
+              <Text style={styles.logoutText}>{t("profile.tab.logout")}</Text>
             </View>
           </PressableScale>
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Delete account"
+            accessibilityLabel={t("profile.tab.deleteAccount")}
             onPress={handleDeleteAccount}
             disabled={deleting}
             hitSlop={8}
             style={styles.deleteLinkWrap}
           >
-            <Text style={styles.deleteLink}>Delete account</Text>
+            <Text style={styles.deleteLink}>
+              {t("profile.tab.deleteAccount")}
+            </Text>
           </Pressable>
         </ScrollView>
 
@@ -430,7 +454,9 @@ export default function ProfileTab() {
             <View style={styles.overlayCard}>
               <ActivityIndicator color={colors.accent} />
               <Text style={styles.overlayText}>
-                {deleting ? "Deleting your account…" : "Logging out…"}
+                {deleting
+                  ? t("profile.tab.deleting")
+                  : t("profile.tab.loggingOut")}
               </Text>
             </View>
           </View>
@@ -450,7 +476,7 @@ export default function ProfileTab() {
           targetUid={uid}
           avatar={avatar}
           businessName={role === "WORKER" ? (profile?.businessName ?? "") : ""}
-          subtitle="Scan to open my profile and connect"
+          subtitle={t("profile.tab.qrSubtitle")}
           showReward
         />
       ) : null}
