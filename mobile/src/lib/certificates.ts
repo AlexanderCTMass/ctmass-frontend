@@ -21,6 +21,8 @@ export type CertificateFile = {
   type: string;
   isPublic: boolean;
   uploadedAt: string;
+  size: number;
+  tags: string[];
 };
 
 export type CertificateVisibility = {
@@ -88,6 +90,10 @@ function mapFiles(data: Record<string, unknown>): CertificateFile[] {
         type: str(file.type),
         isPublic: file.isPublic !== false,
         uploadedAt: str(file.uploadedAt),
+        size: typeof file.size === "number" ? file.size : 0,
+        tags: Array.isArray(file.tags)
+          ? file.tags.filter((tag): tag is string => typeof tag === "string")
+          : [],
       };
     })
     .filter((file) => file.url.length > 0);
@@ -177,19 +183,19 @@ function certificateFields(
     ? input.visibility
     : { institution: false, specialty: false, year: false, number: false };
   const stamp = Date.now().toString(36);
+  const known = new Map(existing.map((file) => [file.id, file]));
   const files = input.files.map((file, index) => ({
     id: file.id ?? `${certificateId}_${stamp}_${index}`,
     name: file.name,
     url: file.url,
-    size: 0,
+    size: (file.id ? known.get(file.id)?.size : undefined) ?? 0,
     type: file.type,
     isPublic: filesPublic,
   }));
-  const known = new Map(existing.map((file) => [file.id, file.uploadedAt]));
   const certificates = files.map((file) => ({
     ...file,
-    tags: [],
-    uploadedAt: known.get(file.id) || uploadedAt,
+    tags: known.get(file.id)?.tags ?? [],
+    uploadedAt: known.get(file.id)?.uploadedAt || uploadedAt,
   }));
   return {
     documentType: input.documentType,

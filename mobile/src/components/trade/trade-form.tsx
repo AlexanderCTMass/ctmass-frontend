@@ -215,10 +215,14 @@ export function contactSourceFromProfile(
     | undefined,
 ): TradeContactSource | null {
   if (!profile) return null;
+  const phone = isValidUSPhone(profile.phone) ? profile.phone : "";
+  const methods = profile.contactSettings.methods.filter(
+    (method) => phone || !PHONE_CONTACT_METHODS.includes(method),
+  );
   return {
     languages: profile.business.languages,
-    methods: profile.contactSettings.methods,
-    phone: profile.phone,
+    methods: methods.length > 0 ? methods : ["app"],
+    phone,
   };
 }
 

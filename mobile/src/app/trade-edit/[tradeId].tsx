@@ -84,7 +84,7 @@ function EditForm({
     control,
     handleSubmit,
     setValue,
-    formState: { errors, submitCount, isDirty },
+    formState: { errors, submitCount, isDirty, dirtyFields },
   } = useForm<TradeFormValues>({
     resolver: zodResolver(schema),
     mode: "onTouched",
@@ -122,11 +122,9 @@ function EditForm({
     setSaving(true);
     const location = values.location;
     const contactInput = contactFromValues(values);
-    const contactChanged =
-      !contact ||
-      contact.languages.join("|") !== contactInput.languages.join("|") ||
-      contact.methods.join("|") !== contactInput.methods.join("|") ||
-      (contactInput.phone !== "" && contactInput.phone !== contact.phone);
+    const contactChanged = Boolean(
+      dirtyFields.languages || dirtyFields.contactMethods || dirtyFields.phone,
+    );
     try {
       if (contactChanged) {
         await saveTradeContact(uid, contactInput);
