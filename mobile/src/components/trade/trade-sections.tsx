@@ -19,9 +19,11 @@ import {
   warrantyLabel,
   workByLabel,
 } from "@/constants/trade-options";
+import { contactMethodLabel } from "@/constants/project-request";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import {
   type OwnerPublic,
+  reachableMethods,
   websiteHost,
   yearsInBusiness,
 } from "@/lib/business-profile";
@@ -322,7 +324,7 @@ export function AvailabilityPanel({
   const response = RESPONSE_TIMES.find(
     (item) => item.value === details.responseTime,
   );
-  const preferred = owner?.contact.preferred ?? "message";
+  const methods = owner ? reachableMethods(owner) : [];
   return (
     <Panel>
       <InfoRow
@@ -352,13 +354,9 @@ export function AvailabilityPanel({
       />
       <InfoRow
         label={t("trade.sections.preferredContact")}
-        value={tx(
-          preferred === "phone"
-            ? "Phone call"
-            : preferred === "email"
-              ? "Email"
-              : "CTMASS message",
-        )}
+        value={(methods.length > 0 ? methods : (["app"] as const))
+          .map((method) => contactMethodLabel(method, t))
+          .join(", ")}
       />
       {details.radiusMiles ? (
         <InfoRow

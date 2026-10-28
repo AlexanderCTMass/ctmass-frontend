@@ -21,6 +21,7 @@ import {
   AwardIcon,
   BuildingIcon,
   CloseIcon,
+  LockIcon,
   MailIcon,
   MapPinIcon,
   PlayIcon,
@@ -83,20 +84,21 @@ const schema = businessFieldsSchema
     location: z.custom<GeoPlace | null>().nullable().optional(),
   })
   .superRefine((values, ctx) => {
+    const methods = values.contactMethods;
     if (
-      values.preferredContact === "phone" &&
+      (methods.includes("phone") || methods.includes("sms")) &&
       (!values.phone?.trim() || !values.showPhone)
     ) {
       ctx.addIssue({
         code: "custom",
-        path: ["preferredContact"],
+        path: ["contactMethods"],
         message: "setup.validation.phonePreferred",
       });
     }
-    if (values.preferredContact === "email" && !values.showEmail) {
+    if (methods.includes("email") && !values.showEmail) {
       ctx.addIssue({
         code: "custom",
-        path: ["preferredContact"],
+        path: ["contactMethods"],
         message: "setup.validation.emailPreferred",
       });
     }
@@ -526,7 +528,31 @@ export default function SetupProfileScreen() {
               ) : certificates.length > 0 ? (
                 <View style={styles.certList}>
                   {certificates.map((cert) => (
-                    <View key={cert.id} style={styles.certItem}>
+                    <Pressable
+                      key={cert.id}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("setup.editCertA11y", {
+                        name:
+                          cert.institution ||
+                          tx(cert.documentType) ||
+                          t("tradePage.document"),
+                      })}
+                      onPress={() => {
+                        tapFeedback();
+                        analyticsEvents.certificateEditTapped({
+                          certificate_id: cert.id,
+                        });
+                        router.push(
+                          toHref(
+                            `/certificate?id=${encodeURIComponent(cert.id)}`,
+                          ),
+                        );
+                      }}
+                      style={({ pressed }) => [
+                        styles.certItem,
+                        pressed && styles.certItemPressed,
+                      ]}
+                    >
                       {cert.files[0]?.url ? (
                         <Image
                           source={{ uri: cert.files[0].url }}
@@ -551,6 +577,14 @@ export default function SetupProfileScreen() {
                             {cert.year ? ` · ${cert.year}` : ""}
                           </Text>
                         ) : null}
+                        {!cert.isPublic ? (
+                          <View style={styles.certPrivate}>
+                            <LockIcon size={12} color={colors.textSecondary} />
+                            <Text style={styles.certPrivateText}>
+                              {t("setup.certPrivate")}
+                            </Text>
+                          </View>
+                        ) : null}
                       </View>
                       <Pressable
                         accessibilityRole="button"
@@ -566,7 +600,7 @@ export default function SetupProfileScreen() {
                       >
                         <CloseIcon size={16} color={colors.textSecondary} />
                       </Pressable>
-                    </View>
+                    </Pressable>
                   ))}
                 </View>
               ) : (
@@ -789,6 +823,20 @@ const useStyles = makeStyles((t) => ({
     backgroundColor: t.colors.surface,
     borderWidth: 1,
     borderColor: t.colors.border,
+  },
+  certItemPressed: {
+    opacity: 0.75,
+  },
+  certPrivate: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 2,
+  },
+  certPrivateText: {
+    color: t.colors.textSecondary,
+    fontSize: 12,
+    fontWeight: "700",
   },
   certThumb: {
     width: 48,

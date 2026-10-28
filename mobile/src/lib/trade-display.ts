@@ -4,6 +4,7 @@ import {
   responseShortLabel,
   workingHoursLabel,
 } from "@/constants/trade-options";
+import type { OwnerPublic } from "@/lib/business-profile";
 import { type Translate, dateLocale, translateData } from "@/lib/i18n";
 import {
   type TradeAvailability,
@@ -86,20 +87,51 @@ export function responseLine(details: TradeDetails, t: Translate): string {
   return responseShortLabel(details.responseTime, t);
 }
 
-export type TrustItem = { key: "license" | "insurance"; label: string };
+export type TrustKey = "license" | "insurance" | "estimate";
 
-export function trustItems(details: TradeDetails, t: Translate): TrustItem[] {
+export type TrustItem = { key: TrustKey; label: string };
+
+export function isLicensed(
+  details: TradeDetails,
+  owner: OwnerPublic | null | undefined,
+): boolean {
+  return (
+    Boolean(details.license && isCredentialCurrent(details.license)) ||
+    Boolean(owner?.hasCertificates)
+  );
+}
+
+export function isInsured(details: TradeDetails): boolean {
+  return Boolean(details.insurance && isCredentialCurrent(details.insurance));
+}
+
+export function offersFreeEstimate(details: TradeDetails): boolean {
+  return details.workPolicy.estimate === "free";
+}
+
+export function trustItems(
+  details: TradeDetails,
+  owner: OwnerPublic | null | undefined,
+  t: Translate,
+): TrustItem[] {
   const items: TrustItem[] = [];
-  if (details.license && isCredentialCurrent(details.license)) {
+  if (isLicensed(details, owner)) {
+    const state =
+      details.license && isCredentialCurrent(details.license)
+        ? details.license.state
+        : "";
     items.push({
       key: "license",
-      label: details.license.state
-        ? t("trade.trust.licenseState", { state: details.license.state })
+      label: state
+        ? t("trade.trust.licenseState", { state })
         : t("trade.trust.license"),
     });
   }
-  if (details.insurance && isCredentialCurrent(details.insurance)) {
+  if (isInsured(details)) {
     items.push({ key: "insurance", label: t("trade.trust.insurance") });
+  }
+  if (offersFreeEstimate(details)) {
+    items.push({ key: "estimate", label: t("trade.trust.freeEstimate") });
   }
   return items;
 }

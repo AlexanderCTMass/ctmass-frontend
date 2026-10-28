@@ -758,23 +758,32 @@ export const analyticsEvents = {
   certificatePhotoRemoved: define<{ photos_count: number }>(
     "certificate_photo_removed",
   ),
-  certificateVisibilityToggled: define<{ is_public: boolean }>(
+  certificateEditTapped: define<{ certificate_id: string }>(
+    "certificate_edit_tapped",
+  ),
+  certificateVisibilityToggled: define<{ field: string; is_public: boolean }>(
     "certificate_visibility_toggled",
   ),
   certificateSubmitted: define<{
+    mode: "create" | "edit";
     document_type: string;
     institution: string;
     specialty: string;
     year: string;
+    has_document_number: boolean;
     photos_count: number;
     is_public: boolean;
+    photos_public: boolean;
+    hidden_fields: string[];
   }>("certificate_submitted"),
   certificateValidationFailed: define<{ fields: string[] }>(
     "certificate_validation_failed",
   ),
-  certificateSaved: define<{ photos_count: number; is_public: boolean }>(
-    "certificate_saved",
-  ),
+  certificateSaved: define<{
+    mode: "create" | "edit";
+    photos_count: number;
+    is_public: boolean;
+  }>("certificate_saved"),
   certificateSaveFailed: define<{ error_message: string }>(
     "certificate_save_failed",
   ),

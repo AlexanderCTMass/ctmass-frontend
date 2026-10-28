@@ -14,6 +14,7 @@ import {
 
 import { findGroup, findTrade } from "@/constants/trade-taxonomy";
 import { type OwnerPublic, readOwnerPublic } from "@/lib/business-profile";
+import { hasAnyCertificate } from "@/lib/certificates";
 import { getDb } from "@/lib/firebase";
 import { type Review, fetchReviews, reviewSummary } from "@/lib/reviews";
 import {
@@ -145,10 +146,13 @@ type OwnerData = { reviews: Review[]; owner: OwnerPublic | null };
 async function fetchOwnerData(ownerId: string): Promise<OwnerData> {
   const [reviews, owner] = await Promise.all([
     fetchReviews(ownerId).catch(() => [] as Review[]),
-    getDoc(doc(getDb(), "profiles", ownerId))
-      .then((snapshot) =>
+    Promise.all([
+      getDoc(doc(getDb(), "profiles", ownerId)),
+      hasAnyCertificate(ownerId).catch(() => false),
+    ])
+      .then(([snapshot, certified]) =>
         snapshot.exists()
-          ? readOwnerPublic(ownerId, asRecord(snapshot.data()))
+          ? readOwnerPublic(ownerId, asRecord(snapshot.data()), certified)
           : null,
       )
       .catch(() => null),

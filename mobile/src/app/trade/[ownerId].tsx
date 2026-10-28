@@ -19,6 +19,7 @@ import {
   BuildingIcon,
   CalendarIcon,
   DollarIcon,
+  GlobeIcon,
   ImageIcon,
   MapPinIcon,
   PhoneIcon,
@@ -35,6 +36,7 @@ import { PortfolioTile } from "@/components/portfolio/portfolio-tile";
 import { CommunityBadges } from "@/components/profile/community-badges";
 import { shortPlace } from "@/components/project/project-card";
 import { TierAvatar } from "@/components/trade/tier-badge";
+import { ContactMethodIcon } from "@/components/trade/trade-card";
 import { TradeCompleteness } from "@/components/trade/trade-completeness";
 import {
   AvailabilityPanel,
@@ -65,6 +67,7 @@ import { useCompare } from "@/hooks/use-compare";
 import { specialistSubject, useSwipeActions } from "@/hooks/use-swipe-actions";
 import { publicPhone, useTradeContact } from "@/hooks/use-trade-contact";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
+import { reachableMethods } from "@/lib/business-profile";
 import { tapFeedback } from "@/lib/haptics";
 import { useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
@@ -416,7 +419,9 @@ export default function TradeProfileScreen() {
   const subtitle = [tx(trade.specialtyLabel), place]
     .filter(Boolean)
     .join(" · ");
-  const trust = trustItems(details, t);
+  const trust = trustItems(details, owner, t);
+  const languages = owner?.business.languages ?? [];
+  const methods = owner ? reachableMethods(owner) : [];
   const response = responseLine(details, t);
   const accepting = details.availability?.acceptingWork !== false;
   const roleLabel = owner ? businessRoleLabel(owner.business.role, t) : "";
@@ -557,6 +562,34 @@ export default function TradeProfileScreen() {
                       <Text style={styles.trustPillText}>{item.label}</Text>
                     </View>
                   ))}
+                </View>
+              ) : null}
+              {languages.length > 0 || methods.length > 0 ? (
+                <View style={styles.reachRow}>
+                  {languages.length > 0 ? (
+                    <View style={styles.reachItem}>
+                      <GlobeIcon size={14} color={colors.textSecondary} />
+                      <Text style={styles.reachText} numberOfLines={2}>
+                        {languages.map(tx).join(", ")}
+                      </Text>
+                    </View>
+                  ) : null}
+                  {methods.length > 0 ? (
+                    <View style={styles.reachItem}>
+                      <Text style={styles.reachLabel}>{t("trade.prefers")}</Text>
+                      {methods.map((method) => (
+                        <View key={method} style={styles.reachChip}>
+                          <ContactMethodIcon
+                            method={method}
+                            color={colors.accent}
+                          />
+                          <Text style={styles.reachChipText}>
+                            {t(`trade.contactShort.${method}`)}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : null}
                 </View>
               ) : null}
               {tags.length > 0 ? (
@@ -1218,12 +1251,51 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: Spacing.md,
     paddingVertical: 5,
     borderRadius: Radius.pill,
-    backgroundColor: "rgba(22,179,100,0.12)",
+    backgroundColor: t.isDark
+      ? "rgba(63,199,154,0.14)"
+      : "rgba(22,179,100,0.12)",
   },
   trustPillText: {
     color: t.colors.accent,
     fontSize: 12.5,
     fontWeight: "700",
+  },
+  reachRow: {
+    alignItems: "center",
+    gap: 6,
+    marginTop: 2,
+  },
+  reachItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  reachText: {
+    color: t.colors.textSecondary,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  reachLabel: {
+    color: t.colors.textMuted,
+    fontSize: 12.5,
+    fontWeight: "700",
+  },
+  reachChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+  },
+  reachChipText: {
+    color: t.colors.text,
+    fontSize: 12,
+    fontWeight: "600",
   },
   unavailable: {
     color: t.colors.coin,

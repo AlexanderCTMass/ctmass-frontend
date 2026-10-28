@@ -1,10 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,7 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
-import { CloseIcon, ImageIcon } from "@/components/icons";
+import { CloseIcon, ImageIcon, LockIcon } from "@/components/icons";
 import { BackButton } from "@/components/ui/back-button";
 import { Toggle } from "@/components/ui/toggle";
 import { PressableScale } from "@/components/ui/pressable-scale";
@@ -25,31 +26,113 @@ import { TextField } from "@/components/ui/text-field";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
-import { addCertificate } from "@/lib/certificates";
+import {
+  type Certificate,
+  type CertificateFileInput,
+  addCertificate,
+  updateCertificate,
+} from "@/lib/certificates";
 import { tapFeedback } from "@/lib/haptics";
 import { useT } from "@/lib/i18n";
 import { choosePhoto } from "@/lib/media";
 import { uploadImage } from "@/lib/storage-upload";
+import { useCertificates } from "@/queries/use-certificates";
 import { useAuthStore } from "@/store/use-auth-store";
 
 const schema = z.object({
   documentType: z.string().trim().min(1, "certificate.errors.type"),
   institution: z.string().trim().min(1, "certificate.errors.institution"),
-  specialty: z.string().optional(),
-  year: z.string().optional(),
+  specialty: z.string(),
+  documentNumber: z.string(),
+  year: z.string(),
+  isPublic: z.boolean(),
+  showInstitution: z.boolean(),
+  showSpecialty: z.boolean(),
+  showYear: z.boolean(),
+  showNumber: z.boolean(),
+  showPhotos: z.boolean(),
 });
 
 type FormValues = z.infer<typeof schema>;
 
-export default function AddCertificateScreen() {
+type VisibilityField =
+  | "showInstitution"
+  | "showSpecialty"
+  | "showYear"
+  | "showNumber"
+  | "showPhotos";
+
+const VISIBILITY_FIELDS: VisibilityField[] = [
+  "showInstitution",
+  "showSpecialty",
+  "showYear",
+  "showNumber",
+  "showPhotos",
+];
+
+type Photo = { uri: string; file: CertificateFileInput | null };
+
+function toValues(cert: Certificate | null): FormValues {
+  return {
+    documentType: cert?.documentType ?? "",
+    institution: cert?.institution ?? "",
+    specialty: cert?.specialty ?? "",
+    documentNumber: cert?.documentNumber ?? "",
+    year: cert?.year ?? "",
+    isPublic: cert?.isPublic ?? true,
+    showInstitution: cert?.isPublic ? cert.visibility.institution : true,
+    showSpecialty: cert?.isPublic ? cert.visibility.specialty : true,
+    showYear: cert?.isPublic ? cert.visibility.year : true,
+    showNumber: cert?.isPublic ? cert.visibility.number : false,
+    showPhotos:
+      cert?.isPublic && cert.files.length > 0
+        ? cert.files.some((file) => file.isPublic)
+        : true,
+  };
+}
+
+function toPhotos(cert: Certificate | null): Photo[] {
+  return (cert?.files ?? []).map((file) => ({
+    uri: file.url,
+    file: { id: file.id, url: file.url, name: file.name, type: file.type },
+  }));
+}
+
+function ToggleCard({
+  title,
+  hint,
+  value,
+  onChange,
+  nested,
+}: {
+  title: string;
+  hint?: string;
+  value: boolean;
+  onChange: (next: boolean) => void;
+  nested?: boolean;
+}) {
+  const styles = useStyles();
+  return (
+    <View style={[styles.toggleRow, nested && styles.toggleNested]}>
+      <View style={styles.toggleBody}>
+        <Text style={styles.toggleTitle}>{title}</Text>
+        {hint ? <Text style={styles.toggleSub}>{hint}</Text> : null}
+      </View>
+      <Toggle accessibilityLabel={title} value={value} onValueChange={onChange} />
+    </View>
+  );
+}
+
+function CertificateForm({ certificate }: { certificate: Certificate | null }) {
   const { colors } = useTheme();
   const styles = useStyles();
   const { t } = useT();
   const uid = useAuthStore((state) => state.user?.uid);
   const queryClient = useQueryClient();
+  const editing = certificate !== null;
+  const mode = editing ? "edit" : "create";
 
-  const [photos, setPhotos] = useState<string[]>([]);
-  const [isPublic, setIsPublic] = useState(true);
+  const [photos, setPhotos] = useState<Photo[]>(() => toPhotos(certificate));
   const [saving, setSaving] = useState(false);
   const [topError, setTopError] = useState<string | null>(null);
 
@@ -59,28 +142,24 @@ export default function AddCertificateScreen() {
     formState: { errors, submitCount },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      documentType: "",
-      institution: "",
-      specialty: "",
-      year: "",
-    },
+    defaultValues: toValues(certificate),
   });
   useSubmitErrorHaptic(submitCount, errors);
+  const isPublic = useWatch({ control, name: "isPublic" });
 
   const handleAddPhoto = async () => {
     tapFeedback();
     const uri = await choosePhoto();
     if (!uri) return;
     analyticsEvents.certificatePhotoAdded({ photos_count: photos.length + 1 });
-    setPhotos((prev) => [...prev, uri]);
+    setPhotos((prev) => [...prev, { uri, file: null }]);
   };
 
   const handleRemovePhoto = (uri: string) => {
     analyticsEvents.certificatePhotoRemoved({
       photos_count: Math.max(0, photos.length - 1),
     });
-    setPhotos((prev) => prev.filter((item) => item !== uri));
+    setPhotos((prev) => prev.filter((item) => item.uri !== uri));
   };
 
   const submit = async (values: FormValues) => {
@@ -90,38 +169,70 @@ export default function AddCertificateScreen() {
       setTopError(t("certificate.needPhoto"));
       return;
     }
+    const hidden = values.isPublic
+      ? VISIBILITY_FIELDS.filter((field) => !values[field])
+      : ["certificate"];
     analyticsEvents.certificateSubmitted({
+      mode,
       document_type: values.documentType.trim(),
       institution: values.institution.trim(),
-      specialty: values.specialty?.trim() ?? "",
-      year: values.year?.trim() ?? "",
+      specialty: values.specialty.trim(),
+      year: values.year.trim(),
+      has_document_number: values.documentNumber.trim().length > 0,
       photos_count: photos.length,
-      is_public: isPublic,
+      is_public: values.isPublic,
+      photos_public: values.isPublic && values.showPhotos,
+      hidden_fields: hidden,
     });
     setSaving(true);
     setTopError(null);
     try {
-      const uploaded = await Promise.all(
-        photos.map((uri, index) =>
-          uploadImage(uri, `certificates/${uid}/${Date.now()}_${index}.jpg`),
-        ),
+      const institution = values.institution.trim();
+      const files = await Promise.all(
+        photos.map(async (photo, index) => {
+          if (photo.file) return photo.file;
+          const url = await uploadImage(
+            photo.uri,
+            `certificates/${uid}/${Date.now()}_${index}.jpg`,
+          );
+          return {
+            url,
+            name: `${institution || "Document"} ${index + 1}`,
+            type: "image/jpeg",
+          };
+        }),
       );
-      await addCertificate(uid, {
+      const input = {
         documentType: values.documentType.trim(),
-        institution: values.institution.trim(),
-        specialty: values.specialty?.trim() ?? "",
-        year: values.year?.trim() ?? "",
-        files: uploaded.map((url, index) => ({
-          url,
-          name: `${values.institution.trim() || "Document"} ${index + 1}`,
-          type: "image/jpeg",
-          isPublic,
-        })),
-      });
+        institution,
+        specialty: values.specialty.trim(),
+        year: values.year.trim(),
+        documentNumber: values.documentNumber.trim(),
+        isPublic: values.isPublic,
+        showPhotos: values.showPhotos,
+        visibility: {
+          institution: values.showInstitution,
+          specialty: values.showSpecialty,
+          year: values.showYear,
+          number: values.showNumber,
+        },
+        files,
+      };
+      if (certificate) {
+        await updateCertificate(uid, certificate, input);
+      } else {
+        await addCertificate(uid, input);
+      }
       void queryClient.invalidateQueries({ queryKey: ["certificates", uid] });
+      void queryClient.invalidateQueries({
+        queryKey: ["public-certificates", uid],
+      });
+      void queryClient.invalidateQueries({ queryKey: ["specialist-pool"] });
+      void queryClient.invalidateQueries({ queryKey: ["trade"] });
       analyticsEvents.certificateSaved({
+        mode,
         photos_count: photos.length,
-        is_public: isPublic,
+        is_public: values.isPublic,
       });
       router.back();
     } catch (error) {
@@ -133,170 +244,270 @@ export default function AddCertificateScreen() {
     }
   };
 
+  const visibilityToggle = (
+    name: VisibilityField | "isPublic",
+    title: string,
+    hint?: string,
+  ) => (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field: { value, onChange } }) => (
+        <ToggleCard
+          title={title}
+          hint={hint}
+          value={value}
+          nested={name !== "isPublic"}
+          onChange={(next) => {
+            analyticsEvents.certificateVisibilityToggled({
+              field: name,
+              is_public: next,
+            });
+            onChange(next);
+          }}
+        />
+      )}
+    />
+  );
+
+  return (
+    <>
+      <View style={styles.header}>
+        <BackButton onPress={() => router.back()} />
+        <Text style={styles.headerTitle}>
+          {editing ? t("certificate.editTitle") : t("certificate.title")}
+        </Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 12}
+      >
+        <ScrollView
+          style={styles.flex}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {topError ? (
+            <View style={styles.errorBanner}>
+              <Text style={styles.errorBannerText}>{topError}</Text>
+            </View>
+          ) : null}
+
+          <Text style={styles.intro}>{t("certificate.intro")}</Text>
+
+          <Controller
+            control={control}
+            name="documentType"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextField
+                label={t("certificate.type")}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.documentType?.message}
+                placeholder={t("certificate.typePlaceholder")}
+                autoCapitalize="words"
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="institution"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextField
+                label={t("certificate.institution")}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.institution?.message}
+                placeholder={t("certificate.institutionPlaceholder")}
+                autoCapitalize="words"
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="specialty"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextField
+                label={t("certificate.specialty")}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                placeholder={t("certificate.specialtyPlaceholder")}
+                autoCapitalize="words"
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="documentNumber"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextField
+                label={t("certificate.number")}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                placeholder={t("tradeForm.example", { value: "A-12345" })}
+                autoCapitalize="none"
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="year"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextField
+                label={t("certificate.year")}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                placeholder={t("tradeForm.example", { value: "2023" })}
+                keyboardType="phone-pad"
+              />
+            )}
+          />
+
+          <View style={styles.photosField}>
+            <Text style={styles.photosLabel}>{t("tradePage.photos")}</Text>
+            <View style={styles.photosGrid}>
+              {photos.map((photo) => (
+                <View key={photo.uri} style={styles.photoWrap}>
+                  <Image
+                    source={{ uri: photo.uri }}
+                    style={styles.photo}
+                    contentFit="cover"
+                    transition={120}
+                  />
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t("profile.tab.removePhoto")}
+                    hitSlop={8}
+                    onPress={() => handleRemovePhoto(photo.uri)}
+                    style={styles.photoRemove}
+                  >
+                    <CloseIcon size={14} color="#FFFFFF" />
+                  </Pressable>
+                </View>
+              ))}
+              <PressableScale
+                accessibilityLabel={t("certificate.addPhoto")}
+                onPress={() => void handleAddPhoto()}
+                scaleTo={0.97}
+              >
+                <View style={styles.addPhoto}>
+                  <ImageIcon size={22} color={colors.accent} />
+                  <Text style={styles.addPhotoText}>
+                    {t("certificate.addPhoto")}
+                  </Text>
+                </View>
+              </PressableScale>
+            </View>
+          </View>
+
+          <View style={styles.privacy}>
+            <View style={styles.privacyHeader}>
+              <LockIcon size={16} color={colors.accent} />
+              <Text style={styles.privacyTitle}>
+                {t("certificate.privacyTitle")}
+              </Text>
+            </View>
+            <Text style={styles.privacyNote}>
+              {t("certificate.privacyNote")}
+            </Text>
+            {visibilityToggle(
+              "isPublic",
+              t("certificate.public"),
+              isPublic
+                ? t("certificate.publicHint")
+                : t("certificate.privateHint"),
+            )}
+            {isPublic ? (
+              <>
+                {visibilityToggle(
+                  "showInstitution",
+                  t("certificate.showInstitution"),
+                )}
+                {visibilityToggle(
+                  "showSpecialty",
+                  t("certificate.showSpecialty"),
+                )}
+                {visibilityToggle("showYear", t("certificate.showYear"))}
+                {visibilityToggle("showNumber", t("certificate.showNumber"))}
+                {visibilityToggle(
+                  "showPhotos",
+                  t("certificate.showPhotos"),
+                  t("certificate.showPhotosHint"),
+                )}
+              </>
+            ) : null}
+          </View>
+
+          <View style={styles.submit}>
+            <PrimaryButton
+              label={
+                saving
+                  ? t("setup.saving")
+                  : editing
+                    ? t("portfolio.saveChanges")
+                    : t("certificate.save")
+              }
+              withArrow={false}
+              loading={saving}
+              disabled={saving}
+              onPress={() =>
+                void handleSubmit(submit, (fieldErrors) =>
+                  analyticsEvents.certificateValidationFailed({
+                    fields: Object.keys(fieldErrors),
+                  }),
+                )()
+              }
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </>
+  );
+}
+
+export default function CertificateScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
+  const { t } = useT();
+  const params = useLocalSearchParams<{ id?: string }>();
+  const id = typeof params.id === "string" ? params.id : undefined;
+  const uid = useAuthStore((state) => state.user?.uid);
+  const { data: certificates, isLoading } = useCertificates(
+    id ? uid : undefined,
+  );
+  const certificate = id
+    ? (certificates?.find((item) => item.id === id) ?? null)
+    : null;
+
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-        <View style={styles.header}>
-          <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>{t("certificate.title")}</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-
-        <KeyboardAvoidingView
-          style={styles.flex}
-          behavior="padding"
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 12}
-        >
-          <ScrollView
-            style={styles.flex}
-            contentContainerStyle={styles.content}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            {topError ? (
-              <View style={styles.errorBanner}>
-                <Text style={styles.errorBannerText}>{topError}</Text>
-              </View>
-            ) : null}
-
-            <Text style={styles.intro}>{t("certificate.intro")}</Text>
-
-            <Controller
-              control={control}
-              name="documentType"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextField
-                  label={t("certificate.type")}
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.documentType?.message}
-                  placeholder={t("certificate.typePlaceholder")}
-                  autoCapitalize="words"
-                />
-              )}
-            />
-            <Controller
-              control={control}
-              name="institution"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextField
-                  label={t("certificate.institution")}
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.institution?.message}
-                  placeholder={t("certificate.institutionPlaceholder")}
-                  autoCapitalize="words"
-                />
-              )}
-            />
-            <Controller
-              control={control}
-              name="specialty"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextField
-                  label={t("certificate.specialty")}
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.specialty?.message}
-                  placeholder={t("certificate.specialtyPlaceholder")}
-                  autoCapitalize="words"
-                />
-              )}
-            />
-            <Controller
-              control={control}
-              name="year"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextField
-                  label={t("certificate.year")}
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.year?.message}
-                  placeholder={t("tradeForm.example", { value: "2023" })}
-                  keyboardType="phone-pad"
-                />
-              )}
-            />
-
-            <View style={styles.photosField}>
-              <Text style={styles.photosLabel}>{t("tradePage.photos")}</Text>
-              <View style={styles.photosGrid}>
-                {photos.map((uri) => (
-                  <View key={uri} style={styles.photoWrap}>
-                    <Image
-                      source={{ uri }}
-                      style={styles.photo}
-                      contentFit="cover"
-                      transition={120}
-                    />
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={t("profile.tab.removePhoto")}
-                      hitSlop={8}
-                      onPress={() => handleRemovePhoto(uri)}
-                      style={styles.photoRemove}
-                    >
-                      <CloseIcon size={14} color="#FFFFFF" />
-                    </Pressable>
-                  </View>
-                ))}
-                <PressableScale
-                  accessibilityLabel={t("certificate.addPhoto")}
-                  onPress={() => void handleAddPhoto()}
-                  scaleTo={0.97}
-                >
-                  <View style={styles.addPhoto}>
-                    <ImageIcon size={22} color={colors.accent} />
-                    <Text style={styles.addPhotoText}>
-                      {t("certificate.addPhoto")}
-                    </Text>
-                  </View>
-                </PressableScale>
-              </View>
+        {id && isLoading ? (
+          <View style={styles.center}>
+            <ActivityIndicator color={colors.accent} />
+          </View>
+        ) : id && !certificate ? (
+          <>
+            <View style={styles.header}>
+              <BackButton onPress={() => router.back()} />
+              <View style={styles.headerSpacer} />
             </View>
-
-            <View style={styles.toggleRow}>
-              <View style={styles.toggleBody}>
-                <Text style={styles.toggleTitle}>
-                  {t("certificate.public")}
-                </Text>
-                <Text style={styles.toggleSub}>
-                  {t("certificate.publicHint")}
-                </Text>
-              </View>
-              <Toggle
-                accessibilityLabel={t("certificate.public")}
-                value={isPublic}
-                onValueChange={(next) => {
-                  analyticsEvents.certificateVisibilityToggled({
-                    is_public: next,
-                  });
-                  setIsPublic(next);
-                }}
-              />
+            <View style={styles.center}>
+              <Text style={styles.missing}>{t("certificate.missing")}</Text>
             </View>
-
-            <View style={styles.submit}>
-              <PrimaryButton
-                label={saving ? t("setup.saving") : t("certificate.save")}
-                withArrow={false}
-                loading={saving}
-                disabled={saving}
-                onPress={() =>
-                  void handleSubmit(submit, (fieldErrors) =>
-                    analyticsEvents.certificateValidationFailed({
-                      fields: Object.keys(fieldErrors),
-                    }),
-                  )()
-                }
-              />
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+          </>
+        ) : (
+          <CertificateForm key={certificate?.id ?? "new"} certificate={certificate} />
+        )}
       </SafeAreaView>
     </ScreenBackground>
   );
@@ -308,6 +519,17 @@ const useStyles = makeStyles((t) => ({
   },
   flex: {
     flex: 1,
+  },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing.lg,
+  },
+  missing: {
+    color: t.colors.textSecondary,
+    fontSize: 15,
+    textAlign: "center",
   },
   header: {
     flexDirection: "row",
@@ -401,6 +623,24 @@ const useStyles = makeStyles((t) => ({
     fontSize: 12,
     fontWeight: "700",
   },
+  privacy: {
+    gap: Spacing.sm,
+  },
+  privacyHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  privacyTitle: {
+    color: t.colors.text,
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  privacyNote: {
+    color: t.colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+  },
   toggleRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -410,6 +650,10 @@ const useStyles = makeStyles((t) => ({
     backgroundColor: t.colors.surface,
     borderWidth: 1,
     borderColor: t.colors.border,
+  },
+  toggleNested: {
+    paddingVertical: Spacing.md,
+    marginLeft: Spacing.md,
   },
   toggleBody: {
     flex: 1,

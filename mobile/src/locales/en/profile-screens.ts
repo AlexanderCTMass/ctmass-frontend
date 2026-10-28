@@ -53,10 +53,23 @@ export const certificate = {
   specialtyPlaceholder: "e.g. Master Electrician",
   year: "Year (optional)",
   addPhoto: "Add photo",
-  public: "Show on public profile",
-  publicHint: "Others can see this document on your profile.",
+  public: "Show on my profile",
+  publicHint: "Homeowners can see this certificate on your profile and trades.",
+  privateHint: "Only you can see it. Your trades still show Licensed.",
   save: "Save certificate",
   needPhoto: "Add at least one photo of your certificate.",
+  editTitle: "Edit certificate",
+  number: "Document number (optional)",
+  privacyTitle: "Privacy",
+  privacyNote:
+    "Choose what homeowners can see. Hidden details stay in your account.",
+  showInstitution: "Show issuing organization",
+  showSpecialty: "Show specialty",
+  showYear: "Show year",
+  showNumber: "Show document number",
+  showPhotos: "Show photos of the document",
+  showPhotosHint: "Photos can include your address, ID number or signature.",
+  missing: "This certificate is no longer available.",
 };
 
 export const videoStory = {

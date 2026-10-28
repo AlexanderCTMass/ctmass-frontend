@@ -15,6 +15,7 @@ import { type Translate, translateData } from "@/lib/i18n";
 import { isCredentialCurrent } from "@/lib/trade-details";
 import {
   availabilityLine,
+  isLicensed,
   priceSubline,
   rateAmount,
   shortDate,
@@ -96,7 +97,7 @@ const METRICS: Record<MetricKey, Metric> = {
   license: {
     better: "high",
     winLabel: null,
-    score: (trade) => credentialScore(trade.details.license),
+    score: (trade) => (isLicensed(trade.details, trade.owner) ? 1 : 0),
   },
   insurance: {
     better: "high",
@@ -222,6 +223,14 @@ function credentialValue(
   return parts.join(" · ");
 }
 
+function licenseValue(trade: Specialist, t: Translate): string {
+  const credential = trade.details.license;
+  if ((!credential || !isCredentialCurrent(credential)) && trade.owner?.hasCertificates) {
+    return t("compare.values.certificateOnFile");
+  }
+  return credentialValue(credential, true, t);
+}
+
 export function experienceValue(trade: Specialist, t: Translate): string {
   const years = trade.details.experienceYears;
   return years !== null
@@ -281,7 +290,7 @@ export const CARD_ROWS: CompareRow[] = [
     key: "license",
     label: (t) => t("compare.rows.license"),
     metric: "license",
-    value: (trade, _d, t) => credentialValue(trade.details.license, true, t),
+    value: (trade, _d, t) => licenseValue(trade, t),
   },
   {
     key: "insurance",
@@ -320,7 +329,7 @@ export const DETAIL_ROWS: CompareRow[] = [
     key: "license",
     label: (t) => t("compare.rows.license"),
     metric: "license",
-    value: (trade, _d, t) => credentialValue(trade.details.license, true, t),
+    value: (trade, _d, t) => licenseValue(trade, t),
   },
   {
     key: "insurance",

@@ -3,8 +3,8 @@ import type { Translations } from "../types";
 export const setup: Translations["setup"] = {
   validation: {
     name: "El nombre es obligatorio",
-    phonePreferred: "Agrega y muestra tu teléfono para que sea el preferido.",
-    emailPreferred: "Muestra tu correo para que sea el preferido.",
+    phonePreferred: "Agrega tu teléfono y muéstralo en tus especialidades para ofrecer llamadas o mensajes.",
+    emailPreferred: "Muestra tu correo en tus especialidades para ofrecer correo.",
   },
   saveFailed: "No se pudo guardar tu perfil. Inténtalo de nuevo.",
   deleteCertTitle: "¿Eliminar certificado?",
@@ -33,6 +33,8 @@ export const setup: Translations["setup"] = {
   editSocialGroups: "Editar grupos sociales",
   addSocialGroups: "+ Agregar grupos sociales",
   deleteCertA11y: "Eliminar certificado",
+  editCertA11y: "Editar {{name}}",
+  certPrivate: "Privado",
   certEmpty: "Agrega una licencia, certificación o diploma.",
   addCertA11y: "Agregar certificado",
   addCert: "+ Agregar certificado",
@@ -55,6 +57,7 @@ export const business: Translations["business"] = {
   errors: {
     year: "Ingresa un año válido, desde 1900 hasta este año.",
     website: "Ingresa un sitio web válido, p. ej. example.com",
+    contactMethods: "Elige al menos una forma de contactarte.",
   },
   note: "Se comparte entre todas tus especialidades. La experiencia se indica por separado en cada una.",
   role: "Tu cargo",
@@ -67,6 +70,7 @@ export const business: Translations["business"] = {
   showPhoneHint:
     "Los propietarios verán un botón para llamarte. Los mensajes de CTMASS siempre están activos.",
   showEmail: "Mostrar mi correo en mis especialidades",
+  contactMethodsHint: "Elige todas las formas en que los propietarios pueden contactarte. La primera se muestra como preferida.",
 };
 
 export const socialGroups: Translations["socialGroups"] = {

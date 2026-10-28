@@ -84,6 +84,7 @@ export const compare: Translations["compare"] = {
     expired: "Vencido",
     quoteOnly: "Solo cotización",
     provided: "Proporcionado",
+    certificateOnFile: "Certificado en el perfil",
     thru: "hasta {{date}}",
     years_one: "{{count}} año",
     years_other: "{{count}} años",

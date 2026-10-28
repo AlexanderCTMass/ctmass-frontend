@@ -3,18 +3,22 @@ import { Pressable, Text, View } from "react-native";
 import {
   CalendarIcon,
   DollarIcon,
+  GlobeIcon,
+  MailIcon,
   MapPinIcon,
   PhoneIcon,
   ResponsesIcon,
   ReviewIcon,
   ScaleIcon,
   ShieldCheckIcon,
+  TextMessageIcon,
   TradeGroupIcon,
 } from "@/components/icons";
-import { shortPlace } from "@/components/project/project-card";
-import { TierAvatar } from "@/components/trade/tier-badge";
+import { compactPlace } from "@/components/project/project-card";
+import { TierAvatar, TierPill } from "@/components/trade/tier-badge";
 import { LikeButton } from "@/components/ui/like-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
+import type { ContactMethod } from "@/constants/project-request";
 import {
   Brand,
   Radius,
@@ -22,6 +26,7 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
+import { reachableMethods } from "@/lib/business-profile";
 import { formatMiles } from "@/lib/geo";
 import { useT } from "@/lib/i18n";
 import {
@@ -71,6 +76,39 @@ function ActionButton({
   );
 }
 
+export function ContactMethodIcon({
+  method,
+  color,
+  size = 13,
+}: {
+  method: ContactMethod;
+  color: string;
+  size?: number;
+}) {
+  switch (method) {
+    case "phone":
+      return <PhoneIcon size={size} color={color} />;
+    case "sms":
+      return <TextMessageIcon size={size} color={color} />;
+    case "email":
+      return <MailIcon size={size} color={color} />;
+    default:
+      return <ResponsesIcon size={size} color={color} />;
+  }
+}
+
+function Fact({ icon, text }: { icon: React.ReactNode; text: string }) {
+  const styles = useStyles();
+  return (
+    <View style={styles.fact}>
+      {icon}
+      <Text style={styles.factText} numberOfLines={2}>
+        {text}
+      </Text>
+    </View>
+  );
+}
+
 export function TradeCard({
   specialist,
   distance,
@@ -106,24 +144,50 @@ export function TradeCard({
   const styles = useStyles();
   const { t, tx } = useT();
   const details = specialist.details;
-  const place = specialist.placeName ? shortPlace(specialist.placeName) : "";
-  const placeLine = [
-    tx(specialist.specialtyLabel),
-    place,
-    formatMiles(distance),
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const owner = specialist.owner;
+  const place = specialist.placeName ? compactPlace(specialist.placeName) : "";
+  const placeLine = [place, formatMiles(distance)].filter(Boolean).join(" · ");
   const rated = specialist.rating > 0;
   const services = servicesPreview(details.services, 3);
-  const trust = trustItems(details, t);
+  const trust = trustItems(details, owner, t);
   const response = responseLine(details, t);
   const schedule = availabilityLine(details.availability, t);
   const subPrice = priceSubline(details.rates, t);
   const listed = hasListedRate(details.rates);
+  const languages = owner?.business.languages ?? [];
+  const methods = owner ? reachableMethods(owner) : [];
   const iconColor = colors.textSecondary;
   const others = otherTrades.slice(0, 2);
   const moreOthers = otherTrades.length - others.length;
+  const facts: { key: string; icon: React.ReactNode; text: string }[] = [];
+  if (response) {
+    facts.push({
+      key: "response",
+      icon: <ResponsesIcon size={15} color={iconColor} />,
+      text: response,
+    });
+  }
+  if (schedule) {
+    facts.push({
+      key: "schedule",
+      icon: <CalendarIcon size={15} color={iconColor} />,
+      text: schedule,
+    });
+  }
+  if (details.radiusMiles) {
+    facts.push({
+      key: "radius",
+      icon: <MapPinIcon size={15} color={iconColor} />,
+      text: t("trade.servesWithin", { miles: details.radiusMiles }),
+    });
+  }
+  if (languages.length > 0) {
+    facts.push({
+      key: "languages",
+      icon: <GlobeIcon size={15} color={iconColor} />,
+      text: languages.map(tx).join(", "),
+    });
+  }
 
   return (
     <PressableScale accessibilityLabel={specialist.name} onPress={onPress}>
@@ -134,12 +198,14 @@ export function TradeCard({
             url={specialist.avatarUrl || null}
             years={details.experienceYears}
             size={54}
+            showLabel={false}
           />
           <View style={styles.headerText}>
             <Text style={styles.name} numberOfLines={2}>
               {specialist.name}
             </Text>
             <View style={styles.ratingRow}>
+              <TierPill years={details.experienceYears} small />
               {badge ? (
                 <View style={[styles.badge, { backgroundColor: badge.bg }]}>
                   <Text style={[styles.badgeText, { color: badge.tint }]}>
@@ -155,20 +221,28 @@ export function TradeCard({
                   </Text>
                   <Text style={styles.ratingCount}>({specialist.reviews})</Text>
                 </>
-              ) : (
+              ) : !badge ? (
                 <Text style={styles.newText}>
                   {t("compare.values.newOnCtmass")}
                 </Text>
-              )}
+              ) : null}
             </View>
-            {placeLine ? (
-              <View style={styles.placeRow}>
+            {specialist.specialtyLabel ? (
+              <View style={styles.metaRow}>
                 <TradeGroupIcon
                   groupId={details.groupId}
                   size={14}
                   color={colors.accent}
                 />
-                <Text style={styles.place} numberOfLines={2}>
+                <Text style={styles.specialty} numberOfLines={1}>
+                  {tx(specialist.specialtyLabel)}
+                </Text>
+              </View>
+            ) : null}
+            {placeLine ? (
+              <View style={styles.metaRow}>
+                <MapPinIcon size={14} color={iconColor} />
+                <Text style={styles.place} numberOfLines={1}>
                   {placeLine}
                 </Text>
               </View>
@@ -218,55 +292,58 @@ export function TradeCard({
           </View>
         ) : null}
 
+        {trust.length > 0 ? (
+          <View style={styles.trustRow}>
+            {trust.map((item) => (
+              <View key={item.key} style={styles.trust}>
+                <ShieldCheckIcon size={13} color={colors.accent} />
+                <Text style={styles.trustText} numberOfLines={1}>
+                  {item.label}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
         <View style={styles.facts}>
-          <View style={styles.fact}>
+          <View style={styles.priceRow}>
             <DollarIcon
               size={15}
               color={listed ? colors.accent : iconColor}
               strokeWidth={2}
             />
-            <Text
-              style={[styles.factText, listed && styles.priceText]}
-              numberOfLines={1}
-            >
-              {priceLine(details.rates, t)}
-            </Text>
+            <View style={styles.priceBody}>
+              <Text
+                style={[styles.priceLine, listed && styles.priceText]}
+                numberOfLines={2}
+              >
+                {priceLine(details.rates, t)}
+              </Text>
+              {subPrice ? (
+                <Text style={styles.subPrice} numberOfLines={1}>
+                  {subPrice}
+                </Text>
+              ) : null}
+            </View>
           </View>
-          {subPrice ? <Text style={styles.subPrice}>{subPrice}</Text> : null}
-          {trust.length > 0 ? (
-            <View style={styles.trustRow}>
-              {trust.map((item) => (
-                <View key={item.key} style={styles.trust}>
-                  <ShieldCheckIcon size={13} color={colors.accent} />
-                  <Text style={styles.trustText} numberOfLines={1}>
-                    {item.label}
-                  </Text>
-                </View>
+          {facts.length > 0 ? (
+            <View style={styles.factGrid}>
+              {facts.map((fact) => (
+                <Fact key={fact.key} icon={fact.icon} text={fact.text} />
               ))}
             </View>
           ) : null}
-          {response ? (
-            <View style={styles.fact}>
-              <ResponsesIcon size={15} color={iconColor} />
-              <Text style={styles.factText} numberOfLines={1}>
-                {response}
-              </Text>
-            </View>
-          ) : null}
-          {schedule ? (
-            <View style={styles.fact}>
-              <CalendarIcon size={15} color={iconColor} />
-              <Text style={styles.factText} numberOfLines={1}>
-                {schedule}
-              </Text>
-            </View>
-          ) : null}
-          {details.radiusMiles ? (
-            <View style={styles.fact}>
-              <MapPinIcon size={15} color={iconColor} />
-              <Text style={styles.factText} numberOfLines={1}>
-                {t("trade.servesWithin", { miles: details.radiusMiles })}
-              </Text>
+          {methods.length > 0 ? (
+            <View style={styles.contactRow}>
+              <Text style={styles.contactLabel}>{t("trade.prefers")}</Text>
+              {methods.map((method) => (
+                <View key={method} style={styles.contactChip}>
+                  <ContactMethodIcon method={method} color={colors.accent} />
+                  <Text style={styles.contactText} numberOfLines={1}>
+                    {t(`trade.contactShort.${method}`)}
+                  </Text>
+                </View>
+              ))}
             </View>
           ) : null}
         </View>
@@ -349,6 +426,7 @@ const useStyles = makeStyles((t) => ({
   },
   headerText: {
     flex: 1,
+    minWidth: 0,
     gap: 4,
   },
   headerActions: {
@@ -364,7 +442,7 @@ const useStyles = makeStyles((t) => ({
   ratingRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 5,
     flexWrap: "wrap",
   },
   ratingValue: {
@@ -386,7 +464,6 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: Radius.pill,
-    marginRight: 2,
   },
   badgeText: {
     fontSize: 10.5,
@@ -394,10 +471,16 @@ const useStyles = makeStyles((t) => ({
     letterSpacing: 0.4,
     textTransform: "uppercase",
   },
-  placeRow: {
+  metaRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
+  },
+  specialty: {
+    flex: 1,
+    color: t.colors.text,
+    fontSize: 13.5,
+    fontWeight: "700",
   },
   place: {
     flex: 1,
@@ -433,34 +516,6 @@ const useStyles = makeStyles((t) => ({
     fontSize: 12.5,
     fontWeight: "600",
   },
-  facts: {
-    gap: 7,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: t.colors.border,
-  },
-  fact: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-  },
-  factText: {
-    flex: 1,
-    color: t.colors.textSecondary,
-    fontSize: 13.5,
-    fontWeight: "600",
-  },
-  priceText: {
-    color: t.colors.text,
-    fontWeight: "800",
-    fontSize: 14.5,
-  },
-  subPrice: {
-    color: t.colors.textMuted,
-    fontSize: 12.5,
-    marginTop: -3,
-    marginLeft: 23,
-  },
   trustRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -473,12 +528,88 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: Radius.pill,
-    backgroundColor: "rgba(22,179,100,0.12)",
+    backgroundColor: t.isDark
+      ? "rgba(63,199,154,0.14)"
+      : "rgba(22,179,100,0.12)",
   },
   trustText: {
     color: t.colors.accent,
     fontSize: 12,
     fontWeight: "700",
+  },
+  facts: {
+    gap: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: t.colors.border,
+  },
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.sm,
+  },
+  priceBody: {
+    flex: 1,
+    gap: 1,
+  },
+  priceLine: {
+    color: t.colors.textSecondary,
+    fontSize: 13.5,
+    fontWeight: "600",
+  },
+  priceText: {
+    color: t.colors.text,
+    fontWeight: "800",
+    fontSize: 14.5,
+  },
+  subPrice: {
+    color: t.colors.textMuted,
+    fontSize: 12.5,
+  },
+  factGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: Spacing.sm,
+  },
+  fact: {
+    width: "50%",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+    paddingRight: Spacing.sm,
+  },
+  factText: {
+    flex: 1,
+    color: t.colors.textSecondary,
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 17,
+  },
+  contactRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  contactLabel: {
+    color: t.colors.textMuted,
+    fontSize: 12.5,
+    fontWeight: "700",
+  },
+  contactChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+  },
+  contactText: {
+    color: t.colors.text,
+    fontSize: 12,
+    fontWeight: "600",
   },
   alsoRow: {
     flexDirection: "row",

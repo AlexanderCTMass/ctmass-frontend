@@ -29,6 +29,8 @@ import { formatMiles } from "@/lib/geo";
 import { useT } from "@/lib/i18n";
 import type { ProjectDetail } from "@/lib/projects";
 
+import { stateCode } from "@/constants/us-states";
+
 export type CardBadge = { label: string; tint: string; bg: string };
 
 const COVER_SIZE = 92;
@@ -42,6 +44,13 @@ export function shortPlace(placeName: string): string {
   const state = parts[parts.length - 1].replace(/\s*\d.*$/, "");
   const city = parts[parts.length - 2];
   return state ? `${city}, ${state}` : city;
+}
+
+export function compactPlace(placeName: string): string {
+  const parts = shortPlace(placeName).split(", ");
+  if (parts.length < 2) return parts[0] ?? "";
+  const state = parts.pop() ?? "";
+  return [...parts, stateCode(state)].join(", ");
 }
 
 function CoverPhoto({ photos }: { photos: string[] }) {

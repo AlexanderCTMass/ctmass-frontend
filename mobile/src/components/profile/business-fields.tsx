@@ -16,13 +16,16 @@ import {
   CREW_SIZES,
   LANGUAGES,
   PAYMENT_METHODS,
-  PREFERRED_CONTACTS,
-  type PreferredContact,
 } from "@/constants/trade-options";
+import {
+  CONTACT_METHODS,
+  type ContactMethod,
+} from "@/constants/project-request";
 import { makeStyles } from "@/constants/theme";
 import {
   type BusinessDetails,
   type ContactSettings,
+  contactSettingsPayload,
   normalizeWebsite,
 } from "@/lib/business-profile";
 import { useT } from "@/lib/i18n";
@@ -54,7 +57,7 @@ export const businessFieldsSchema = z.object({
   paymentMethods: z.array(z.string()),
   showPhone: z.boolean(),
   showEmail: z.boolean(),
-  preferredContact: z.string(),
+  contactMethods: z.array(z.string()).min(1, "business.errors.contactMethods"),
 });
 
 export type BusinessFieldValues = z.infer<typeof businessFieldsSchema>;
@@ -74,7 +77,7 @@ export function businessDefaults(
     paymentMethods: business?.paymentMethods ?? [],
     showPhone: contact?.showPhone ?? true,
     showEmail: contact?.showEmail ?? false,
-    preferredContact: contact?.preferred ?? "message",
+    contactMethods: contact?.methods ?? ["app"],
   };
 }
 
@@ -93,11 +96,10 @@ export function businessFromValues(values: BusinessFieldValues): {
       website: normalizeWebsite(values.website),
       paymentMethods: values.paymentMethods,
     },
-    contactSettings: {
-      showPhone: values.showPhone,
-      showEmail: values.showEmail,
-      preferred: (values.preferredContact || "message") as PreferredContact,
-    },
+    contactSettings: contactSettingsPayload(
+      values.contactMethods as ContactMethod[],
+      { showPhone: values.showPhone, showEmail: values.showEmail },
+    ),
   };
 }
 
@@ -279,16 +281,17 @@ export function ContactVisibilityFields<T extends BusinessFieldValues>({
       />
       <FormSection
         label={t("trade.sections.preferredContact")}
-        error={errors.preferredContact?.message}
+        hint={t("business.contactMethodsHint")}
+        error={errors.contactMethods?.message}
       >
         <Controller
           control={control}
-          name="preferredContact"
+          name="contactMethods"
           render={({ field: { value, onChange } }) => (
-            <ChoiceChips
-              options={PREFERRED_CONTACTS}
+            <MultiChips
+              options={CONTACT_METHODS}
               value={value}
-              onChange={(next) => next && onChange(next)}
+              onChange={onChange}
             />
           )}
         />

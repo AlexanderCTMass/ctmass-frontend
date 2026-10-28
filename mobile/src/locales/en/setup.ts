@@ -1,8 +1,8 @@
 export const setup = {
   validation: {
     name: "Name is required",
-    phonePreferred: "Add and show your phone to make it preferred.",
-    emailPreferred: "Show your email to make it preferred.",
+    phonePreferred: "Add your phone and show it on your trades to offer calls or texts.",
+    emailPreferred: "Show your email on your trades to offer email.",
   },
   saveFailed: "Couldn't save your profile. Please try again.",
   deleteCertTitle: "Delete certificate?",
@@ -30,6 +30,8 @@ export const setup = {
   editSocialGroups: "Edit social groups",
   addSocialGroups: "+ Add social groups",
   deleteCertA11y: "Delete certificate",
+  editCertA11y: "Edit {{name}}",
+  certPrivate: "Private",
   certEmpty: "Add a license, certification or diploma.",
   addCertA11y: "Add certificate",
   addCert: "+ Add certificate",
@@ -52,6 +54,7 @@ export const business = {
   errors: {
     year: "Enter a valid year, from 1900 to this year.",
     website: "Enter a valid website, e.g. example.com",
+    contactMethods: "Pick at least one way to reach you.",
   },
   note: "Shared by all your trades. Experience is set separately in each trade.",
   role: "Your role",
@@ -62,6 +65,7 @@ export const business = {
   showPhone: "Show my phone on my trades",
   showPhoneHint: "Homeowners get a Call button. CTMASS messages are always on.",
   showEmail: "Show my email on my trades",
+  contactMethodsHint: "Pick every way homeowners can reach you. The first one is shown as preferred.",
 };
 
 export const socialGroups = {

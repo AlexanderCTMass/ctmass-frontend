@@ -3,10 +3,10 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { CheckIcon } from "@/components/icons";
 import {
   type CompareRanks,
-  TierPill,
   useCompareColors,
 } from "@/components/compare/compare-card";
 import { ToggleRow } from "@/components/trade/form-parts";
+import { TierPill } from "@/components/trade/tier-badge";
 import { Avatar } from "@/components/ui/avatar";
 import {
   Brand,

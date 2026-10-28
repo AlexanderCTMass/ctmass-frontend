@@ -25,8 +25,13 @@ export function useTradeCertificates(
     enabled: Boolean(ownerId),
     staleTime: 5 * 60 * 1000,
     queryFn: () => fetchPublicCertificates(ownerId as string),
-    select: (list) =>
-      tradeId ? list.filter((cert) => cert.linkedTradeIds.includes(tradeId)) : [],
+    select: (list) => {
+      if (!tradeId) return [];
+      const linked = list.filter((cert) =>
+        cert.linkedTradeIds.includes(tradeId),
+      );
+      return linked.length > 0 ? linked : list;
+    },
   });
 }
 

@@ -3,8 +3,8 @@ import { Pressable, Text, View } from "react-native";
 
 import { CheckIcon, TradeGroupIcon } from "@/components/icons";
 import { shortPlace } from "@/components/project/project-card";
+import { TierPill } from "@/components/trade/tier-badge";
 import { Avatar } from "@/components/ui/avatar";
-import { tierBadgeLabel, tierFor } from "@/constants/trade-options";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import {
   CARD_ROWS,
@@ -26,35 +26,6 @@ export function useCompareColors() {
     winText: colors.accent,
     neutralBackground: colors.track,
   };
-}
-
-export function TierPill({
-  years,
-  small = false,
-}: {
-  years: number | null;
-  small?: boolean;
-}) {
-  const styles = useStyles();
-  const { t } = useT();
-  if (years === null) return null;
-  const tier = tierFor(years);
-  return (
-    <View
-      style={[
-        styles.tierPill,
-        small && styles.tierPillSmall,
-        { backgroundColor: tier.color },
-      ]}
-    >
-      <Text
-        style={[styles.tierText, small && styles.tierTextSmall]}
-        numberOfLines={1}
-      >
-        {tierBadgeLabel(years, t)}
-      </Text>
-    </View>
-  );
 }
 
 export function CompareCard({
@@ -252,24 +223,6 @@ const useStyles = makeStyles((t) => ({
     position: "absolute",
     left: 92,
     bottom: 10,
-  },
-  tierPill: {
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: Radius.pill,
-  },
-  tierPillSmall: {
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  tierText: {
-    color: "#04170D",
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 0.4,
-  },
-  tierTextSmall: {
-    fontSize: 9.5,
   },
   identity: {
     paddingTop: 30,

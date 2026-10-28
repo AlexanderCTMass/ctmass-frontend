@@ -80,6 +80,7 @@ export const compare = {
     expired: "Expired",
     quoteOnly: "Quote only",
     provided: "Provided",
+    certificateOnFile: "Certificate on file",
     thru: "thru {{date}}",
     years_one: "{{count}} year",
     years_other: "{{count}} years",

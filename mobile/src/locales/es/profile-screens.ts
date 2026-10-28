@@ -58,10 +58,23 @@ export const certificate: Translations["certificate"] = {
   specialtyPlaceholder: "p. ej. Electricista maestro",
   year: "Año (opcional)",
   addPhoto: "Agregar foto",
-  public: "Mostrar en el perfil público",
-  publicHint: "Otras personas pueden ver este documento en tu perfil.",
+  public: "Mostrar en mi perfil",
+  publicHint: "Los propietarios pueden ver este certificado en tu perfil y tus especialidades.",
+  privateHint: "Solo tú puedes verlo. Tus especialidades siguen mostrando Con licencia.",
   save: "Guardar certificado",
   needPhoto: "Agrega al menos una foto de tu certificado.",
+  editTitle: "Editar certificado",
+  number: "Número de documento (opcional)",
+  privacyTitle: "Privacidad",
+  privacyNote:
+    "Elige qué pueden ver los propietarios. Los datos ocultos se quedan en tu cuenta.",
+  showInstitution: "Mostrar organización emisora",
+  showSpecialty: "Mostrar especialidad",
+  showYear: "Mostrar año",
+  showNumber: "Mostrar número de documento",
+  showPhotos: "Mostrar fotos del documento",
+  showPhotosHint: "Las fotos pueden incluir tu dirección, número de identificación o firma.",
+  missing: "Este certificado ya no está disponible.",
 };
 
 export const videoStory: Translations["videoStory"] = {
