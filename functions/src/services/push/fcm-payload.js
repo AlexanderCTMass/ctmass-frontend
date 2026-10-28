@@ -1,4 +1,4 @@
-const ANDROID_CHANNEL_ID = "default";
+const ANDROID_CHANNEL_ID = "ctmass_alerts";
 const ANDROID_ACCENT_COLOR = "#16B364";
 const MAX_BODY_LENGTH = 240;
 
@@ -28,6 +28,10 @@ export const buildPushMessage = ({ tokens, title, body, data, collapseId }) => {
         channelId: ANDROID_CHANNEL_ID,
         color: ANDROID_ACCENT_COLOR,
         sound: "default",
+        defaultSound: true,
+        defaultVibrateTimings: true,
+        priority: "high",
+        visibility: "public",
         ...(tag ? { tag } : {}),
       },
     },

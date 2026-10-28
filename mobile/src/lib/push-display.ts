@@ -5,8 +5,10 @@ import type { PushData } from "@/lib/notifications";
 import { routeFromPushData } from "@/lib/push-routing";
 import i18n from "@/lib/i18n";
 
-const CHANNEL_ID = "default";
+const CHANNEL_ID = "ctmass_alerts";
+const LEGACY_CHANNEL_IDS = ["default"];
 const BRAND_COLOR = "#16B364";
+const VIBRATION_PATTERN = [0, 250, 200, 250];
 
 Notifications.setNotificationHandler({
   handleNotification: () => {
@@ -26,9 +28,16 @@ export async function ensureAndroidChannel(): Promise<void> {
     name: i18n.t("profile.tab.notifications"),
     importance: Notifications.AndroidImportance.HIGH,
     enableVibrate: true,
-    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    vibrationPattern: VIBRATION_PATTERN,
+    enableLights: true,
     lightColor: BRAND_COLOR,
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
   });
+  await Promise.all(
+    LEGACY_CHANNEL_IDS.map((id) =>
+      Notifications.deleteNotificationChannelAsync(id).catch(() => undefined),
+    ),
+  );
 }
 
 export async function presentFromData(data: PushData): Promise<void> {
