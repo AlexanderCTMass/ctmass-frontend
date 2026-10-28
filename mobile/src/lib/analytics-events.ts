@@ -951,6 +951,11 @@ export const analyticsEvents = {
     results_count: number;
     is_email: boolean;
   }>("specialist_search_performed"),
+  specialistSearchFilterChanged: define<{
+    filter: string;
+    value: string;
+    active_count: number;
+  }>("specialist_search_filter_changed"),
   specialistSearchProfileOpened: define<{
     owner_id: string;
     trade_id: string;

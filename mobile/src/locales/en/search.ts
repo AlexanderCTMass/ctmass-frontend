@@ -26,5 +26,14 @@ export const search = {
       "Specialists you swipe left will show up here. Swipe right to bring them back.",
     noneQuery: "Try a different name, specialty, email, or a wider distance.",
     noneText: "Specialists will appear here.",
+    noneFilters: "No specialists match these filters. Try removing one.",
+  },
+  filters: {
+    trade: "Trade",
+    tradeTitle: "Filter by trade",
+    language: "Language",
+    languageTitle: "Speaks",
+    clearAll: "Clear all",
+    clearOne: "Remove {{name}} filter",
   },
 };

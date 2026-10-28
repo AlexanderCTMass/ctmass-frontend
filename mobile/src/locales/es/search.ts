@@ -29,5 +29,14 @@ export const search: Translations["search"] = {
     noneQuery:
       "Prueba con otro nombre, especialidad, correo o una distancia mayor.",
     noneText: "Los especialistas aparecerán aquí.",
+    noneFilters: "Ningún especialista coincide con estos filtros. Prueba quitar uno.",
+  },
+  filters: {
+    trade: "Especialidad",
+    tradeTitle: "Filtrar por especialidad",
+    language: "Idioma",
+    languageTitle: "Habla",
+    clearAll: "Quitar todo",
+    clearOne: "Quitar el filtro {{name}}",
   },
 };

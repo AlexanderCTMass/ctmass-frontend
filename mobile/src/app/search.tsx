@@ -6,6 +6,13 @@ import { Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ArchiveIcon, HeartIcon } from "@/components/icons";
+import {
+  EMPTY_FILTERS,
+  type SearchFilters,
+  SearchFilterBar,
+  activeFilterCount,
+  matchesFilters,
+} from "@/components/search/search-filters";
 import { CompareTray } from "@/components/trade/compare-tray";
 import { TradeCard } from "@/components/trade/trade-card";
 import { BackButton } from "@/components/ui/back-button";
@@ -126,6 +133,8 @@ export default function SearchScreen() {
   const [emailQuery, setEmailQuery] = useState("");
   const [radius, setRadius] = useState(50);
   const [tab, setTab] = useState<Tab>("all");
+  const [filters, setFilters] = useState<SearchFilters>(EMPTY_FILTERS);
+  const filtering = activeFilterCount(filters) > 0;
 
   const swipe = useSwipeActions(uid, "search");
   const sides = useSwipeSides();
@@ -175,7 +184,8 @@ export default function SearchScreen() {
         .filter((specialist) => set.has(specialist.tradeId))
         .filter((specialist) =>
           matchesSpecialistQuery(specialist, trimmed, tx),
-        );
+        )
+        .filter((specialist) => matchesFilters(specialist, filters));
       if (list.length === 0) return [];
       return [
         {
@@ -222,6 +232,7 @@ export default function SearchScreen() {
     const base = (pool.data ?? [])
       .filter((specialist) => !archived.has(specialist.tradeId))
       .filter((specialist) => matchesSpecialistQuery(specialist, trimmed, tx))
+      .filter((specialist) => matchesFilters(specialist, filters))
       .filter(withinRadius);
     const groups = groupSpecialists(base);
     const out: Row[] = [];
@@ -260,6 +271,7 @@ export default function SearchScreen() {
     trimmed,
     origin,
     radius,
+    filters,
     tx,
   ]);
 
@@ -277,6 +289,20 @@ export default function SearchScreen() {
 
   const restoreSpecialist = (specialist: Specialist) => {
     swipe.restore(specialistSubject(specialist), "swipe");
+  };
+
+  const changeFilters = (
+    next: SearchFilters,
+    changed: keyof SearchFilters,
+  ) => {
+    const value = next[changed];
+    analyticsEvents.specialistSearchFilterChanged({
+      filter: activeFilterCount(next) === 0 ? "clear" : changed,
+      value: typeof value === "string" ? value : value ? "on" : "off",
+      active_count: activeFilterCount(next),
+    });
+    undo.hide();
+    setFilters(next);
   };
 
   const changeTab = (next: Tab) => {
@@ -367,9 +393,11 @@ export default function SearchScreen() {
       ? t("search.empty.likedText")
       : tab === "archived"
         ? t("search.empty.archiveText")
-        : trimmed || origin
-          ? t("search.empty.noneQuery")
-          : t("search.empty.noneText");
+        : filtering
+          ? t("search.empty.noneFilters")
+          : trimmed || origin
+            ? t("search.empty.noneQuery")
+            : t("search.empty.noneText");
 
   return (
     <ScreenBackground>
@@ -431,6 +459,12 @@ export default function SearchScreen() {
                 },
               ]}
             />
+          </View>
+        ) : null}
+
+        {!emailActive ? (
+          <View style={styles.filtersWrap}>
+            <SearchFilterBar value={filters} onChange={changeFilters} />
           </View>
         ) : null}
 
@@ -581,6 +615,9 @@ const useStyles = makeStyles((t) => ({
   },
   tabsWrap: {
     paddingHorizontal: Spacing.base,
+  },
+  filtersWrap: {
+    paddingTop: Spacing.sm,
   },
   skeletonAvatar: {
     width: 52,
