@@ -42,7 +42,7 @@ import {
 import { shop } from "./shop";
 import { time } from "./time";
 import { form, tradeForm, tradePicker } from "./trade-form";
-import { tradePage } from "./trade-page";
+import { myTrades, tradePage } from "./trade-page";
 import { tradeSetup, chooseSpecialty, specialists } from "./trade-setup";
 import { trade } from "./trade";
 import { ui, location } from "./ui";
@@ -96,6 +96,7 @@ export const es: Translations = {
   tradeEdit,
   tradeForm,
   tradePage,
+  myTrades,
   tradePicker,
   tradeSetup,
   ui,

@@ -52,3 +52,13 @@ export const tradePage: Translations["tradePage"] = {
   deleting: "Eliminando…",
   unavailable: "Este perfil de especialista no está disponible.",
 };
+
+export const myTrades: Translations["myTrades"] = {
+  title: "Mis especialidades",
+  intro:
+    "Cada especialidad tiene su propia página con sus servicios, precios y reseñas. Los propietarios te encuentran por cada una.",
+  view: "Ver",
+  add: "Agregar especialidad",
+  emptyTitle: "Aún no tienes especialidades",
+  emptyText: "Agrega tu primera especialidad para que los propietarios te encuentren y te contraten.",
+};

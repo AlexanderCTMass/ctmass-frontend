@@ -32,6 +32,7 @@ export const profile = {
     setupTitle: "Setup your profile",
     setupSub: "Add your details so people recognize you.",
     viewPublic: "View public profile",
+    myTrades: "My trades",
     notifications: "Notifications",
     invite: "Invite friends & earn coins",
     friends: "Friends",

@@ -34,6 +34,7 @@ export const profile: Translations["profile"] = {
     setupTitle: "Configura tu perfil",
     setupSub: "Agrega tus datos para que la gente te reconozca.",
     viewPublic: "Ver perfil público",
+    myTrades: "Mis especialidades",
     notifications: "Notificaciones",
     invite: "Invita amigos y gana monedas",
     friends: "Amigos",

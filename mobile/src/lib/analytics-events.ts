@@ -270,6 +270,10 @@ export const analyticsEvents = {
     step: number;
     step_name: string;
   }>("trade_setup_step_completed"),
+  myTradesViewed: define("my_trades_viewed"),
+  myTradesOpened: define<{ trade_id: string }>("my_trades_opened"),
+  myTradesEditTapped: define<{ trade_id: string }>("my_trades_edit_tapped"),
+  myTradesAddTapped: define<{ trades_count: number }>("my_trades_add_tapped"),
   tradeContactSaveFailed: define<{ error_message: string }>(
     "trade_contact_save_failed",
   ),

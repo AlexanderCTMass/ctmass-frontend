@@ -23,6 +23,7 @@ import {
   QrCodeIcon,
   ReviewIcon,
   ShareIcon,
+  ToolsIcon,
   UserIcon,
   UsersIcon,
 } from "@/components/icons";
@@ -376,6 +377,16 @@ export default function ProfileTab() {
           </PressableScale>
 
           <View style={styles.list}>
+            {role === "WORKER" ? (
+              <>
+                <ProfileItem
+                  icon={<ToolsIcon size={20} color={colors.accent} />}
+                  label={t("profile.tab.myTrades")}
+                  onPress={() => go("/my-trades", "my_trades")}
+                />
+                <View style={styles.itemDivider} />
+              </>
+            ) : null}
             <ProfileItem
               icon={<ShareIcon size={20} color={colors.accent} />}
               label={t("profile.tab.viewPublic")}

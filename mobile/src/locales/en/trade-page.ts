@@ -50,3 +50,13 @@ export const tradePage = {
   deleting: "Deleting…",
   unavailable: "This specialist profile isn't available.",
 };
+
+export const myTrades = {
+  title: "My trades",
+  intro:
+    "Each trade has its own page with its own services, prices and reviews. Homeowners find you by each of them.",
+  view: "View",
+  add: "Add a trade",
+  emptyTitle: "No trades yet",
+  emptyText: "Add your first trade so homeowners can find and hire you.",
+};
