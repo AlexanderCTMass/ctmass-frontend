@@ -20,6 +20,10 @@ export const tradeSetup = {
       title: "Where & when you work",
       subtitle: "Homeowners see your city, radius and schedule.",
     },
+    contact: {
+      title: "How homeowners reach you",
+      subtitle: "Pick how you like to be contacted and the languages you speak.",
+    },
     details: {
       title: "Final details",
       subtitle: "Optional, but complete profiles get more requests.",

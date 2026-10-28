@@ -25,6 +25,7 @@ import {
   AVAILABILITY_DAYS,
   EMERGENCY_OPTIONS,
   ESTIMATE_POLICIES,
+  LANGUAGES,
   MAX_EXPERIENCE_YEARS,
   PERMIT_OPTIONS,
   PRICE_DISCLAIMER,
@@ -45,6 +46,11 @@ import {
   defaultBasisFor,
   modelTakesRate,
 } from "@/constants/trade-options";
+import {
+  CONTACT_METHODS,
+  type ContactMethod,
+  PHONE_CONTACT_METHODS,
+} from "@/constants/project-request";
 import { servicesForTrade } from "@/constants/trade-services";
 import { OTHER_TRADE_LABEL, findTrade } from "@/constants/trade-taxonomy";
 import { useT } from "@/lib/i18n";
@@ -55,6 +61,7 @@ import {
   detailsToInput,
   emptyDetailsInput,
 } from "@/lib/trade-details";
+import { isValidUSPhone } from "@/lib/shop-form";
 
 const MAX_SERVICES = 12;
 
@@ -100,6 +107,9 @@ function baseSchema() {
     permits: z.string(),
     workBy: z.string(),
     about: z.string(),
+    languages: z.array(z.string()),
+    contactMethods: z.array(z.string()),
+    phone: z.string(),
   });
 }
 
@@ -131,6 +141,15 @@ function issuesFor(values: TradeFormValues, strict: boolean): Issue[] {
     Number(values.rateMax) < Number(values.rateMin)
   ) {
     issues.push({ path: "rateMax", message: "tradeForm.errors.rateMax" });
+  }
+  if (values.contactMethods.length === 0) {
+    issues.push({
+      path: "contactMethods",
+      message: "business.errors.contactMethods",
+    });
+  }
+  if (needsPhone(values.contactMethods) && !isValidUSPhone(values.phone)) {
+    issues.push({ path: "phone", message: "validation.usPhone" });
   }
   if (strict) {
     if (years === "") {
@@ -175,8 +194,48 @@ export const STEP_FIELDS: (keyof TradeFormValues)[][] = [
   ["services", "experienceYears"],
   ["pricingModel", "rateMin", "rateMax", "minimumCharge", "serviceCallFee"],
   ["location", "radiusMiles", "days", "responseTime"],
+  ["languages", "contactMethods", "phone"],
   ["about"],
 ];
+
+export type TradeContactSource = {
+  languages: string[];
+  methods: ContactMethod[];
+  phone: string;
+};
+
+export function contactSourceFromProfile(
+  profile:
+    | {
+        business: { languages: string[] };
+        contactSettings: { methods: ContactMethod[] };
+        phone: string;
+      }
+    | null
+    | undefined,
+): TradeContactSource | null {
+  if (!profile) return null;
+  return {
+    languages: profile.business.languages,
+    methods: profile.contactSettings.methods,
+    phone: profile.phone,
+  };
+}
+
+export function needsPhone(methods: string[]): boolean {
+  return methods.some((method) =>
+    PHONE_CONTACT_METHODS.includes(method as ContactMethod),
+  );
+}
+
+export function contactFromValues(values: TradeFormValues): TradeContactSource {
+  const methods = values.contactMethods as ContactMethod[];
+  return {
+    languages: values.languages,
+    methods,
+    phone: needsPhone(methods) ? values.phone.trim() : "",
+  };
+}
 
 const text = (value: number | null) => (value === null ? "" : String(value));
 const numberOrNull = (value: string) => (value === "" ? null : Number(value));
@@ -223,7 +282,10 @@ export function tradeToFormSource(trade: {
   };
 }
 
-export function toFormValues(source: TradeFormSource | null): TradeFormValues {
+export function toFormValues(
+  source: TradeFormSource | null,
+  contact?: TradeContactSource | null,
+): TradeFormValues {
   const label = source?.specialtyLabel ?? "";
   const known = findTrade(label);
   const details: TradeDetailsInput =
@@ -263,6 +325,9 @@ export function toFormValues(source: TradeFormSource | null): TradeFormValues {
     permits: details.workPolicy.permits,
     workBy: details.workPolicy.workBy,
     about: source?.about ?? "",
+    languages: contact?.languages ?? [],
+    contactMethods: contact?.methods ?? ["app"],
+    phone: contact?.phone ?? "",
   };
 }
 
@@ -694,7 +759,6 @@ export function PricingSection({ control, errors, setValue }: SectionProps) {
 
 export function AreaAvailabilitySection({ control, errors }: SectionProps) {
   const { t } = useT();
-  const parts = useFormPartStyles();
   const emergency = useWatch({ control, name: "emergency" });
   return (
     <>
@@ -817,6 +881,71 @@ export function AreaAvailabilitySection({ control, errors }: SectionProps) {
               value={value}
               onChange={onChange}
               allowClear
+            />
+          )}
+        />
+      </FormSection>
+    </>
+  );
+}
+
+const languageOptions = LANGUAGES.map((item) => ({ value: item, label: item }));
+
+export function ContactSection({ control, errors }: SectionProps) {
+  const { t } = useT();
+  const parts = useFormPartStyles();
+  const methods = useWatch({ control, name: "contactMethods" });
+  return (
+    <>
+      <FormSection
+        label={t("trade.sections.preferredContact")}
+        hint={t("business.contactMethodsHint")}
+        error={errors.contactMethods?.message}
+      >
+        <Controller
+          control={control}
+          name="contactMethods"
+          render={({ field: { value, onChange } }) => (
+            <MultiChips
+              options={CONTACT_METHODS}
+              value={value}
+              onChange={onChange}
+            />
+          )}
+        />
+      </FormSection>
+      {needsPhone(methods) ? (
+        <FormSection
+          label={t("project.phoneNumber")}
+          hint={t("tradeForm.phoneHint")}
+          error={errors.phone?.message}
+        >
+          <Controller
+            control={control}
+            name="phone"
+            render={({ field: { value, onChange, onBlur } }) => (
+              <FormInput
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                placeholder="+1 (555) 123-4567"
+                keyboardType="phone-pad"
+                textContentType="telephoneNumber"
+                autoComplete="tel"
+              />
+            )}
+          />
+        </FormSection>
+      ) : null}
+      <FormSection label={t("business.languages")} optional>
+        <Controller
+          control={control}
+          name="languages"
+          render={({ field: { value, onChange } }) => (
+            <MultiChips
+              options={languageOptions}
+              value={value}
+              onChange={onChange}
             />
           )}
         />

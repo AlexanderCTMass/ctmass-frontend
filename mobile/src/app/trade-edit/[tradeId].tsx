@@ -16,11 +16,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { TradeCompleteness } from "@/components/trade/trade-completeness";
 import {
   AreaAvailabilitySection,
+  ContactSection,
   DetailsSection,
   IdentitySection,
   PricingSection,
   ServicesSection,
+  type TradeContactSource,
   type TradeFormValues,
+  contactFromValues,
+  contactSourceFromProfile,
   fromFormValues,
   specialtyFromValues,
   toFormValues,
@@ -40,7 +44,10 @@ import { errorFeedback, successFeedback, tapFeedback } from "@/lib/haptics";
 import { useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
 import { type TradeProfile, updateTrade } from "@/lib/trades";
+import { saveTradeContact } from "@/lib/user-profile";
+import { useProfile } from "@/queries/use-profile";
 import { useTradeById } from "@/queries/use-trade";
+import { useAuthStore } from "@/store/use-auth-store";
 
 const schema = tradeFormSchema(false);
 
@@ -60,7 +67,15 @@ function Group({
   );
 }
 
-function EditForm({ trade }: { trade: TradeProfile }) {
+function EditForm({
+  trade,
+  uid,
+  contact,
+}: {
+  trade: TradeProfile;
+  uid: string;
+  contact: TradeContactSource | null;
+}) {
   const { colors } = useTheme();
   const styles = useStyles();
   const { t } = useT();
@@ -73,7 +88,7 @@ function EditForm({ trade }: { trade: TradeProfile }) {
   } = useForm<TradeFormValues>({
     resolver: zodResolver(schema),
     mode: "onTouched",
-    defaultValues: toFormValues(tradeToFormSource(trade)),
+    defaultValues: toFormValues(tradeToFormSource(trade), contact),
   });
   useSubmitErrorHaptic(submitCount, errors);
   const [filterError, setFilterError] = useState<string | null>(null);
@@ -106,7 +121,17 @@ function EditForm({ trade }: { trade: TradeProfile }) {
     if (saving) return;
     setSaving(true);
     const location = values.location;
+    const contactInput = contactFromValues(values);
+    const contactChanged =
+      !contact ||
+      contact.languages.join("|") !== contactInput.languages.join("|") ||
+      contact.methods.join("|") !== contactInput.methods.join("|") ||
+      (contactInput.phone !== "" && contactInput.phone !== contact.phone);
     try {
+      if (contactChanged) {
+        await saveTradeContact(uid, contactInput);
+        void queryClient.invalidateQueries({ queryKey: ["profile", uid] });
+      }
       await updateTrade(trade, {
         title: values.title.trim(),
         primarySpecialtyLabel: specialtyFromValues(values),
@@ -196,6 +221,9 @@ function EditForm({ trade }: { trade: TradeProfile }) {
         <Group title={t("tradeEdit.groups.area")}>
           <AreaAvailabilitySection {...sectionProps} />
         </Group>
+        <Group title={t("tradeEdit.groups.contact")}>
+          <ContactSection {...sectionProps} />
+        </Group>
         <Group title={t("videoStory.details")}>
           <DetailsSection {...sectionProps} />
         </Group>
@@ -224,15 +252,17 @@ export default function TradeEditScreen() {
   const tradeId =
     typeof params.tradeId === "string" ? params.tradeId : undefined;
   const { data: trade, isLoading } = useTradeById(tradeId);
+  const uid = useAuthStore((state) => state.user?.uid);
+  const { data: profile, isLoading: profileLoading } = useProfile(uid);
 
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-        {isLoading ? (
+        {isLoading || profileLoading ? (
           <View style={styles.center}>
             <ActivityIndicator color={colors.accent} />
           </View>
-        ) : !trade ? (
+        ) : !trade || !uid || trade.ownerId !== uid ? (
           <>
             <View style={styles.header}>
               <BackButton onPress={() => router.back()} />
@@ -243,7 +273,11 @@ export default function TradeEditScreen() {
             </View>
           </>
         ) : (
-          <EditForm trade={trade} />
+          <EditForm
+            trade={trade}
+            uid={uid}
+            contact={contactSourceFromProfile(profile)}
+          />
         )}
       </SafeAreaView>
     </ScreenBackground>

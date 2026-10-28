@@ -23,6 +23,10 @@ export const tradeSetup: Translations["tradeSetup"] = {
       title: "Dónde y cuándo trabajas",
       subtitle: "Los propietarios ven tu ciudad, tu radio y tu horario.",
     },
+    contact: {
+      title: "Cómo te contactan los propietarios",
+      subtitle: "Elige cómo prefieres que te contacten y los idiomas que hablas.",
+    },
     details: {
       title: "Últimos detalles",
       subtitle:

@@ -270,6 +270,9 @@ export const analyticsEvents = {
     step: number;
     step_name: string;
   }>("trade_setup_step_completed"),
+  tradeContactSaveFailed: define<{ error_message: string }>(
+    "trade_contact_save_failed",
+  ),
   tradeSetupSubmitted: define<{
     title: string;
     specialty: string;
@@ -283,6 +286,8 @@ export const analyticsEvents = {
     days: string[];
     response_time: string;
     about_length: number;
+    languages: string[];
+    contact_methods: string[];
     city: string | null;
     state: string | null;
   }>("trade_setup_submitted"),

@@ -14,12 +14,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
   AreaAvailabilitySection,
+  ContactSection,
   DetailsSection,
   IdentitySection,
   PricingSection,
   STEP_FIELDS,
   ServicesSection,
   type TradeFormValues,
+  contactFromValues,
+  contactSourceFromProfile,
   fromFormValues,
   specialtyFromValues,
   toFormValues,
@@ -37,6 +40,7 @@ import { findObjectionable } from "@/lib/content-filter";
 import { errorFeedback, tapFeedback } from "@/lib/haptics";
 import { useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
+import { useProfile } from "@/queries/use-profile";
 import { useAuthStore } from "@/store/use-auth-store";
 import { useTradeDraftStore } from "@/store/use-trade-draft-store";
 
@@ -45,6 +49,7 @@ const STEPS = [
   { name: "services" },
   { name: "pricing" },
   { name: "area" },
+  { name: "contact" },
   { name: "details" },
 ] as const;
 
@@ -54,6 +59,8 @@ export default function ContractorSetupTradeScreen() {
   const styles = useStyles();
   const { t } = useT();
   const patch = useTradeDraftStore((state) => state.patch);
+  const uid = useAuthStore((state) => state.user?.uid);
+  const { data: profile } = useProfile(uid);
   const scrollRef = useRef<ScrollView>(null);
   const [step, setStep] = useState(0);
   const [filterError, setFilterError] = useState<string | null>(null);
@@ -62,6 +69,7 @@ export default function ContractorSetupTradeScreen() {
     control,
     handleSubmit,
     setValue,
+    getFieldState,
     trigger,
     formState: { errors, submitCount },
   } = useForm<TradeFormValues>({
@@ -74,6 +82,20 @@ export default function ContractorSetupTradeScreen() {
   useEffect(() => {
     analyticsEvents.tradeSetupViewed();
   }, []);
+
+  useEffect(() => {
+    const contact = contactSourceFromProfile(profile);
+    if (!contact) return;
+    if (!getFieldState("languages").isDirty) {
+      setValue("languages", contact.languages);
+    }
+    if (!getFieldState("contactMethods").isDirty) {
+      setValue("contactMethods", contact.methods);
+    }
+    if (!getFieldState("phone").isDirty && contact.phone) {
+      setValue("phone", contact.phone);
+    }
+  }, [profile, getFieldState, setValue]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
@@ -116,12 +138,14 @@ export default function ContractorSetupTradeScreen() {
     setFilterError(null);
     const specialty = specialtyFromValues(values);
     const details = fromFormValues(values);
+    const contact = contactFromValues(values);
     patch({
       title: values.title.trim(),
       specialty,
       location: values.location,
       about: values.about.trim(),
       details,
+      contact,
     });
     analyticsEvents.tradeSetupSubmitted({
       title: values.title.trim(),
@@ -136,6 +160,8 @@ export default function ContractorSetupTradeScreen() {
       days: details.availability.days,
       response_time: details.responseTime,
       about_length: values.about.trim().length,
+      languages: contact.languages,
+      contact_methods: contact.methods,
       ...locationProps(values.location),
     });
     const auth = useAuthStore.getState();
@@ -215,7 +241,8 @@ export default function ContractorSetupTradeScreen() {
               {step === 3 ? (
                 <AreaAvailabilitySection {...sectionProps} />
               ) : null}
-              {step === 4 ? <DetailsSection {...sectionProps} /> : null}
+              {step === 4 ? <ContactSection {...sectionProps} /> : null}
+              {step === 5 ? <DetailsSection {...sectionProps} /> : null}
             </Animated.View>
           </ScrollView>
 

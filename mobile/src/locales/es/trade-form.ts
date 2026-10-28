@@ -71,7 +71,9 @@ export const tradeForm: Translations["tradeForm"] = {
   responseTimeHint:
     "Tu propio compromiso. Se muestra como “Indicado por el contratista”.",
   contactNote:
-    "Tu teléfono y correo se administran en la configuración de tu perfil.",
+    "Se comparte entre todas tus especialidades. También puedes cambiarlo en Editar perfil.",
+  phoneHint:
+    "Se muestra en tus especialidades para que los propietarios te llamen o te escriban.",
   about: "Sobre tu trabajo",
   aboutHint: "Proyectos típicos, qué te hace diferente.",
   aboutPlaceholder: "Qué haces, cómo trabajas, qué te hace destacar…",

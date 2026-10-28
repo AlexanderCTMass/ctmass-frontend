@@ -28,6 +28,7 @@ import { emptyDetailsInput } from "@/lib/trade-details";
 import { coinsForRole, isRuleEnabledForRole } from "@/lib/loyalty-config";
 import { formatCoins } from "@/lib/shop";
 import { createTrade } from "@/lib/trades";
+import { saveTradeContact } from "@/lib/user-profile";
 import { useLoyaltyRules } from "@/queries/use-loyalty-config";
 import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
@@ -81,6 +82,7 @@ export default function ContractorTradeCompletedScreen() {
     if (!specialty || !location) return;
 
     const details = draft.details ?? emptyDetailsInput(groupOfTrade(specialty));
+    const contact = draft.contact;
 
     void createTrade(uid, {
       title: draft.title,
@@ -105,6 +107,20 @@ export default function ContractorTradeCompletedScreen() {
           ...locationProps(location),
         });
         setCreatedTradeId(tradeId);
+        if (contact) {
+          void saveTradeContact(uid, contact)
+            .then(() => {
+              void queryClient.invalidateQueries({ queryKey: ["profile", uid] });
+              void queryClient.invalidateQueries({
+                queryKey: ["specialist-pool"],
+              });
+            })
+            .catch((error: unknown) =>
+              analyticsEvents.tradeContactSaveFailed({
+                error_message: errorMessage(error),
+              }),
+            );
+        }
         void queryClient.invalidateQueries({ queryKey: ["trade"] });
         void queryClient.invalidateQueries({ queryKey: ["specialists"] });
         void queryClient.invalidateQueries({ queryKey: ["specialist-pool"] });
@@ -129,6 +145,7 @@ export default function ContractorTradeCompletedScreen() {
     draft.location,
     draft.about,
     draft.details,
+    draft.contact,
     canCreate,
     setCreatedTradeId,
     queryClient,

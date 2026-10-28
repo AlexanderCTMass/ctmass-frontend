@@ -69,6 +69,7 @@ export const tradeEdit = {
   groups: {
     trade: "Trade",
     area: "Service area & availability",
+    contact: "Contact & languages",
   },
   unavailable: "This trade isn't available.",
 };

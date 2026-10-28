@@ -73,6 +73,7 @@ export const tradeEdit: Translations["tradeEdit"] = {
   groups: {
     trade: "Especialidad",
     area: "Zona de servicio y disponibilidad",
+    contact: "Contacto e idiomas",
   },
   unavailable: "Esta especialidad no está disponible.",
 };

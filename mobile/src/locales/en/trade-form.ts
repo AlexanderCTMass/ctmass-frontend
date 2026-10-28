@@ -64,7 +64,9 @@ export const tradeForm = {
   emergencyPlaceholder: "Hours, extra fee and coverage area",
   responseTime: "Typical response time",
   responseTimeHint: "Your own commitment. It is labeled “Set by contractor”.",
-  contactNote: "Your phone and email are managed in your profile settings.",
+  contactNote:
+    "Shared by all your trades. You can also change it in Edit profile.",
+  phoneHint: "Shown on your trades so homeowners can call or text you.",
   about: "About your work",
   aboutHint: "Typical projects, what makes you different.",
   aboutPlaceholder: "What you do, how you work, what makes you great…",
