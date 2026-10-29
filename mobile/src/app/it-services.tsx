@@ -13,6 +13,7 @@ import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
 import {
   DEFAULT_SHOP_ITEMS,
@@ -33,6 +34,7 @@ function itServicesFrom(features: ShopFeature[]): ShopFeature[] {
 export default function ItServicesScreen() {
   const { colors, gradients } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const { data: features } = useShopFeatures();
 
   const services = useMemo(() => {
@@ -64,7 +66,7 @@ export default function ItServicesScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>Our IT Services</Text>
+          <Text style={styles.headerTitle}>{t("profile.tab.itServices")}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -80,14 +82,9 @@ export default function ItServicesScreen() {
             <View style={styles.heroIcon}>
               <CodeBadgeIcon size={26} color={colors.accent} />
             </View>
-            <Text style={styles.eyebrow}>CTMASS IT Solutions</Text>
-            <Text style={styles.heroTitle}>
-              We build software for your business
-            </Text>
-            <Text style={styles.heroText}>
-              Our own team ships custom websites, mobile apps, CRMs and AI
-              automation. Book a free 30-minute call to talk through your idea.
-            </Text>
+            <Text style={styles.eyebrow}>{t("onboarding.it.eyebrow")}</Text>
+            <Text style={styles.heroTitle}>{t("it.servicesTitle")}</Text>
+            <Text style={styles.heroText}>{t("it.servicesText")}</Text>
           </Animated.View>
 
           <View style={styles.list}>
@@ -106,20 +103,24 @@ export default function ItServicesScreen() {
                   />
                 ) : null}
                 <View style={styles.cardBody}>
-                  <Text style={styles.cardTitle}>{service.displayName}</Text>
+                  <Text style={styles.cardTitle}>
+                    {tx(service.displayName)}
+                  </Text>
                   {service.description ? (
                     <Text style={styles.cardText} numberOfLines={4}>
-                      {service.description}
+                      {tx(service.description)}
                     </Text>
                   ) : null}
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`Book a call about ${service.displayName}`}
+                    accessibilityLabel={t("it.bookAboutA11y", {
+                      name: tx(service.displayName),
+                    })}
                     onPress={() => book(service.displayName)}
                     style={styles.cardBtn}
                   >
                     <CalendarIcon size={16} color={colors.accent} />
-                    <Text style={styles.cardBtnText}>Book a free call</Text>
+                    <Text style={styles.cardBtnText}>{t("it.bookFree")}</Text>
                   </Pressable>
                 </View>
               </Animated.View>
@@ -132,28 +133,22 @@ export default function ItServicesScreen() {
             end={{ x: 1, y: 1 }}
             style={styles.shopCard}
           >
-            <Text style={styles.shopTitle}>Pay with CTMASS Coins</Text>
-            <Text style={styles.shopText}>
-              Every service above can also be redeemed with the coins you earn
-              on the platform.
-            </Text>
+            <Text style={styles.shopTitle}>{t("it.payCoins")}</Text>
+            <Text style={styles.shopText}>{t("it.payCoinsText")}</Text>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Open the Shop"
+              accessibilityLabel={t("shop.earn.openShop")}
               onPress={openShop}
               style={styles.shopBtn}
             >
               <ShopIcon size={16} color="#FFFFFF" />
-              <Text style={styles.shopBtnText}>Open the Shop</Text>
+              <Text style={styles.shopBtnText}>{t("shop.earn.openShop")}</Text>
             </Pressable>
           </LinearGradient>
         </ScrollView>
 
         <View style={styles.footer}>
-          <PrimaryButton
-            label="Book a free 30-min call"
-            onPress={() => book()}
-          />
+          <PrimaryButton label={t("it.bookFree30")} onPress={() => book()} />
         </View>
       </SafeAreaView>
     </ScreenBackground>

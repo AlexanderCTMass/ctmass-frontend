@@ -13,12 +13,14 @@ import { analyticsEvents } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
 import type { Friend } from "@/lib/friends";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { chatHref, toHref } from "@/lib/navigation";
 import { useFriends } from "@/queries/use-friends";
 import { useAuthStore } from "@/store/use-auth-store";
 
 export default function FriendsScreen() {
   const styles = useStyles();
+  const { t } = useT();
   const uid = useAuthStore((state) => state.user?.uid);
   const { data: friends, isLoading } = useFriends(uid);
   const friendsCount = friends?.length ?? 0;
@@ -41,7 +43,7 @@ export default function FriendsScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>Friends</Text>
+          <Text style={styles.headerTitle}>{t("profile.tab.friends")}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -50,15 +52,13 @@ export default function FriendsScreen() {
           showsVerticalScrollIndicator={false}
         >
           {isLoading ? (
-            <Text style={styles.muted}>Loading…</Text>
+            <Text style={styles.muted}>{t("friends.loading")}</Text>
           ) : !friends || friends.length === 0 ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>No friends yet</Text>
-              <Text style={styles.emptyText}>
-                Invite people you know — once they join, they show up here.
-              </Text>
+              <Text style={styles.emptyTitle}>{t("friends.emptyTitle")}</Text>
+              <Text style={styles.emptyText}>{t("friends.emptyText")}</Text>
               <PressableScale
-                accessibilityLabel="Invite a friend"
+                accessibilityLabel={t("invite.title")}
                 onPress={() => {
                   tapFeedback();
                   analyticsEvents.friendsInviteTapped();
@@ -66,7 +66,9 @@ export default function FriendsScreen() {
                 }}
               >
                 <View style={styles.inviteButton}>
-                  <Text style={styles.inviteButtonText}>Invite a friend</Text>
+                  <Text style={styles.inviteButtonText}>
+                    {t("invite.title")}
+                  </Text>
                 </View>
               </PressableScale>
             </View>
@@ -100,6 +102,7 @@ function FriendRow({
   position: number;
 }) {
   const styles = useStyles();
+  const { t } = useT();
   const [opening, setOpening] = useState(false);
 
   const message = async () => {
@@ -122,13 +125,13 @@ function FriendRow({
         {friend.name}
       </Text>
       <PressableScale
-        accessibilityLabel={`Message ${friend.name}`}
+        accessibilityLabel={t("friends.messageA11y", { name: friend.name })}
         onPress={() => void message()}
         disabled={opening}
       >
         <View style={styles.messageButton}>
           <Text style={styles.messageButtonText}>
-            {opening ? "Opening…" : "Message"}
+            {opening ? t("friends.opening") : t("trade.message")}
           </Text>
         </View>
       </PressableScale>

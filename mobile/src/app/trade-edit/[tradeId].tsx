@@ -16,11 +16,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { TradeCompleteness } from "@/components/trade/trade-completeness";
 import {
   AreaAvailabilitySection,
+  ContactSection,
   DetailsSection,
   IdentitySection,
   PricingSection,
   ServicesSection,
+  type TradeContactSource,
   type TradeFormValues,
+  contactFromValues,
+  contactSourceFromProfile,
   fromFormValues,
   specialtyFromValues,
   toFormValues,
@@ -37,13 +41,23 @@ import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
 import { errorFeedback, successFeedback, tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
 import { type TradeProfile, updateTrade } from "@/lib/trades";
+import { saveTradeContact } from "@/lib/user-profile";
+import { useProfile } from "@/queries/use-profile";
 import { useTradeById } from "@/queries/use-trade";
+import { useAuthStore } from "@/store/use-auth-store";
 
 const schema = tradeFormSchema(false);
 
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
+function Group({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   const styles = useStyles();
   return (
     <View style={styles.group}>
@@ -53,19 +67,28 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-function EditForm({ trade }: { trade: TradeProfile }) {
+function EditForm({
+  trade,
+  uid,
+  contact,
+}: {
+  trade: TradeProfile;
+  uid: string;
+  contact: TradeContactSource | null;
+}) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const queryClient = useQueryClient();
   const {
     control,
     handleSubmit,
     setValue,
-    formState: { errors, submitCount, isDirty },
+    formState: { errors, submitCount, isDirty, dirtyFields },
   } = useForm<TradeFormValues>({
     resolver: zodResolver(schema),
     mode: "onTouched",
-    defaultValues: toFormValues(tradeToFormSource(trade)),
+    defaultValues: toFormValues(tradeToFormSource(trade), contact),
   });
   useSubmitErrorHaptic(submitCount, errors);
   const [filterError, setFilterError] = useState<string | null>(null);
@@ -73,7 +96,14 @@ function EditForm({ trade }: { trade: TradeProfile }) {
   const sectionProps = { control, errors, setValue };
 
   const onSubmit = async (values: TradeFormValues) => {
-    if (findObjectionable(values.title, values.about, values.customSpecialty, ...values.services)) {
+    if (
+      findObjectionable(
+        values.title,
+        values.about,
+        values.customSpecialty,
+        ...values.services,
+      )
+    ) {
       analyticsEvents.contentFilterBlocked({
         screen: "trade_edit",
         fields: [
@@ -84,14 +114,22 @@ function EditForm({ trade }: { trade: TradeProfile }) {
         ].filter((field): field is string => field !== null),
       });
       errorFeedback();
-      setFilterError("Please remove inappropriate language from your trade details.");
+      setFilterError(t("tradeSetup.filterError"));
       return;
     }
     setFilterError(null);
     if (saving) return;
     setSaving(true);
     const location = values.location;
+    const contactInput = contactFromValues(values);
+    const contactChanged = Boolean(
+      dirtyFields.languages || dirtyFields.contactMethods || dirtyFields.phone,
+    );
     try {
+      if (contactChanged) {
+        await saveTradeContact(uid, contactInput);
+        void queryClient.invalidateQueries({ queryKey: ["profile", uid] });
+      }
       await updateTrade(trade, {
         title: values.title.trim(),
         primarySpecialtyLabel: specialtyFromValues(values),
@@ -120,7 +158,7 @@ function EditForm({ trade }: { trade: TradeProfile }) {
       });
       errorFeedback();
       setSaving(false);
-      setFilterError("Could not save your changes. Please try again.");
+      setFilterError(t("tradeEdit.saveFailed"));
     }
   };
 
@@ -132,7 +170,7 @@ function EditForm({ trade }: { trade: TradeProfile }) {
     >
       <View style={styles.header}>
         <BackButton onPress={() => router.back()} />
-        <Text style={styles.headerTitle}>Edit trade</Text>
+        <Text style={styles.headerTitle}>{t("tradePage.editTrade")}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -144,40 +182,47 @@ function EditForm({ trade }: { trade: TradeProfile }) {
       >
         <TradeCompleteness trade={trade} />
         <PressableScale
-          accessibilityLabel="License and insurance"
+          accessibilityLabel={t("tradePage.licenseInsurance")}
           onPress={() => {
             tapFeedback();
             router.push(
-              toHref(`/trade-credentials/${encodeURIComponent(trade.tradeId)}?source=trade_edit`),
+              toHref(
+                `/trade-credentials/${encodeURIComponent(trade.tradeId)}?source=trade_edit`,
+              ),
             );
           }}
         >
           <View style={styles.linkRow}>
             <ShieldCheckIcon size={20} color={colors.accent} />
             <View style={styles.linkBody}>
-              <Text style={styles.linkTitle}>License & insurance</Text>
+              <Text style={styles.linkTitle}>
+                {t("tradePage.licenseInsurance")}
+              </Text>
               <Text style={styles.linkHint}>
                 {trade.details.license || trade.details.insurance
-                  ? "Provided — tap to update"
-                  : "Not provided — add to build trust"}
+                  ? t("tradeEdit.credProvided")
+                  : t("tradeEdit.credMissing")}
               </Text>
             </View>
             <Text style={styles.linkChevron}>›</Text>
           </View>
         </PressableScale>
-        <Group title="Trade">
+        <Group title={t("tradeEdit.groups.trade")}>
           <IdentitySection {...sectionProps} />
         </Group>
-        <Group title="Services & experience">
+        <Group title={t("tradeSetup.steps.services.title")}>
           <ServicesSection {...sectionProps} />
         </Group>
-        <Group title="Pricing">
+        <Group title={t("trade.sections.pricing")}>
           <PricingSection {...sectionProps} />
         </Group>
-        <Group title="Service area & availability">
+        <Group title={t("tradeEdit.groups.area")}>
           <AreaAvailabilitySection {...sectionProps} />
         </Group>
-        <Group title="Details">
+        <Group title={t("tradeEdit.groups.contact")}>
+          <ContactSection {...sectionProps} />
+        </Group>
+        <Group title={t("videoStory.details")}>
           <DetailsSection {...sectionProps} />
         </Group>
       </ScrollView>
@@ -187,7 +232,7 @@ function EditForm({ trade }: { trade: TradeProfile }) {
           <Text style={styles.filterError}>{filterError}</Text>
         ) : null}
         <PrimaryButton
-          label={saving ? "Saving…" : "Save changes"}
+          label={saving ? t("setup.saving") : t("portfolio.saveChanges")}
           onPress={() => void handleSubmit(onSubmit)()}
           disabled={!isDirty || saving}
           loading={saving}
@@ -200,30 +245,37 @@ function EditForm({ trade }: { trade: TradeProfile }) {
 export default function TradeEditScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const params = useLocalSearchParams<{ tradeId?: string }>();
   const tradeId =
     typeof params.tradeId === "string" ? params.tradeId : undefined;
   const { data: trade, isLoading } = useTradeById(tradeId);
+  const uid = useAuthStore((state) => state.user?.uid);
+  const { data: profile, isLoading: profileLoading } = useProfile(uid);
 
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-        {isLoading ? (
+        {isLoading || profileLoading ? (
           <View style={styles.center}>
             <ActivityIndicator color={colors.accent} />
           </View>
-        ) : !trade ? (
+        ) : !trade || !uid || trade.ownerId !== uid ? (
           <>
             <View style={styles.header}>
               <BackButton onPress={() => router.back()} />
               <View style={styles.headerSpacer} />
             </View>
             <View style={styles.center}>
-              <Text style={styles.missing}>This trade isn&apos;t available.</Text>
+              <Text style={styles.missing}>{t("tradeEdit.unavailable")}</Text>
             </View>
           </>
         ) : (
-          <EditForm trade={trade} />
+          <EditForm
+            trade={trade}
+            uid={uid}
+            contact={contactSourceFromProfile(profile)}
+          />
         )}
       </SafeAreaView>
     </ScreenBackground>

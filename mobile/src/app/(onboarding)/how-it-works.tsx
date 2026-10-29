@@ -26,78 +26,41 @@ import {
 } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { useAppStore } from "@/store/use-app-store";
+import { useT } from "@/lib/i18n";
 
 type Step = {
-  title: string;
-  description: string;
+  id: "step1" | "step2" | "step3" | "step4";
   Icon: (props: IconProps) => React.JSX.Element;
 };
 
 const homeownerSteps: Step[] = [
-  {
-    title: "Submit a request",
-    description:
-      "Describe your project and add photos so the right specialists can find it.",
-    Icon: SubmitRequestIcon,
-  },
-  {
-    title: "Receive responses",
-    description:
-      "Local specialists review your project and send their proposals.",
-    Icon: ResponsesIcon,
-  },
-  {
-    title: "Choose your specialist",
-    description:
-      "Compare proposals, ratings and reviews, then hire with confidence.",
-    Icon: SelectSpecialistIcon,
-  },
-  {
-    title: "Job done",
-    description:
-      "Your project gets completed — everyone's happy. Leave a review to help your neighbors too.",
-    Icon: CheckIcon,
-  },
+  { id: "step1", Icon: SubmitRequestIcon },
+  { id: "step2", Icon: ResponsesIcon },
+  { id: "step3", Icon: SelectSpecialistIcon },
+  { id: "step4", Icon: CheckIcon },
 ];
 
 const contractorSteps: Step[] = [
-  {
-    title: "Create your profile",
-    description:
-      "Set up your trade, service area and portfolio so local clients can find you.",
-    Icon: HardHatIcon,
-  },
-  {
-    title: "Browse local projects",
-    description:
-      "Explore active job requests from homeowners across Massachusetts and Connecticut.",
-    Icon: BrowseJobsIcon,
-  },
-  {
-    title: "Send your proposals",
-    description:
-      "Submit competitive quotes and message clients directly. Never pay for a lead.",
-    Icon: SendIcon,
-  },
-  {
-    title: "Complete work & earn reviews",
-    description:
-      "Finish the job, get paid, and build the platform rating that wins your next one.",
-    Icon: ReviewIcon,
-  },
+  { id: "step1", Icon: HardHatIcon },
+  { id: "step2", Icon: BrowseJobsIcon },
+  { id: "step3", Icon: SendIcon },
+  { id: "step4", Icon: ReviewIcon },
 ];
 
 function StepRow({
   step,
+  audience,
   index,
   isLast,
 }: {
   step: Step;
+  audience: "homeowner" | "contractor";
   index: number;
   isLast: boolean;
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const { Icon } = step;
 
   return (
@@ -116,9 +79,13 @@ function StepRow({
           <Text style={styles.stepNumber}>
             {String(index + 1).padStart(2, "0")}
           </Text>
-          <Text style={styles.title}>{step.title}</Text>
+          <Text style={styles.title}>
+            {t(`onboarding.howItWorks.${audience}.${step.id}.title`)}
+          </Text>
         </View>
-        <Text style={styles.description}>{step.description}</Text>
+        <Text style={styles.description}>
+          {t(`onboarding.howItWorks.${audience}.${step.id}.description`)}
+        </Text>
       </View>
     </Animated.View>
   );
@@ -126,9 +93,11 @@ function StepRow({
 
 export default function HowItWorksScreen() {
   const styles = useStyles();
+  const { t } = useT();
   const role = useAppStore((state) => state.role);
   const isContractor = role === "contractor";
   const steps = isContractor ? contractorSteps : homeownerSteps;
+  const audience = isContractor ? "contractor" : "homeowner";
 
   useEffect(() => {
     analyticsEvents.onboardingHowItWorksViewed({ role });
@@ -141,7 +110,7 @@ export default function HowItWorksScreen() {
       centerContent={false}
       footer={
         <PrimaryButton
-          label="Next"
+          label={t("common.next")}
           onPress={() => {
             analyticsEvents.onboardingHowItWorksContinueTapped({ role });
             router.push("/rewards");
@@ -151,23 +120,16 @@ export default function HowItWorksScreen() {
     >
       <View>
         <ScreenHeading
-          eyebrow="How it works"
-          title={
-            isContractor
-              ? "Find local work, grow your business"
-              : "Post a request, get the work done"
-          }
-          body={
-            isContractor
-              ? "A clear path from your profile to paid, reviewed jobs — no lead fees, ever."
-              : "A simple, transparent process — from your first request to a finished project."
-          }
+          eyebrow={t("onboarding.howItWorks.eyebrow")}
+          title={t(`onboarding.howItWorks.${audience}.title`)}
+          body={t(`onboarding.howItWorks.${audience}.body`)}
         />
         <View style={styles.steps}>
           {steps.map((step, index) => (
             <StepRow
-              key={step.title}
+              key={step.id}
               step={step}
+              audience={audience}
               index={index}
               isLast={index === steps.length - 1}
             />

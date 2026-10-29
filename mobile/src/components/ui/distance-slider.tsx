@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 
 import { Brand, Radius, Spacing, makeStyles } from "@/constants/theme";
 import { tickFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 
 type DistanceSliderProps = {
   value: number;
@@ -21,9 +22,11 @@ export function DistanceSlider({
   max,
   step,
   onChange,
-  label = "Distance from location (miles)",
+  label,
 }: DistanceSliderProps) {
   const styles = useStyles();
+  const { t } = useT();
+  const shownLabel = label ?? t("ui.distanceLabel");
   const [trackWidth, setTrackWidth] = useState(0);
 
   const update = (x: number) => {
@@ -44,9 +47,11 @@ export function DistanceSlider({
   return (
     <View style={styles.wrap}>
       <View style={styles.labelRow}>
-        <Text style={styles.label}>{label}</Text>
+        <Text style={styles.label}>{shownLabel}</Text>
         <View style={styles.bubble}>
-          <Text style={styles.bubbleText}>{value} miles</Text>
+          <Text style={styles.bubbleText}>
+            {t("trade.sections.miles", { count: value })}
+          </Text>
         </View>
       </View>
       <View

@@ -17,10 +17,19 @@ import {
   budgetLabel,
   startLabel,
 } from "@/constants/project-request";
-import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
 import { timeAgo } from "@/lib/format";
 import { formatMiles } from "@/lib/geo";
+import { useT } from "@/lib/i18n";
 import type { ProjectDetail } from "@/lib/projects";
+
+import { stateCode } from "@/constants/us-states";
 
 export type CardBadge = { label: string; tint: string; bg: string };
 
@@ -35,6 +44,13 @@ export function shortPlace(placeName: string): string {
   const state = parts[parts.length - 1].replace(/\s*\d.*$/, "");
   const city = parts[parts.length - 2];
   return state ? `${city}, ${state}` : city;
+}
+
+export function compactPlace(placeName: string): string {
+  const parts = shortPlace(placeName).split(", ");
+  if (parts.length < 2) return parts[0] ?? "";
+  const state = parts.pop() ?? "";
+  return [...parts, stateCode(state)].join(", ");
 }
 
 function CoverPhoto({ photos }: { photos: string[] }) {
@@ -108,20 +124,21 @@ export function ProjectCard({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const place = project.placeName ? shortPlace(project.placeName) : "";
   const miles = formatMiles(distance ?? null);
   const placeLine = [place, miles].filter(Boolean).join(" · ");
-  const start = startLabel(project.startType, project.start, project.end);
+  const start = startLabel(project.startType, project.start, project.end, t);
   const bestTime = project.contactPreferences
-    ? bestTimeLabel(project.contactPreferences.bestTime)
+    ? bestTimeLabel(project.contactPreferences.bestTime, t)
     : "";
-  const posted = timeAgo(project.createdAt);
-  const budget = budgetLabel(project.budget);
-  const responses = `${project.responseCount} ${project.responseCount === 1 ? "response" : "responses"}`;
+  const posted = timeAgo(project.createdAt, t);
+  const budget = budgetLabel(project.budget, t);
+  const responses = t("project.responses", { count: project.responseCount });
   const iconColor = colors.textSecondary;
 
   return (
-    <PressableScale accessibilityLabel={project.title} onPress={onPress}>
+    <PressableScale accessibilityLabel={tx(project.title)} onPress={onPress}>
       <View style={[styles.card, highlighted && styles.cardHighlighted]}>
         <View style={styles.topRow}>
           <View style={styles.metaRow}>
@@ -147,7 +164,7 @@ export function ProjectCard({
           {onMore ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="More actions"
+              accessibilityLabel={t("project.moreActions")}
               hitSlop={8}
               onPress={onMore}
               style={({ pressed }) => [
@@ -164,12 +181,12 @@ export function ProjectCard({
           <CoverPhoto photos={project.photos} />
           <View style={styles.headerText}>
             <Text style={styles.title} numberOfLines={2}>
-              {project.title}
+              {tx(project.title)}
             </Text>
             {project.specialtyLabel &&
             project.specialtyLabel !== project.title ? (
               <Text style={styles.specialty} numberOfLines={1}>
-                {project.specialtyLabel}
+                {tx(project.specialtyLabel)}
               </Text>
             ) : null}
             {placeLine ? (
@@ -194,14 +211,14 @@ export function ProjectCard({
             {start ? (
               <InfoRow
                 icon={<CalendarIcon size={15} color={iconColor} />}
-                label="Start"
+                label={t("project.startLabel")}
                 value={start}
               />
             ) : null}
             {bestTime ? (
               <InfoRow
                 icon={<ClockIcon size={15} color={iconColor} />}
-                label="Best time"
+                label={t("project.bestTime")}
                 value={bestTime}
               />
             ) : null}
@@ -213,9 +230,11 @@ export function ProjectCard({
             <View style={styles.stat}>
               <View style={styles.statLabelRow}>
                 <WalletIcon size={14} color={iconColor} />
-                <Text style={styles.statLabel}>Budget</Text>
+                <Text style={styles.statLabel}>{t("project.budget")}</Text>
               </View>
-              <Text style={styles.statValue}>{budget || "Open to quotes"}</Text>
+              <Text style={styles.statValue}>
+                {budget || t("project.openToQuotes")}
+              </Text>
             </View>
             {showResponses ? (
               <>
@@ -223,7 +242,9 @@ export function ProjectCard({
                 <View style={styles.stat}>
                   <View style={styles.statLabelRow}>
                     <ResponsesIcon size={14} color={iconColor} />
-                    <Text style={styles.statLabel}>Responses</Text>
+                    <Text style={styles.statLabel}>
+                      {t("project.responsesLabel")}
+                    </Text>
                   </View>
                   <Text style={styles.statValue}>{responses}</Text>
                 </View>
@@ -236,9 +257,7 @@ export function ProjectCard({
           <View style={styles.likesRow}>
             <HeartIcon size={15} color={colors.accent} filled />
             <Text style={styles.likesText}>
-              {likeCount}{" "}
-              {likeCount === 1 ? "contractor likes" : "contractors like"} your
-              request
+              {t("project.likes", { count: likeCount })}
             </Text>
           </View>
         ) : null}

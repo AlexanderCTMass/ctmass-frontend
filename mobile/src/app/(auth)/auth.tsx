@@ -35,14 +35,10 @@ import {
 } from "@/lib/analytics-events";
 import { GoogleSignInCancelledError } from "@/lib/firebase";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
 import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
-
-const roleLabel: Record<string, string> = {
-  homeowner: "Homeowner",
-  contractor: "Contractor",
-};
 
 type Pending = "google" | "apple" | null;
 
@@ -53,6 +49,7 @@ const WEB_BASE_URL =
 export default function AuthScreen() {
   const { gradients } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const role = useAppStore((state) => state.role);
   const resetOnboarding = useAppStore((state) => state.resetOnboarding);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -113,9 +110,7 @@ export default function AuthScreen() {
           method: "google",
           error_message: errorMessage(error),
         });
-        setNotice(
-          error instanceof Error ? error.message : "Something went wrong.",
-        );
+        setNotice(t("auth.failed"));
       }
     } finally {
       setPending(null);
@@ -142,19 +137,17 @@ export default function AuthScreen() {
           method: "apple",
           error_message: errorMessage(error),
         });
-        setNotice(
-          error instanceof Error ? error.message : "Something went wrong.",
-        );
+        setNotice(t("auth.failed"));
       }
     } finally {
       setPending(null);
     }
   };
 
-  const openLegal = (path: string, title: string) => {
+  const openLegal = (path: string, document: string, title: string) => {
     tapFeedback();
     analyticsEvents.legalDocumentOpened({
-      document: title,
+      document,
       screen: currentScreen(),
     });
     router.push(
@@ -191,13 +184,15 @@ export default function AuthScreen() {
               style={styles.header}
             >
               <BrandLogo size={76} />
-              <Text style={styles.title}>Sign in to CTMASS</Text>
-              <Text style={styles.subtitle}>
-                One free account for projects, proposals and CTMASS Coins.
-              </Text>
+              <Text style={styles.title}>{t("auth.title")}</Text>
+              <Text style={styles.subtitle}>{t("auth.subtitle")}</Text>
               {role ? (
                 <View style={styles.roleChip}>
-                  <Text style={styles.roleChipText}>{roleLabel[role]}</Text>
+                  <Text style={styles.roleChipText}>
+                    {role === "contractor"
+                      ? t("common.roles.contractor")
+                      : t("common.roles.homeowner")}
+                  </Text>
                 </View>
               ) : null}
             </Animated.View>
@@ -207,7 +202,7 @@ export default function AuthScreen() {
               style={styles.form}
             >
               <PressableScale
-                accessibilityLabel="Continue with Google"
+                accessibilityLabel={t("auth.google")}
                 onPress={() => void handleGoogle()}
                 disabled={pending !== null}
               >
@@ -217,9 +212,7 @@ export default function AuthScreen() {
                   ) : (
                     <>
                       <GoogleIcon size={20} />
-                      <Text style={styles.googleText}>
-                        Continue with Google
-                      </Text>
+                      <Text style={styles.googleText}>{t("auth.google")}</Text>
                     </>
                   )}
                 </View>
@@ -227,7 +220,7 @@ export default function AuthScreen() {
 
               {appleAvailable ? (
                 <PressableScale
-                  accessibilityLabel="Continue with Apple"
+                  accessibilityLabel={t("auth.apple")}
                   onPress={() => void handleApple()}
                   disabled={pending !== null}
                 >
@@ -237,36 +230,41 @@ export default function AuthScreen() {
                     ) : (
                       <>
                         <AppleIcon size={19} color="#FFFFFF" />
-                        <Text style={styles.appleText}>
-                          Continue with Apple
-                        </Text>
+                        <Text style={styles.appleText}>{t("auth.apple")}</Text>
                       </>
                     )}
                   </View>
                 </PressableScale>
               ) : null}
 
-              <Text style={styles.legal}>
-                By continuing you agree to CTMASS&apos;s Terms and Privacy
-                Policy.
-              </Text>
+              <Text style={styles.legal}>{t("auth.legal")}</Text>
               <View style={styles.legalLinks}>
                 <Pressable
                   accessibilityRole="link"
                   hitSlop={8}
                   onPress={() =>
-                    openLegal("/terms-and-conditions", "Terms of Service")
+                    openLegal(
+                      "/terms-and-conditions",
+                      "Terms of Service",
+                      t("auth.terms"),
+                    )
                   }
                 >
-                  <Text style={styles.legalLink}>Terms of Service</Text>
+                  <Text style={styles.legalLink}>{t("auth.terms")}</Text>
                 </Pressable>
                 <Text style={styles.legalDot}>·</Text>
                 <Pressable
                   accessibilityRole="link"
                   hitSlop={8}
-                  onPress={() => openLegal("/privacy-policy", "Privacy Policy")}
+                  onPress={() =>
+                    openLegal(
+                      "/privacy-policy",
+                      "Privacy Policy",
+                      t("auth.privacy"),
+                    )
+                  }
                 >
-                  <Text style={styles.legalLink}>Privacy Policy</Text>
+                  <Text style={styles.legalLink}>{t("auth.privacy")}</Text>
                 </Pressable>
               </View>
             </Animated.View>

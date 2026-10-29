@@ -8,6 +8,7 @@ import {
   useTheme,
 } from "@/constants/theme";
 import { tickFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 
 export type FeedTab<K extends string> = {
   key: K;
@@ -78,10 +79,11 @@ export function SortChip({
   onPress: () => void;
 }) {
   const styles = useStyles();
+  const { t } = useT();
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Sort: ${label}`}
+      accessibilityLabel={t("ui.sortA11y", { label })}
       hitSlop={6}
       onPress={() => {
         tickFeedback();

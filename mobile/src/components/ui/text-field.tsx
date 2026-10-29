@@ -1,6 +1,7 @@
 import { Text, TextInput, View } from "react-native";
 
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { translateKey, useT } from "@/lib/i18n";
 
 export type TextFieldProps = {
   label: string;
@@ -29,6 +30,7 @@ export function TextField({
 }: TextFieldProps) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   return (
     <View style={styles.wrap}>
       <Text style={styles.label}>{label}</Text>
@@ -48,7 +50,7 @@ export function TextField({
         ]}
       />
       {error ? (
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={styles.errorText}>{translateKey(t, error)}</Text>
       ) : hint ? (
         <Text style={styles.hint}>{hint}</Text>
       ) : null}

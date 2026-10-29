@@ -11,12 +11,14 @@ import {
 import { useTheme } from "@/constants/theme";
 import { analyticsEvents, currentScreen } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { setPushNavigationReady } from "@/lib/push-routing";
 import { usePartnerAdsSync } from "@/queries/use-partner-ads";
 import { useShopFeatures } from "@/queries/use-shop";
 
 export default function TabsLayout() {
   const { colors } = useTheme();
+  const { t } = useT();
   usePartnerAdsSync();
   useShopFeatures();
 
@@ -69,7 +71,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
+          title: t("tabs.home"),
           tabBarIcon: ({ color, size }) => (
             <HomeIcon size={size} color={color as string} />
           ),
@@ -78,7 +80,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="chats"
         options={{
-          title: "Chats",
+          title: t("tabs.chats"),
           tabBarIcon: ({ color, size }) => (
             <ResponsesIcon size={size} color={color as string} />
           ),
@@ -87,7 +89,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="shop"
         options={{
-          title: "Shop",
+          title: t("tabs.shop"),
           tabBarIcon: ({ color, size }) => (
             <ShopIcon size={size} color={color as string} />
           ),
@@ -96,7 +98,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: t("tabs.profile"),
           tabBarIcon: ({ color, size }) => (
             <UserIcon size={size} color={color as string} />
           ),

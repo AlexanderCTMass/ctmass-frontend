@@ -3,17 +3,24 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { CheckIcon } from "@/components/icons";
 import {
   type CompareRanks,
-  TierPill,
   useCompareColors,
 } from "@/components/compare/compare-card";
 import { ToggleRow } from "@/components/trade/form-parts";
+import { TierPill } from "@/components/trade/tier-badge";
 import { Avatar } from "@/components/ui/avatar";
-import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
 import {
   type CompareRow,
   isMutedValue,
   leadsCount,
 } from "@/lib/compare-metrics";
+import { useT } from "@/lib/i18n";
 import type { Specialist } from "@/lib/trades";
 
 function ColumnHead({
@@ -30,6 +37,7 @@ function ColumnHead({
   onOpen: () => void;
 }) {
   const styles = useStyles();
+  const { t } = useT();
   const { colors } = useTheme();
   const lead = leadsCount(trade, other);
   const ahead = lead.total > 0 && lead.wins * 2 > lead.total;
@@ -37,7 +45,11 @@ function ColumnHead({
     <View style={[styles.head, ahead && styles.headAhead]}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={canSwap ? `Swap ${trade.name} for another contractor` : `Open ${trade.name}`}
+        accessibilityLabel={
+          canSwap
+            ? t("compare.swapA11y", { name: trade.name })
+            : t("compare.openA11y", { name: trade.name })
+        }
         onPress={canSwap ? onSwap : onOpen}
         style={styles.headTap}
       >
@@ -48,12 +60,17 @@ function ColumnHead({
         <TierPill years={trade.details.experienceYears} small />
       </Pressable>
       {lead.total > 0 ? (
-        <Text style={[styles.lead, { color: ahead ? colors.accent : colors.textSecondary }]}>
-          Leads in {lead.wins} of {lead.total}
+        <Text
+          style={[
+            styles.lead,
+            { color: ahead ? colors.accent : colors.textSecondary },
+          ]}
+        >
+          {t("compare.leadsIn", { wins: lead.wins, total: lead.total })}
         </Text>
       ) : null}
       <Pressable accessibilityRole="button" hitSlop={8} onPress={onOpen}>
-        <Text style={styles.view}>View trade</Text>
+        <Text style={styles.view}>{t("compare.viewTrade")}</Text>
       </Pressable>
     </View>
   );
@@ -85,6 +102,7 @@ export function HeadToHead({
   onQuote: (trade: Specialist) => void;
 }) {
   const styles = useStyles();
+  const { t } = useT();
   const tones = useCompareColors();
   const pair = [left, right];
 
@@ -110,38 +128,44 @@ export function HeadToHead({
             onOpen={() => onOpen(right)}
           />
           <View pointerEvents="none" style={styles.vs}>
-            <Text style={styles.vsText}>VS</Text>
+            <Text style={styles.vsText}>{t("compare.vs")}</Text>
           </View>
         </View>
 
         {canSwap ? (
-          <Text style={styles.hint}>Tap a face to swap who you compare</Text>
+          <Text style={styles.hint}>{t("compare.swapHint")}</Text>
         ) : null}
 
         <ToggleRow
-          label="Differences only"
+          label={t("compare.differencesOnly")}
           value={differencesOnly}
           onChange={onDifferencesChange}
         />
 
         <View style={styles.table}>
           {rows.length === 0 ? (
-            <Text style={styles.same}>These two look the same on every detail.</Text>
+            <Text style={styles.same}>{t("compare.same")}</Text>
           ) : (
             rows.map((row, index) => {
               const ranked = row.metric ? ranks[row.metric] : null;
               return (
-                <View key={row.key} style={[styles.row, index > 0 && styles.rowBorder]}>
-                  <Text style={styles.rowLabel}>{row.label}</Text>
+                <View
+                  key={row.key}
+                  style={[styles.row, index > 0 && styles.rowBorder]}
+                >
+                  <Text style={styles.rowLabel}>{row.label(t)}</Text>
                   <View style={styles.cells}>
                     {pair.map((trade) => {
-                      const value = row.value(trade, distanceTo(trade));
+                      const value = row.value(trade, distanceTo(trade), t);
                       const win = ranked?.get(trade.tradeId)?.best === true;
-                      const muted = isMutedValue(value);
+                      const muted = isMutedValue(value, t);
                       return (
                         <View
                           key={trade.tradeId}
-                          style={[styles.cell, win && { backgroundColor: tones.winBackground }]}
+                          style={[
+                            styles.cell,
+                            win && { backgroundColor: tones.winBackground },
+                          ]}
                         >
                           <Text
                             style={[
@@ -154,7 +178,11 @@ export function HeadToHead({
                             {value}
                           </Text>
                           {win ? (
-                            <CheckIcon size={14} color={tones.winText} strokeWidth={3} />
+                            <CheckIcon
+                              size={14}
+                              color={tones.winText}
+                              strokeWidth={3}
+                            />
                           ) : null}
                         </View>
                       );
@@ -166,11 +194,7 @@ export function HeadToHead({
           )}
         </View>
 
-        <Text style={styles.note}>
-          All details are provided by contractors. CTMASS does not verify
-          licenses, insurance or prices. Rates with a different basis
-          (tech-hour, crew-hour, visit) are not directly comparable.
-        </Text>
+        <Text style={styles.note}>{t("compare.note")}</Text>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -186,10 +210,15 @@ export function HeadToHead({
             ]}
           >
             <Text
-              style={[styles.quoteText, index === 0 ? styles.quoteTextPrimary : styles.quoteTextSecondary]}
+              style={[
+                styles.quoteText,
+                index === 0
+                  ? styles.quoteTextPrimary
+                  : styles.quoteTextSecondary,
+              ]}
               numberOfLines={1}
             >
-              Quote {trade.name.split(" ")[0]}
+              {t("compare.quoteName", { name: trade.name.split(" ")[0] })}
             </Text>
           </Pressable>
         ))}

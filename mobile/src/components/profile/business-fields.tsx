@@ -16,15 +16,19 @@ import {
   CREW_SIZES,
   LANGUAGES,
   PAYMENT_METHODS,
-  PREFERRED_CONTACTS,
-  type PreferredContact,
 } from "@/constants/trade-options";
+import {
+  CONTACT_METHODS,
+  type ContactMethod,
+} from "@/constants/project-request";
 import { makeStyles } from "@/constants/theme";
 import {
   type BusinessDetails,
   type ContactSettings,
+  contactSettingsPayload,
   normalizeWebsite,
 } from "@/lib/business-profile";
+import { useT } from "@/lib/i18n";
 
 const currentYear = new Date().getFullYear();
 
@@ -38,7 +42,7 @@ export const businessFieldsSchema = z.object({
     .refine(
       (value) =>
         value === "" || (Number(value) >= 1900 && Number(value) <= currentYear),
-      `Enter a year between 1900 and ${currentYear}.`,
+      "business.errors.year",
     ),
   languages: z.array(z.string()),
   website: z
@@ -46,13 +50,14 @@ export const businessFieldsSchema = z.object({
     .trim()
     .refine(
       (value) =>
-        value === "" || /^(https?:\/\/)?[\w-]+(\.[\w-]+)+(\/\S*)?$/i.test(value),
-      "Enter a valid website, e.g. example.com",
+        value === "" ||
+        /^(https?:\/\/)?[\w-]+(\.[\w-]+)+(\/\S*)?$/i.test(value),
+      "business.errors.website",
     ),
   paymentMethods: z.array(z.string()),
   showPhone: z.boolean(),
   showEmail: z.boolean(),
-  preferredContact: z.string(),
+  contactMethods: z.array(z.string()).min(1, "business.errors.contactMethods"),
 });
 
 export type BusinessFieldValues = z.infer<typeof businessFieldsSchema>;
@@ -72,7 +77,7 @@ export function businessDefaults(
     paymentMethods: business?.paymentMethods ?? [],
     showPhone: contact?.showPhone ?? true,
     showEmail: contact?.showEmail ?? false,
-    preferredContact: contact?.preferred ?? "message",
+    contactMethods: contact?.methods ?? ["app"],
   };
 }
 
@@ -91,11 +96,10 @@ export function businessFromValues(values: BusinessFieldValues): {
       website: normalizeWebsite(values.website),
       paymentMethods: values.paymentMethods,
     },
-    contactSettings: {
-      showPhone: values.showPhone,
-      showEmail: values.showEmail,
-      preferred: (values.preferredContact || "message") as PreferredContact,
-    },
+    contactSettings: contactSettingsPayload(
+      values.contactMethods as ContactMethod[],
+      { showPhone: values.showPhone, showEmail: values.showEmail },
+    ),
   };
 }
 
@@ -113,48 +117,66 @@ export function BusinessDetailsFields<T extends BusinessFieldValues>({
   const control = rawControl as unknown as Control<BusinessFieldValues>;
   const errors = rawErrors as FieldErrors<BusinessFieldValues>;
   const styles = useStyles();
+  const { t } = useT();
   return (
     <View>
-      <Text style={styles.note}>
-        Shared by all your trades. Experience is set separately in each trade.
-      </Text>
-      <FormSection label="Your role" optional>
+      <Text style={styles.note}>{t("business.note")}</Text>
+      <FormSection label={t("business.role")} optional>
         <Controller
           control={control}
           name="businessRole"
           render={({ field: { value, onChange } }) => (
-            <ChoiceChips options={BUSINESS_ROLES} value={value} onChange={onChange} allowClear />
+            <ChoiceChips
+              options={BUSINESS_ROLES}
+              value={value}
+              onChange={onChange}
+              allowClear
+            />
           )}
         />
       </FormSection>
-      <FormSection label="Business structure" optional>
+      <FormSection label={t("trade.sections.structure")} optional>
         <Controller
           control={control}
           name="structure"
           render={({ field: { value, onChange } }) => (
-            <ChoiceChips options={BUSINESS_STRUCTURES} value={value} onChange={onChange} allowClear />
+            <ChoiceChips
+              options={BUSINESS_STRUCTURES}
+              value={value}
+              onChange={onChange}
+              allowClear
+            />
           )}
         />
       </FormSection>
-      <FormSection label="Crew size" optional>
+      <FormSection label={t("trade.sections.crewSize")} optional>
         <Controller
           control={control}
           name="crewSize"
           render={({ field: { value, onChange } }) => (
-            <ChoiceChips options={CREW_SIZES} value={value} onChange={onChange} allowClear />
+            <ChoiceChips
+              options={CREW_SIZES}
+              value={value}
+              onChange={onChange}
+              allowClear
+            />
           )}
         />
         <Controller
           control={control}
           name="usesSubcontractors"
           render={({ field: { value, onChange } }) => (
-            <ToggleRow label="I work with subcontractors when needed" value={value} onChange={onChange} />
+            <ToggleRow
+              label={t("business.subcontractors")}
+              value={value}
+              onChange={onChange}
+            />
           )}
         />
       </FormSection>
       <FormSection
-        label="Year founded"
-        hint="Years in business are shown separately from trade experience."
+        label={t("business.founded")}
+        hint={t("business.foundedHint")}
         error={errors.foundedYear?.message}
         optional
       >
@@ -166,31 +188,45 @@ export function BusinessDetailsFields<T extends BusinessFieldValues>({
               value={value}
               onChangeText={(next) => onChange(digitsOnly(next, 4))}
               onBlur={onBlur}
-              placeholder={`e.g. ${currentYear - 6}`}
+              placeholder={t("tradeForm.example", {
+                value: String(currentYear - 6),
+              })}
               keyboardType="number-pad"
             />
           )}
         />
       </FormSection>
-      <FormSection label="Languages you speak with customers" optional>
+      <FormSection label={t("business.languages")} optional>
         <Controller
           control={control}
           name="languages"
           render={({ field: { value, onChange } }) => (
-            <MultiChips options={languageOptions} value={value} onChange={onChange} />
+            <MultiChips
+              options={languageOptions}
+              value={value}
+              onChange={onChange}
+            />
           )}
         />
       </FormSection>
-      <FormSection label="Payment methods" optional>
+      <FormSection label={t("trade.sections.paymentMethods")} optional>
         <Controller
           control={control}
           name="paymentMethods"
           render={({ field: { value, onChange } }) => (
-            <MultiChips options={PAYMENT_METHODS} value={value} onChange={onChange} />
+            <MultiChips
+              options={PAYMENT_METHODS}
+              value={value}
+              onChange={onChange}
+            />
           )}
         />
       </FormSection>
-      <FormSection label="Website" error={errors.website?.message} optional>
+      <FormSection
+        label={t("trade.sections.website")}
+        error={errors.website?.message}
+        optional
+      >
         <Controller
           control={control}
           name="website"
@@ -217,6 +253,7 @@ export function ContactVisibilityFields<T extends BusinessFieldValues>({
 }: Props<T>) {
   const control = rawControl as unknown as Control<BusinessFieldValues>;
   const errors = rawErrors as FieldErrors<BusinessFieldValues>;
+  const { t } = useT();
   return (
     <View>
       <Controller
@@ -224,8 +261,8 @@ export function ContactVisibilityFields<T extends BusinessFieldValues>({
         name="showPhone"
         render={({ field: { value, onChange } }) => (
           <ToggleRow
-            label="Show my phone on my trades"
-            hint="Homeowners get a Call button. CTMASS messages are always on."
+            label={t("business.showPhone")}
+            hint={t("business.showPhoneHint")}
             value={value}
             onChange={onChange}
           />
@@ -235,18 +272,26 @@ export function ContactVisibilityFields<T extends BusinessFieldValues>({
         control={control}
         name="showEmail"
         render={({ field: { value, onChange } }) => (
-          <ToggleRow label="Show my email on my trades" value={value} onChange={onChange} />
+          <ToggleRow
+            label={t("business.showEmail")}
+            value={value}
+            onChange={onChange}
+          />
         )}
       />
-      <FormSection label="Preferred contact" error={errors.preferredContact?.message}>
+      <FormSection
+        label={t("trade.sections.preferredContact")}
+        hint={t("business.contactMethodsHint")}
+        error={errors.contactMethods?.message}
+      >
         <Controller
           control={control}
-          name="preferredContact"
+          name="contactMethods"
           render={({ field: { value, onChange } }) => (
-            <ChoiceChips
-              options={PREFERRED_CONTACTS}
+            <MultiChips
+              options={CONTACT_METHODS}
               value={value}
-              onChange={(next) => next && onChange(next)}
+              onChange={onChange}
             />
           )}
         />

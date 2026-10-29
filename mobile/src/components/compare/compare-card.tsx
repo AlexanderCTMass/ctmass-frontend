@@ -3,16 +3,18 @@ import { Pressable, Text, View } from "react-native";
 
 import { CheckIcon, TradeGroupIcon } from "@/components/icons";
 import { shortPlace } from "@/components/project/project-card";
+import { TierPill } from "@/components/trade/tier-badge";
 import { Avatar } from "@/components/ui/avatar";
-import { tierBadgeLabel, tierFor } from "@/constants/trade-options";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import {
   CARD_ROWS,
   type MetricKey,
   type MetricRank,
   isMutedValue,
+  rankLabelText,
 } from "@/lib/compare-metrics";
 import { formatMiles } from "@/lib/geo";
+import { useT } from "@/lib/i18n";
 import type { Specialist } from "@/lib/trades";
 
 export type CompareRanks = Record<MetricKey, Map<string, MetricRank>>;
@@ -24,19 +26,6 @@ export function useCompareColors() {
     winText: colors.accent,
     neutralBackground: colors.track,
   };
-}
-
-export function TierPill({ years, small = false }: { years: number | null; small?: boolean }) {
-  const styles = useStyles();
-  if (years === null) return null;
-  const tier = tierFor(years);
-  return (
-    <View style={[styles.tierPill, small && styles.tierPillSmall, { backgroundColor: tier.color }]}>
-      <Text style={[styles.tierText, small && styles.tierTextSmall]} numberOfLines={1}>
-        {tierBadgeLabel(years)}
-      </Text>
-    </View>
-  );
 }
 
 export function CompareCard({
@@ -59,10 +48,11 @@ export function CompareCard({
   onOpen: () => void;
 }) {
   const styles = useStyles();
+  const { t, tx } = useT();
   const { colors } = useTheme();
   const tones = useCompareColors();
   const place = trade.placeName ? shortPlace(trade.placeName) : "";
-  const meta = [trade.specialtyLabel, place, formatMiles(distance)]
+  const meta = [tx(trade.specialtyLabel), place, formatMiles(distance)]
     .filter(Boolean)
     .join(" · ");
 
@@ -86,7 +76,7 @@ export function CompareCard({
         )}
         <View style={styles.counter}>
           <Text style={styles.counterText}>
-            {position} of {total}
+            {t("compare.position", { position, total })}
           </Text>
         </View>
         <View style={styles.avatarRing}>
@@ -109,25 +99,33 @@ export function CompareCard({
             <>
               ★ {trade.rating.toFixed(1)}{" "}
               <Text style={styles.ratingCount}>
-                ({trade.reviews} {trade.reviews === 1 ? "review" : "reviews"})
+                ({t("compare.reviews", { count: trade.reviews })})
               </Text>
             </>
           ) : (
-            <Text style={styles.ratingCount}>New on CTMASS</Text>
+            <Text style={styles.ratingCount}>
+              {t("compare.values.newOnCtmass")}
+            </Text>
           )}
         </Text>
       </View>
 
       <View style={styles.rows}>
         {CARD_ROWS.map((row) => {
-          const value = row.value(trade, distance);
-          const rank = row.metric ? ranks[row.metric].get(trade.tradeId) : undefined;
-          const muted = isMutedValue(value);
-          const booleanMetric = row.metric === "license" || row.metric === "insurance";
+          const value = row.value(trade, distance, t);
+          const rank = row.metric
+            ? ranks[row.metric].get(trade.tradeId)
+            : undefined;
+          const muted = isMutedValue(value, t);
+          const booleanMetric =
+            row.metric === "license" || row.metric === "insurance";
           return (
-            <View key={row.key} style={[styles.row, compact && styles.rowCompact]}>
+            <View
+              key={row.key}
+              style={[styles.row, compact && styles.rowCompact]}
+            >
               <Text style={styles.rowLabel} numberOfLines={1}>
-                {row.label}
+                {row.label(t)}
               </Text>
               <Text
                 style={[styles.rowValue, muted && styles.rowMuted]}
@@ -151,10 +149,12 @@ export function CompareCard({
                   <Text
                     style={[
                       styles.chipText,
-                      { color: rank.best ? tones.winText : colors.textSecondary },
+                      {
+                        color: rank.best ? tones.winText : colors.textSecondary,
+                      },
                     ]}
                   >
-                    {rank.label}
+                    {rankLabelText(rank.label, t)}
                   </Text>
                 </View>
               ) : null}
@@ -165,12 +165,12 @@ export function CompareCard({
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`See all details for ${trade.name}`}
+        accessibilityLabel={t("compare.seeAllDetailsFor", { name: trade.name })}
         hitSlop={8}
         onPress={onOpen}
         style={styles.detailsLink}
       >
-        <Text style={styles.detailsText}>See all details</Text>
+        <Text style={styles.detailsText}>{t("compare.seeAllDetails")}</Text>
       </Pressable>
     </View>
   );
@@ -223,24 +223,6 @@ const useStyles = makeStyles((t) => ({
     position: "absolute",
     left: 92,
     bottom: 10,
-  },
-  tierPill: {
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: Radius.pill,
-  },
-  tierPillSmall: {
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  tierText: {
-    color: "#04170D",
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 0.4,
-  },
-  tierTextSmall: {
-    fontSize: 9.5,
   },
   identity: {
     paddingTop: 30,

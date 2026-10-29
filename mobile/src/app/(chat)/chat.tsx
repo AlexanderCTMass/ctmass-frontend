@@ -48,9 +48,11 @@ import {
   parseMessageBody,
   sendMessage,
   subscribeMessages,
+  translateChatText,
 } from "@/lib/chat";
 import { timeShort } from "@/lib/format";
 import { successFeedback, tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { choosePhoto } from "@/lib/media";
 import { type BlockState, fetchBlockState } from "@/lib/moderation";
 import { toHref } from "@/lib/navigation";
@@ -87,8 +89,11 @@ function MessageBubble({
   onOpenImage: (url: string) => void;
 }) {
   const styles = useStyles();
+  const { t, locale } = useT();
   const body = parseMessageBody(message.text, mine);
-  const copy = body.text ? () => onCopy(body.text) : undefined;
+  const shownText =
+    body.kind === "html" ? body.text : translateChatText(t, body.text);
+  const copy = body.text ? () => onCopy(shownText) : undefined;
   const longPress =
     mine && body.kind === "text" ? () => onManage(message) : copy;
 
@@ -96,13 +101,15 @@ function MessageBubble({
     return (
       <View style={styles.infoRow}>
         <Pressable
-          accessibilityHint="Long press to copy"
+          accessibilityHint={t("chat.longPressCopy")}
           delayLongPress={COPY_LONG_PRESS_MS}
           onLongPress={copy}
           style={styles.infoCard}
         >
-          <Text style={styles.infoText}>{body.text}</Text>
-          <Text style={styles.infoTime}>{timeShort(message.createdAt)}</Text>
+          <Text style={styles.infoText}>{shownText}</Text>
+          <Text style={styles.infoTime}>
+            {timeShort(message.createdAt, locale)}
+          </Text>
         </Pressable>
       </View>
     );
@@ -111,7 +118,7 @@ function MessageBubble({
   return (
     <View style={[styles.bubbleRow, mine ? styles.bubbleRowMine : null]}>
       <Pressable
-        accessibilityHint={longPress ? "Long press for options" : undefined}
+        accessibilityHint={longPress ? t("chat.longPressOptions") : undefined}
         delayLongPress={COPY_LONG_PRESS_MS}
         onLongPress={longPress}
         style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}
@@ -120,7 +127,7 @@ function MessageBubble({
           <Pressable
             key={attachment.url}
             accessibilityRole="imagebutton"
-            accessibilityLabel="Open photo"
+            accessibilityLabel={t("tradePage.openPhoto")}
             delayLongPress={COPY_LONG_PRESS_MS}
             onPress={() => onOpenImage(attachment.url)}
             onLongPress={longPress}
@@ -146,13 +153,13 @@ function MessageBubble({
                     {segment.text}
                   </Text>
                 ))
-              : body.text}
+              : shownText}
           </Text>
         ) : null}
         <View style={styles.metaRow}>
           <Text style={[styles.metaTime, mine ? styles.metaTimeMine : null]}>
-            {message.edited ? "edited · " : ""}
-            {timeShort(message.createdAt)}
+            {message.edited ? `${t("chat.edited")} · ` : ""}
+            {timeShort(message.createdAt, locale)}
           </Text>
           {mine ? (
             message.isRead ? (
@@ -174,6 +181,7 @@ function MessageBubble({
 export default function ChatThreadScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const params = useLocalSearchParams<{
     threadId?: string;
     peerName?: string;
@@ -356,7 +364,7 @@ export default function ChatThreadScreen() {
         action: "edit",
         error_message: errorMessage(error),
       });
-      Alert.alert("Couldn't save changes", "Please try again.");
+      Alert.alert(t("chat.saveFailed"), t("common.pleaseTryAgain"));
     } finally {
       setSending(false);
     }
@@ -374,37 +382,33 @@ export default function ChatThreadScreen() {
         action: "delete",
         error_message: errorMessage(error),
       });
-      Alert.alert("Couldn't delete message", "Please try again.");
+      Alert.alert(t("chat.deleteFailed"), t("common.pleaseTryAgain"));
     }
   };
 
   const confirmDelete = (target: ChatMessage) => {
-    Alert.alert(
-      "Delete this message?",
-      "It will be removed for everyone in this chat.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => void removeMessage(target),
-        },
-      ],
-    );
+    Alert.alert(t("chat.deleteTitle"), t("chat.deleteText"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("common.delete"),
+        style: "destructive",
+        onPress: () => void removeMessage(target),
+      },
+    ]);
   };
 
   const manageMessage = (target: ChatMessage) => {
     tapFeedback();
     const text = target.text.trim();
     Alert.alert(
-      "Message",
+      t("chat.message"),
       undefined,
       [
         ...(text
           ? [
-              { text: "Copy", onPress: () => copyMessage(text) },
+              { text: t("chat.copy"), onPress: () => copyMessage(text) },
               {
-                text: "Edit",
+                text: t("chat.edit"),
                 onPress: () => {
                   setEditing(target);
                   setDraft(text);
@@ -413,12 +417,12 @@ export default function ChatThreadScreen() {
             ]
           : []),
         {
-          text: "Delete",
+          text: t("common.delete"),
           style: "destructive" as const,
           onPress: () => confirmDelete(target),
         },
         ...(Platform.OS === "ios" || !text
-          ? [{ text: "Cancel", style: "cancel" as const }]
+          ? [{ text: t("common.cancel"), style: "cancel" as const }]
           : []),
       ],
       { cancelable: true },
@@ -506,7 +510,7 @@ export default function ChatThreadScreen() {
           />
           <View style={styles.uploadingRow}>
             <ActivityIndicator size="small" color="#04170D" />
-            <Text style={styles.uploadingText}>Sending…</Text>
+            <Text style={styles.uploadingText}>{t("invite.sending")}</Text>
           </View>
         </View>
       </View>
@@ -665,7 +669,7 @@ export default function ChatThreadScreen() {
           <Pressable
             style={styles.peerInfo}
             accessibilityRole="button"
-            accessibilityLabel="Open profile"
+            accessibilityLabel={t("chat.openProfile")}
             onPress={() => {
               if (!peer?.uid) return;
               analyticsEvents.chatPeerProfileOpened({
@@ -679,9 +683,13 @@ export default function ChatThreadScreen() {
               );
             }}
           >
-            <Avatar name={peer?.name ?? "Chat"} url={peer?.avatar} size={36} />
+            <Avatar
+              name={peer?.name ?? t("chat.chat")}
+              url={peer?.avatar}
+              size={36}
+            />
             <Text style={styles.peerName} numberOfLines={1}>
-              {peer?.name ?? "Chat"}
+              {peer?.name ?? t("chat.chat")}
             </Text>
           </Pressable>
         </View>
@@ -703,8 +711,7 @@ export default function ChatThreadScreen() {
                     <View style={styles.unreadDivider}>
                       <View style={styles.unreadLine} />
                       <Text style={styles.unreadText}>
-                        {unread.count} new{" "}
-                        {unread.count === 1 ? "message" : "messages"}
+                        {t("chat.newMessages", { count: unread.count })}
                       </Text>
                       <View style={styles.unreadLine} />
                     </View>
@@ -731,7 +738,7 @@ export default function ChatThreadScreen() {
           {copied ? (
             <View pointerEvents="none" style={styles.copiedWrap}>
               <View style={styles.copiedPill}>
-                <Text style={styles.copiedText}>Message copied</Text>
+                <Text style={styles.copiedText}>{t("chat.copied")}</Text>
               </View>
             </View>
           ) : null}
@@ -739,11 +746,10 @@ export default function ChatThreadScreen() {
           {justSelected ? (
             <View style={styles.selectedBanner}>
               <Text style={styles.selectedText}>
-                {peer?.name} is now your specialist. Coordinate the work right
-                here in chat.
+                {t("chat.nowYourSpecialist", { name: peer?.name ?? "" })}
               </Text>
               <PressableScale
-                accessibilityLabel="Got it"
+                accessibilityLabel={t("chat.gotIt")}
                 onPress={() => {
                   tapFeedback();
                   analyticsEvents.chatSelectedBannerDismissed({
@@ -753,7 +759,9 @@ export default function ChatThreadScreen() {
                 }}
               >
                 <View style={styles.selectedButton}>
-                  <Text style={styles.selectedButtonText}>Got it</Text>
+                  <Text style={styles.selectedButtonText}>
+                    {t("chat.gotIt")}
+                  </Text>
                 </View>
               </PressableScale>
               <Pressable
@@ -767,22 +775,24 @@ export default function ChatThreadScreen() {
                   router.navigate(toHref("/home"));
                 }}
               >
-                <Text style={styles.homeLink}>Back to home</Text>
+                <Text style={styles.homeLink}>{t("chat.backHome")}</Text>
               </Pressable>
             </View>
           ) : canSelect ? (
             <View style={styles.selectBanner}>
               <Text style={styles.selectText}>
-                Ready to select {peer?.name} for this project?
+                {t("chat.readyToSelect", { name: peer?.name ?? "" })}
               </Text>
               <PressableScale
-                accessibilityLabel="Confirm selection"
+                accessibilityLabel={t("chat.confirmSelection")}
                 onPress={() => void handleSelect()}
                 disabled={selecting}
               >
                 <View style={styles.selectButton}>
                   <Text style={styles.selectButtonText}>
-                    {selecting ? "Selecting…" : "Confirm selection"}
+                    {selecting
+                      ? t("chat.selecting")
+                      : t("chat.confirmSelection")}
                   </Text>
                 </View>
               </PressableScale>
@@ -794,18 +804,20 @@ export default function ChatThreadScreen() {
               <View style={styles.selectBanner}>
                 <Text style={styles.selectText}>
                   {project.completionRequested
-                    ? "Waiting for the customer to confirm completion."
-                    : "Finished the work? Mark this project as complete."}
+                    ? t("chat.waitingConfirm")
+                    : t("chat.finishedWork")}
                 </Text>
                 {!project.completionRequested ? (
                   <PressableScale
-                    accessibilityLabel="Mark as completed"
+                    accessibilityLabel={t("chat.markCompleted")}
                     onPress={() => void handleContractorComplete()}
                     disabled={completing}
                   >
                     <View style={styles.selectButton}>
                       <Text style={styles.selectButtonText}>
-                        {completing ? "Marking…" : "Mark as completed"}
+                        {completing
+                          ? t("chat.marking")
+                          : t("chat.markCompleted")}
                       </Text>
                     </View>
                   </PressableScale>
@@ -815,11 +827,13 @@ export default function ChatThreadScreen() {
               <View style={styles.selectBanner}>
                 <Text style={styles.selectText}>
                   {project.completionRequested
-                    ? `${peer?.name ?? "The specialist"} marked this complete. Confirm and leave a review.`
-                    : "Work finished? Complete the project and leave a review."}
+                    ? t("chat.markedComplete", {
+                        name: peer?.name ?? t("chat.theSpecialist"),
+                      })
+                    : t("chat.workFinished")}
                 </Text>
                 <PressableScale
-                  accessibilityLabel="Complete and review"
+                  accessibilityLabel={t("chat.completeReview")}
                   onPress={() => {
                     tapFeedback();
                     setReviewMode("customerComplete");
@@ -827,7 +841,7 @@ export default function ChatThreadScreen() {
                 >
                   <View style={styles.selectButton}>
                     <Text style={styles.selectButtonText}>
-                      Complete &amp; review
+                      {t("chat.completeReview")}
                     </Text>
                   </View>
                 </PressableScale>
@@ -837,10 +851,10 @@ export default function ChatThreadScreen() {
             isContractor && !project.contractorReviewed ? (
               <View style={styles.selectedBanner}>
                 <Text style={styles.selectedText}>
-                  Project completed. Leave a review for the client.
+                  {t("chat.projectCompletedReview")}
                 </Text>
                 <PressableScale
-                  accessibilityLabel="Review the client"
+                  accessibilityLabel={t("chat.reviewClient")}
                   onPress={() => {
                     tapFeedback();
                     setReviewMode("contractorReview");
@@ -848,14 +862,16 @@ export default function ChatThreadScreen() {
                 >
                   <View style={styles.selectedButton}>
                     <Text style={styles.selectedButtonText}>
-                      Review the client
+                      {t("chat.reviewClient")}
                     </Text>
                   </View>
                 </PressableScale>
               </View>
             ) : (
               <View style={styles.completedBanner}>
-                <Text style={styles.completedText}>✓ Project completed</Text>
+                <Text style={styles.completedText}>
+                  ✓ {t("chat.projectCompleted")}
+                </Text>
               </View>
             )
           ) : null}
@@ -863,9 +879,7 @@ export default function ChatThreadScreen() {
           {blocked ? (
             <View style={styles.blockedBar}>
               <Text style={styles.blockedText}>
-                {block.iBlocked
-                  ? "You blocked this user. Unblock from their profile to message again."
-                  : "You can't message this user."}
+                {block.iBlocked ? t("chat.youBlocked") : t("chat.cantMessage")}
               </Text>
             </View>
           ) : (
@@ -873,24 +887,24 @@ export default function ChatThreadScreen() {
               {editing ? (
                 <View style={styles.editBar}>
                   <View style={styles.editBody}>
-                    <Text style={styles.editTitle}>Editing message</Text>
+                    <Text style={styles.editTitle}>{t("chat.editing")}</Text>
                     <Text style={styles.editPreview} numberOfLines={1}>
                       {editing.text.trim()}
                     </Text>
                   </View>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel="Cancel editing"
+                    accessibilityLabel={t("chat.cancelEditing")}
                     hitSlop={10}
                     onPress={cancelEditing}
                   >
-                    <Text style={styles.editCancel}>Cancel</Text>
+                    <Text style={styles.editCancel}>{t("common.cancel")}</Text>
                   </Pressable>
                 </View>
               ) : null}
               <View style={styles.inputBar}>
                 <PressableScale
-                  accessibilityLabel="Attach a photo"
+                  accessibilityLabel={t("chat.attachPhoto")}
                   onPress={() => void handleAttach()}
                   disabled={sending || editing !== null}
                 >
@@ -901,13 +915,13 @@ export default function ChatThreadScreen() {
                 <TextInput
                   value={draft}
                   onChangeText={setDraft}
-                  placeholder="Write a message"
+                  placeholder={t("chat.placeholder")}
                   placeholderTextColor={colors.textMuted}
                   style={styles.input}
                   multiline
                 />
                 <PressableScale
-                  accessibilityLabel="Send message"
+                  accessibilityLabel={t("chat.send")}
                   onPress={() => void handleSend()}
                   disabled={draft.trim().length === 0 || sending}
                 >
@@ -932,10 +946,12 @@ export default function ChatThreadScreen() {
         visible={reviewMode !== null}
         title={
           reviewMode === "contractorReview"
-            ? `Review ${peer?.name ?? "the client"}`
-            : `Review ${peer?.name ?? "the specialist"}`
+            ? t("chat.reviewName", { name: peer?.name ?? t("chat.theClient") })
+            : t("chat.reviewName", {
+                name: peer?.name ?? t("chat.theSpecialistLower"),
+              })
         }
-        subtitle="How was your experience? Your rating and comment appear on their public profile."
+        subtitle={t("chat.reviewSubtitle")}
         submitting={submittingReview}
         onSubmit={(rating, message) => void submitReview(rating, message)}
         onClose={() => {

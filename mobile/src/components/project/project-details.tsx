@@ -35,10 +35,17 @@ import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { timeAgo } from "@/lib/format";
 import { formatMiles } from "@/lib/geo";
+import { useT } from "@/lib/i18n";
 import { tapFeedback } from "@/lib/haptics";
 import type { ProjectDetail } from "@/lib/projects";
 
-function MethodIcon({ method, color }: { method: ContactMethod; color: string }) {
+function MethodIcon({
+  method,
+  color,
+}: {
+  method: ContactMethod;
+  color: string;
+}) {
   switch (method) {
     case "app":
       return <ResponsesIcon size={15} color={color} />;
@@ -75,6 +82,7 @@ function PhotoViewer({
   onClose: () => void;
 }) {
   const styles = useStyles();
+  const { t } = useT();
   const { width } = useWindowDimensions();
   return (
     <Modal
@@ -89,7 +97,7 @@ function PhotoViewer({
         <ModalSafeArea style={styles.viewerSafe}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Close"
+            accessibilityLabel={t("common.close")}
             hitSlop={12}
             onPress={onClose}
             style={styles.viewerClose}
@@ -158,12 +166,13 @@ export function ProjectDetails({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const iconColor = colors.textSecondary;
 
-  const start = startLabel(project.startType, project.start, project.end);
-  const budget = budgetLabel(project.budget);
-  const posted = timeAgo(project.createdAt);
+  const start = startLabel(project.startType, project.start, project.end, t);
+  const budget = budgetLabel(project.budget, t);
+  const posted = timeAgo(project.createdAt, t);
   const miles = formatMiles(distance ?? null);
   const preferences = project.contactPreferences;
   const phone = project.contactPhone;
@@ -193,7 +202,7 @@ export function ProjectDetails({
             <Pressable
               key={uri}
               accessibilityRole="imagebutton"
-              accessibilityLabel={`Photo ${index + 1}`}
+              accessibilityLabel={t("project.photoA11y", { number: index + 1 })}
               onPress={() => {
                 tapFeedback();
                 setViewerIndex(index);
@@ -221,7 +230,9 @@ export function ProjectDetails({
             <View style={styles.locationBody}>
               <Text style={styles.locationText}>{project.placeName}</Text>
               {miles ? (
-                <Text style={styles.locationMeta}>{miles} from you</Text>
+                <Text style={styles.locationMeta}>
+                  {t("project.milesFromYou", { miles })}
+                </Text>
               ) : null}
             </View>
           </View>
@@ -229,9 +240,11 @@ export function ProjectDetails({
             <Pressable
               accessibilityRole="link"
               hitSlop={8}
-              onPress={() => openLink(mapsUrl(center, project.placeName), "map")}
+              onPress={() =>
+                openLink(mapsUrl(center, project.placeName), "map")
+              }
             >
-              <Text style={styles.link}>Open in Maps</Text>
+              <Text style={styles.link}>{t("project.openInMaps")}</Text>
             </Pressable>
           ) : null}
         </View>
@@ -240,34 +253,34 @@ export function ProjectDetails({
       <View style={styles.facts}>
         <Fact
           icon={<WalletIcon size={14} color={iconColor} />}
-          label="Budget"
-          value={budget || "Open to quotes"}
+          label={t("project.budget")}
+          value={budget || t("project.openToQuotes")}
         />
         <Fact
           icon={<CalendarIcon size={14} color={iconColor} />}
-          label="Start"
-          value={start || "Not specified"}
+          label={t("project.startLabel")}
+          value={start || t("compare.values.notSpecified")}
         />
         {posted ? (
           <Fact
             icon={<ClockIcon size={14} color={iconColor} />}
-            label="Posted"
+            label={t("project.posted")}
             value={posted}
           />
         ) : null}
         <Fact
           icon={<ResponsesIcon size={14} color={iconColor} />}
-          label="Responses"
+          label={t("project.responsesLabel")}
           value={String(project.responseCount)}
         />
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>About the job</Text>
+        <Text style={styles.sectionTitle}>{t("project.aboutJob")}</Text>
         {project.description ? (
           <Text style={styles.description}>{project.description}</Text>
         ) : (
-          <Text style={styles.muted}>No description provided.</Text>
+          <Text style={styles.muted}>{t("project.noDescription")}</Text>
         )}
       </View>
 
@@ -275,8 +288,8 @@ export function ProjectDetails({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
             {contactMode === "owner"
-              ? "How contractors will contact you"
-              : "Preferred contact"}
+              ? t("project.howContact")
+              : t("trade.sections.preferredContact")}
           </Text>
           <View style={styles.card}>
             <View style={styles.methods}>
@@ -284,7 +297,7 @@ export function ProjectDetails({
                 <View key={method} style={styles.methodChip}>
                   <MethodIcon method={method} color={colors.accent} />
                   <Text style={styles.methodText}>
-                    {contactMethodLabel(method)}
+                    {contactMethodLabel(method, t)}
                   </Text>
                 </View>
               ))}
@@ -292,8 +305,10 @@ export function ProjectDetails({
             <View style={styles.bestTimeRow}>
               <ClockIcon size={15} color={iconColor} />
               <Text style={styles.bestTimeText}>
-                <Text style={styles.bestTimeLabel}>Best time: </Text>
-                {bestTimeLabel(preferences.bestTime)}
+                <Text style={styles.bestTimeLabel}>
+                  {t("project.bestTimeColon")}{" "}
+                </Text>
+                {bestTimeLabel(preferences.bestTime, t)}
               </Text>
             </View>
 
@@ -328,7 +343,7 @@ export function ProjectDetails({
                   >
                     <PhoneIcon size={16} color={colors.accent} />
                     <Text style={styles.contactButtonText}>
-                      Call {formatPhone(phone)}
+                      {t("project.callPhone", { phone: formatPhone(phone) })}
                     </Text>
                   </Pressable>
                 ) : null}
@@ -339,7 +354,9 @@ export function ProjectDetails({
                     style={styles.contactButton}
                   >
                     <TextMessageIcon size={16} color={colors.accent} />
-                    <Text style={styles.contactButtonText}>Send a text</Text>
+                    <Text style={styles.contactButtonText}>
+                      {t("project.sendText")}
+                    </Text>
                   </Pressable>
                 ) : null}
                 {showEmail ? (

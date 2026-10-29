@@ -3,6 +3,7 @@
     "google_analytics_automatic_screen_reporting_enabled": false,
     "crashlytics_debug_enabled": false,
     "crashlytics_auto_collection_enabled": true,
-    "perf_auto_collection_enabled": true
+    "perf_auto_collection_enabled": true,
+    "messaging_android_notification_channel_id": "ctmass_alerts"
   }
 }

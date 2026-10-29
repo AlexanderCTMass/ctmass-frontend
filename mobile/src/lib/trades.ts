@@ -13,10 +13,8 @@ import {
 } from "@react-native-firebase/firestore";
 
 import { findGroup, findTrade } from "@/constants/trade-taxonomy";
-import {
-  type OwnerPublic,
-  readOwnerPublic,
-} from "@/lib/business-profile";
+import { type OwnerPublic, readOwnerPublic } from "@/lib/business-profile";
+import { hasAnyCertificate } from "@/lib/certificates";
 import { getDb } from "@/lib/firebase";
 import { type Review, fetchReviews, reviewSummary } from "@/lib/reviews";
 import {
@@ -67,9 +65,10 @@ function asRecord(value: unknown): Record<string, unknown> {
     : {};
 }
 
-function readCoords(
-  addressLocation: Record<string, unknown>,
-): { lat: number | null; lng: number | null } {
+function readCoords(addressLocation: Record<string, unknown>): {
+  lat: number | null;
+  lng: number | null;
+} {
   const center = addressLocation.center;
   const geometry = asRecord(addressLocation.geometry);
   const coordinates = geometry.coordinates;
@@ -125,7 +124,8 @@ function mapTrade(id: string, data: Record<string, unknown>): Specialist {
 function firstImage(value: unknown): string {
   if (!Array.isArray(value)) return "";
   const url = value.find(
-    (item): item is string => typeof item === "string" && item.startsWith("http"),
+    (item): item is string =>
+      typeof item === "string" && item.startsWith("http"),
   );
   return url ?? "";
 }
@@ -146,10 +146,13 @@ type OwnerData = { reviews: Review[]; owner: OwnerPublic | null };
 async function fetchOwnerData(ownerId: string): Promise<OwnerData> {
   const [reviews, owner] = await Promise.all([
     fetchReviews(ownerId).catch(() => [] as Review[]),
-    getDoc(doc(getDb(), "profiles", ownerId))
-      .then((snapshot) =>
+    Promise.all([
+      getDoc(doc(getDb(), "profiles", ownerId)),
+      hasAnyCertificate(ownerId).catch(() => false),
+    ])
+      .then(([snapshot, certified]) =>
         snapshot.exists()
-          ? readOwnerPublic(ownerId, asRecord(snapshot.data()))
+          ? readOwnerPublic(ownerId, asRecord(snapshot.data()), certified)
           : null,
       )
       .catch(() => null),
@@ -334,17 +337,18 @@ export function groupSpecialists(list: Specialist[]): SpecialistGroups {
 export function matchesSpecialistQuery(
   specialist: Specialist,
   query: string,
+  translate: (value: string) => string = (value) => value,
 ): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
+  const has = (value: string) =>
+    value.toLowerCase().includes(q) ||
+    translate(value).toLowerCase().includes(q);
   return (
     specialist.name.toLowerCase().includes(q) ||
-    specialist.specialtyLabel.toLowerCase().includes(q) ||
-    specialist.details.services.some((service) =>
-      service.toLowerCase().includes(q),
-    ) ||
-    (findGroup(specialist.details.groupId)?.label.toLowerCase().includes(q) ??
-      false)
+    has(specialist.specialtyLabel) ||
+    specialist.details.services.some(has) ||
+    has(findGroup(specialist.details.groupId)?.label ?? "")
   );
 }
 

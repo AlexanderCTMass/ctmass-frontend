@@ -11,6 +11,17 @@ function stripHtmlTags(input) {
     return input.replace(/<\/?[^>]+(>|$)/g, "");
 }
 
+function escapeHtml(input) {
+    return String(input ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+export const isEmailOptedOut = (recipient) =>
+    recipient?.notificationPreferences?.email?.frequency === 'never';
+
 const DEFAULT_TEMPLATE_ID = 'template_epduqer';
 
 class EmailSender {
@@ -106,7 +117,7 @@ class EmailSender {
     }
 
     sendAdmin_newRegistration(user, locationInfo = {}) {
-        const { placeName = '', zip = '', approximate = false, ip = '' } = locationInfo || {};
+        const { placeName = '', zip = '', approximate = false, ip = '', channel = '' } = locationInfo || {};
         const locationText = placeName
             ? (approximate ? `${placeName} (approximate)` : placeName)
             : '—';
@@ -122,13 +133,15 @@ class EmailSender {
       <tr><td style="padding: 6px 0; color: #666;">Email:</td><td style="padding: 6px 0; font-weight: 600;">${user.email || '—'}</td></tr>
       <tr><td style="padding: 6px 0; color: #666;">Role:</td><td style="padding: 6px 0;">${user.role || '—'}</td></tr>
       <tr><td style="padding: 6px 0; color: #666;">Phone:</td><td style="padding: 6px 0;">${user.phone || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">Registered via:</td><td style="padding: 6px 0; font-weight: 600;">🌐 Website</td></tr>
+      <tr><td style="padding: 6px 0; color: #666; vertical-align: top;">Came from:</td><td style="padding: 6px 0; font-weight: 600;">${stripHtmlTags(channel) || '—'}</td></tr>
       <tr><td style="padding: 6px 0; color: #666;">Location:</td><td style="padding: 6px 0; font-weight: 600;">${locationText}</td></tr>
       <tr><td style="padding: 6px 0; color: #666;">ZIP:</td><td style="padding: 6px 0;">${zip || '—'}</td></tr>
       <tr><td style="padding: 6px 0; color: #666;">IP address:</td><td style="padding: 6px 0;">${ip || '—'}</td></tr>
     </table>
   </div>
 </div>`.trim();
-        return this.sendAdminMail("New registration", message);
+        return this.sendAdminMail("New registration (website)", message);
     }
 
     sendAdmin_newOrder(job, user, blocked) {
@@ -234,17 +247,18 @@ class EmailSender {
         return this.send('template_hello', templateParams, false, null, blocked);
     }
 
-    sendAdminDirectMessage(recipient, subject, message) {
-        const safeText = String(message || '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/\n/g, '<br/>');
+    sendAdminDirectMessage(recipient, subject, message, images = []) {
+        const safeText = escapeHtml(message).replace(/\n/g, '<br/>');
+        const imagesHtml = (images || [])
+            .filter((image) => image?.url)
+            .map((image) => `<p style="margin: 16px 0 0;"><img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.name || '')}" style="display: block; max-width: 100%; height: auto; border-radius: 8px;" /></p>`)
+            .join('');
         const html = `
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1f2937; font-size: 15px; line-height: 1.6;">
-  <p style="margin: 0 0 16px;">Hi ${stripHtmlTags(recipient.name) || 'there'},</p>
-  <div>${safeText}</div>
+  <p style="margin: 0 0 16px;">Hi ${escapeHtml(stripHtmlTags(recipient.name)) || 'there'},</p>
+  <div>${safeText}</div>${imagesHtml}
   <p style="margin: 24px 0 0; color: #6b7280;">— CTMASS.com team</p>
+  <p style="margin: 24px 0 0; color: #9ca3af; font-size: 12px; line-height: 1.5;">You received this email because you have an account on CTMASS.com.<br/>CTMASS LLC · 2389 Main Street Suite 100, Glastonbury, CT 06033 · support@ctmass.com</p>
 </div>`.trim();
         const templateParams = {
             'subject': subject,

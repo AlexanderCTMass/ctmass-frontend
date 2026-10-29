@@ -9,6 +9,7 @@ import { ScreenBackground } from "@/components/ui/screen-background";
 import { Toggle } from "@/components/ui/toggle";
 import { Brand, Radius, Spacing, makeStyles } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
+import { useT } from "@/lib/i18n";
 import {
   fetchNotificationPrefs,
   hasNotificationPermission,
@@ -24,6 +25,7 @@ type PrefKey = keyof NotificationPrefs;
 
 export default function NotificationsScreen() {
   const styles = useStyles();
+  const { t } = useT();
   const uid = useAuthStore((state) => state.user?.uid);
   const role = useAuthStore((state) => state.user?.role ?? null);
   const isContractor = role === "WORKER";
@@ -96,7 +98,9 @@ export default function NotificationsScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>Notifications</Text>
+          <Text style={styles.headerTitle}>
+            {t("profile.tab.notifications")}
+          </Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -107,32 +111,31 @@ export default function NotificationsScreen() {
           {granted === false ? (
             <View style={styles.permissionCard}>
               <Text style={styles.permissionTitle}>
-                Notifications are turned off
+                {t("notifications.offTitle")}
               </Text>
               <Text style={styles.permissionText}>
-                Turn on notifications to get messages, project updates and
-                reminders on this device.
+                {t("notifications.offText")}
               </Text>
               <PressableScale
-                accessibilityLabel="Enable notifications"
+                accessibilityLabel={t("notifications.enable")}
                 onPress={() => void enable()}
                 disabled={requesting}
               >
                 <View style={styles.permissionButton}>
                   <Text style={styles.permissionButtonText}>
-                    Enable notifications
+                    {t("notifications.enable")}
                   </Text>
                 </View>
               </PressableScale>
             </View>
           ) : null}
 
-          <Text style={styles.sectionLabel}>Choose what to receive</Text>
+          <Text style={styles.sectionLabel}>{t("notifications.choose")}</Text>
 
           <View style={styles.group}>
             <PrefRow
-              label="New messages"
-              description="Get notified when someone messages you."
+              label={t("notifications.messages")}
+              description={t("notifications.messagesText")}
               value={prefs?.messages ?? true}
               disabled={disabled}
               onToggle={() => toggle("messages")}
@@ -141,8 +144,8 @@ export default function NotificationsScreen() {
               <>
                 <View style={styles.rowDivider} />
                 <PrefRow
-                  label="Responses to your requests"
-                  description="When a specialist responds to a project you posted."
+                  label={t("notifications.responses")}
+                  description={t("notifications.responsesText")}
                   value={prefs?.projectResponses ?? true}
                   disabled={disabled}
                   onToggle={() => toggle("projectResponses")}
@@ -152,8 +155,8 @@ export default function NotificationsScreen() {
               <>
                 <View style={styles.rowDivider} />
                 <PrefRow
-                  label="New matching projects"
-                  description="When a new project matches your trade or is open to all."
+                  label={t("notifications.projects")}
+                  description={t("notifications.projectsText")}
                   value={prefs?.newProjects ?? true}
                   disabled={disabled}
                   onToggle={() => toggle("newProjects")}
@@ -162,8 +165,8 @@ export default function NotificationsScreen() {
             )}
             <View style={styles.rowDivider} />
             <PrefRow
-              label="Reminders"
-              description="Occasional nudges when you've been away for a while."
+              label={t("notifications.reminders")}
+              description={t("notifications.remindersText")}
               value={prefs?.inactivity ?? true}
               disabled={disabled}
               onToggle={() => toggle("inactivity")}

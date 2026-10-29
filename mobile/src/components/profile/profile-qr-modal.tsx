@@ -7,9 +7,14 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { shareQrImage } from "@/lib/share";
 
 type QrRef = { toDataURL: (callback: (data: string) => void) => void };
+
+const QR_SIZE = 220;
+const LOGO_SIZE = 64;
+const logoMark = require("../../../assets/images/logo-mark.png") as number;
 
 export function ProfileQrModal({
   visible,
@@ -17,7 +22,9 @@ export function ProfileQrModal({
   url,
   name,
   targetUid,
-  subtitle = "Scan to open this profile",
+  avatar,
+  businessName,
+  subtitle,
   showReward = false,
 }: {
   visible: boolean;
@@ -25,13 +32,18 @@ export function ProfileQrModal({
   url: string;
   name: string;
   targetUid: string;
+  avatar?: string | null;
+  businessName?: string;
   subtitle?: string;
   showReward?: boolean;
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const [sharing, setSharing] = useState(false);
   const qrRef = useRef<QrRef | null>(null);
+  const company = businessName?.trim() ?? "";
+  const showCompany = company.length > 0 && company !== name.trim();
 
   const close = () => {
     analyticsEvents.profileQrClosed({ target_uid: targetUid });
@@ -60,7 +72,7 @@ export function ProfileQrModal({
         <View style={styles.card}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Close"
+            accessibilityLabel={t("common.close")}
             hitSlop={10}
             onPress={close}
             style={styles.close}
@@ -70,28 +82,37 @@ export function ProfileQrModal({
           <Text style={styles.title} numberOfLines={1}>
             {name}
           </Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
+          <Text style={styles.subtitle}>{subtitle ?? t("qr.subtitle")}</Text>
           <View style={styles.qrWrap}>
             <QRCode
               value={url}
-              size={220}
+              size={QR_SIZE}
               color="#000000"
               backgroundColor="#FFFFFF"
+              ecl="H"
+              logo={avatar ? { uri: avatar } : logoMark}
+              logoSize={LOGO_SIZE}
+              logoMargin={4}
+              logoBorderRadius={LOGO_SIZE / 2}
+              logoBackgroundColor="#FFFFFF"
               getRef={(node: unknown) => {
                 qrRef.current = node as QrRef | null;
               }}
             />
           </View>
+          {showCompany ? (
+            <Text style={styles.company} numberOfLines={2}>
+              {company}
+            </Text>
+          ) : null}
           {showReward ? (
             <View style={styles.reward}>
               <CoinIcon size={20} />
-              <Text style={styles.rewardText}>
-                Earn CTMASS Coins when someone new joins with your code.
-              </Text>
+              <Text style={styles.rewardText}>{t("qr.reward")}</Text>
             </View>
           ) : null}
           <PrimaryButton
-            label={sharing ? "Sharing…" : "Share QR code"}
+            label={sharing ? t("qr.sharing") : t("share.qrTitle")}
             withArrow={false}
             loading={sharing}
             disabled={sharing}
@@ -151,6 +172,14 @@ const useStyles = makeStyles((t) => ({
     borderRadius: Radius.md,
     backgroundColor: "#FFFFFF",
     marginVertical: Spacing.base,
+  },
+  company: {
+    color: t.colors.text,
+    fontSize: 16,
+    fontWeight: "700",
+    textAlign: "center",
+    marginTop: -Spacing.sm,
+    marginBottom: Spacing.sm,
   },
   reward: {
     flexDirection: "row",

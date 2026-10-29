@@ -6,6 +6,13 @@ import { Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ArchiveIcon, HeartIcon } from "@/components/icons";
+import {
+  EMPTY_FILTERS,
+  type SearchFilters,
+  SearchFilterBar,
+  activeFilterCount,
+  matchesFilters,
+} from "@/components/search/search-filters";
 import { CompareTray } from "@/components/trade/compare-tray";
 import { TradeCard } from "@/components/trade/trade-card";
 import { BackButton } from "@/components/ui/back-button";
@@ -33,6 +40,7 @@ import { publicPhone, useTradeContact } from "@/hooks/use-trade-contact";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { distanceMiles } from "@/lib/geo";
 import { tapFeedback } from "@/lib/haptics";
+import { type Translate, translateKey, useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
 import { rankByAffinity } from "@/lib/swipes";
 import {
@@ -67,12 +75,21 @@ type Row =
 function groupBadge(
   group: string,
   colors: ThemeColors,
+  t: Translate,
 ): { label: string; tint: string; bg: string } | null {
   if (group === "top") {
-    return { label: "Top rated", tint: colors.coin, bg: "rgba(255,193,7,0.16)" };
+    return {
+      label: t("search.badges.top"),
+      tint: colors.coin,
+      bg: "rgba(255,193,7,0.16)",
+    };
   }
   if (group === "recent") {
-    return { label: "New", tint: colors.accent, bg: "rgba(22,179,100,0.14)" };
+    return {
+      label: t("search.badges.new"),
+      tint: colors.accent,
+      bg: "rgba(22,179,100,0.14)",
+    };
   }
   return null;
 }
@@ -109,12 +126,15 @@ function SkeletonList() {
 export default function SearchScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const uid = useAuthStore((state) => state.user?.uid);
 
   const [text, setText] = useState("");
   const [emailQuery, setEmailQuery] = useState("");
   const [radius, setRadius] = useState(50);
   const [tab, setTab] = useState<Tab>("all");
+  const [filters, setFilters] = useState<SearchFilters>(EMPTY_FILTERS);
+  const filtering = activeFilterCount(filters) > 0;
 
   const swipe = useSwipeActions(uid, "search");
   const sides = useSwipeSides();
@@ -162,14 +182,19 @@ export default function SearchScreen() {
       const set = tab === "archived" ? archived : liked;
       const list = (saved.data ?? [])
         .filter((specialist) => set.has(specialist.tradeId))
-        .filter((specialist) => matchesSpecialistQuery(specialist, trimmed));
+        .filter((specialist) =>
+          matchesSpecialistQuery(specialist, trimmed, tx),
+        )
+        .filter((specialist) => matchesFilters(specialist, filters));
       if (list.length === 0) return [];
       return [
         {
           kind: "header",
           id: `h-${tab}`,
           title:
-            tab === "archived" ? "Archived specialists" : "Liked specialists",
+            tab === "archived"
+              ? "search.groups.archived"
+              : "search.groups.liked",
         },
         ...list.map((specialist, index) => ({
           kind: "specialist" as const,
@@ -185,7 +210,7 @@ export default function SearchScreen() {
       const list = emailResults.data ?? [];
       if (list.length === 0) return [];
       return [
-        { kind: "header", id: "h-match", title: "Matches" },
+        { kind: "header", id: "h-match", title: "search.groups.matches" },
         ...list.map((specialist, index) => ({
           kind: "specialist" as const,
           id: specialist.tradeId,
@@ -206,7 +231,8 @@ export default function SearchScreen() {
     };
     const base = (pool.data ?? [])
       .filter((specialist) => !archived.has(specialist.tradeId))
-      .filter((specialist) => matchesSpecialistQuery(specialist, trimmed))
+      .filter((specialist) => matchesSpecialistQuery(specialist, trimmed, tx))
+      .filter((specialist) => matchesFilters(specialist, filters))
       .filter(withinRadius);
     const groups = groupSpecialists(base);
     const out: Row[] = [];
@@ -229,9 +255,9 @@ export default function SearchScreen() {
         });
       });
     };
-    pushGroup("Top rated", groups.topRated, "top");
-    pushGroup("Recently joined", groups.recent, "recent");
-    pushGroup("More specialists", groups.more, "more");
+    pushGroup("search.groups.top", groups.topRated, "top");
+    pushGroup("search.groups.recent", groups.recent, "recent");
+    pushGroup("search.groups.more", groups.more, "more");
     return out;
   }, [
     tab,
@@ -245,6 +271,8 @@ export default function SearchScreen() {
     trimmed,
     origin,
     radius,
+    filters,
+    tx,
   ]);
 
   const likeSpecialist = (specialist: Specialist, source: SwipeSource) => {
@@ -256,11 +284,25 @@ export default function SearchScreen() {
   const archiveSpecialist = (specialist: Specialist) => {
     const subject = specialistSubject(specialist);
     const revert = swipe.archive(subject, "swipe");
-    undo.show("Specialist archived", revert);
+    undo.show(t("search.archived"), revert);
   };
 
   const restoreSpecialist = (specialist: Specialist) => {
     swipe.restore(specialistSubject(specialist), "swipe");
+  };
+
+  const changeFilters = (
+    next: SearchFilters,
+    changed: keyof SearchFilters,
+  ) => {
+    const value = next[changed];
+    analyticsEvents.specialistSearchFilterChanged({
+      filter: activeFilterCount(next) === 0 ? "clear" : changed,
+      value: typeof value === "string" ? value : value ? "on" : "off",
+      active_count: activeFilterCount(next),
+    });
+    undo.hide();
+    setFilters(next);
   };
 
   const changeTab = (next: Tab) => {
@@ -309,7 +351,11 @@ export default function SearchScreen() {
     });
   };
 
-  const openTrade = (specialist: Specialist, group: string, position: number) => {
+  const openTrade = (
+    specialist: Specialist,
+    group: string,
+    position: number,
+  ) => {
     tapFeedback();
     analyticsEvents.specialistSearchProfileOpened({
       owner_id: specialist.ownerId,
@@ -338,18 +384,20 @@ export default function SearchScreen() {
   const showEmpty = !loading && rows.length === 0;
   const emptyTitle =
     tab === "liked"
-      ? "No liked specialists yet"
+      ? t("search.empty.likedTitle")
       : tab === "archived"
-        ? "Archive is empty"
-        : "No specialists found";
+        ? t("search.empty.archiveTitle")
+        : t("search.empty.noneTitle");
   const emptyText =
     tab === "liked"
-      ? "Swipe a specialist right or tap the heart to save them here. Your likes are private."
+      ? t("search.empty.likedText")
       : tab === "archived"
-        ? "Specialists you swipe left will show up here. Swipe right to bring them back."
-        : trimmed || origin
-          ? "Try a different name, specialty, email, or a wider distance."
-          : "Specialists will appear here.";
+        ? t("search.empty.archiveText")
+        : filtering
+          ? t("search.empty.noneFilters")
+          : trimmed || origin
+            ? t("search.empty.noneQuery")
+            : t("search.empty.noneText");
 
   return (
     <ScreenBackground>
@@ -357,7 +405,7 @@ export default function SearchScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>Find a specialist</Text>
+          <Text style={styles.headerTitle}>{t("search.title")}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -365,7 +413,7 @@ export default function SearchScreen() {
           <TextInput
             value={text}
             onChangeText={setText}
-            placeholder="Search by name, specialty or email"
+            placeholder={t("search.placeholder")}
             placeholderTextColor={colors.textMuted}
             style={styles.search}
             autoCapitalize="none"
@@ -374,7 +422,7 @@ export default function SearchScreen() {
             onSubmitEditing={onSubmit}
           />
           {looksEmail && !emailActive ? (
-            <Text style={styles.hint}>Press search to look up this email.</Text>
+            <Text style={styles.hint}>{t("search.emailHint")}</Text>
           ) : null}
         </View>
 
@@ -396,21 +444,27 @@ export default function SearchScreen() {
               value={tab}
               onChange={changeTab}
               tabs={[
-                { key: "all", label: "All" },
+                { key: "all", label: t("home.all") },
                 {
                   key: "liked",
-                  label: "Liked",
+                  label: t("home.liked"),
                   count: liked.size,
                   icon: (color) => <HeartIcon size={14} color={color} filled />,
                 },
                 {
                   key: "archived",
-                  label: "Archived",
+                  label: t("search.archivedTab"),
                   count: archived.size,
                   icon: (color) => <ArchiveIcon size={14} color={color} />,
                 },
               ]}
             />
+          </View>
+        ) : null}
+
+        {!emailActive ? (
+          <View style={styles.filtersWrap}>
+            <SearchFilterBar value={filters} onChange={changeFilters} />
           </View>
         ) : null}
 
@@ -422,7 +476,11 @@ export default function SearchScreen() {
             getItemType={(item) => item.kind}
             renderItem={({ item }) => {
               if (item.kind === "header") {
-                return <Text style={styles.groupTitle}>{item.title}</Text>;
+                return (
+                  <Text style={styles.groupTitle}>
+                    {translateKey(t, item.title)}
+                  </Text>
+                );
               }
               const specialist = item.specialist;
               const isLiked = liked.has(specialist.tradeId);
@@ -431,7 +489,7 @@ export default function SearchScreen() {
               const card = (
                 <TradeCard
                   specialist={specialist}
-                  badge={groupBadge(item.group, colors)}
+                  badge={groupBadge(item.group, colors, t)}
                   distance={distanceTo(specialist)}
                   liked={isLiked}
                   compared={compare.isCompared(specialist.tradeId)}
@@ -557,6 +615,9 @@ const useStyles = makeStyles((t) => ({
   },
   tabsWrap: {
     paddingHorizontal: Spacing.base,
+  },
+  filtersWrap: {
+    paddingTop: Spacing.sm,
   },
   skeletonAvatar: {
     width: 52,

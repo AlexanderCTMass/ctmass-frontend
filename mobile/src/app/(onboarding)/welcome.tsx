@@ -31,14 +31,15 @@ import {
   useTheme,
 } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
+import { useT } from "@/lib/i18n";
 
 const highlights: {
-  label: string;
+  id: "free" | "trusted" | "local";
   Icon: (p: IconProps) => React.JSX.Element;
 }[] = [
-  { label: "Always free", Icon: TagIcon },
-  { label: "Trusted pros", Icon: ShieldCheckIcon },
-  { label: "Local first", Icon: MapPinIcon },
+  { id: "free", Icon: TagIcon },
+  { id: "trusted", Icon: ShieldCheckIcon },
+  { id: "local", Icon: MapPinIcon },
 ];
 
 function Pill({
@@ -94,6 +95,7 @@ function LogoBadge() {
 
 export default function WelcomeScreen() {
   const styles = useStyles();
+  const { t } = useT();
 
   useEffect(() => {
     analyticsEvents.onboardingWelcomeViewed();
@@ -106,14 +108,14 @@ export default function WelcomeScreen() {
       footer={
         <>
           <PrimaryButton
-            label="Get started"
+            label={t("onboarding.welcome.cta")}
             onPress={() => {
               analyticsEvents.onboardingWelcomeContinueTapped();
               router.push("/role");
             }}
           />
           <Text style={styles.footerNote}>
-            Built by a licensed contractor, for our neighbors.
+            {t("onboarding.welcome.footer")}
           </Text>
         </>
       }
@@ -121,16 +123,16 @@ export default function WelcomeScreen() {
       <View style={styles.body}>
         <LogoBadge />
         <ScreenHeading
-          eyebrow="Massachusetts & Connecticut"
-          title="Home projects, done the local way"
-          body="CTMASS connects homeowners with trusted contractors nearby. No hidden fees, no paid leads — the platform is free for everyone."
+          eyebrow={t("onboarding.welcome.eyebrow")}
+          title={t("onboarding.welcome.title")}
+          body={t("onboarding.welcome.body")}
           delay={220}
         />
         <View style={styles.pills}>
           {highlights.map((item, index) => (
             <Pill
-              key={item.label}
-              label={item.label}
+              key={item.id}
+              label={t(`onboarding.welcome.pills.${item.id}`)}
               Icon={item.Icon}
               delay={520 + index * 90}
             />
@@ -140,13 +142,9 @@ export default function WelcomeScreen() {
           entering={FadeInDown.delay(820).duration(600)}
           style={styles.quote}
         >
-          <Text style={styles.quoteText}>
-            “I see their dedication, their skill, and their challenges — and I
-            wanted to build something to support them and the homeowners they
-            serve.”
-          </Text>
+          <Text style={styles.quoteText}>{t("onboarding.welcome.quote")}</Text>
           <Text style={styles.quoteAuthor}>
-            Yakov · Founder, licensed Construction Supervisor & HVAC technician
+            {t("onboarding.welcome.quoteAuthor")}
           </Text>
         </Animated.View>
       </View>

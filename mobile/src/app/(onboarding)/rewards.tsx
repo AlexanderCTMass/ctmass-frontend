@@ -28,20 +28,20 @@ import {
 import { analyticsEvents } from "@/lib/analytics-events";
 import { toHref } from "@/lib/navigation";
 import { useAppStore } from "@/store/use-app-store";
+import { useT } from "@/lib/i18n";
 
-const homeownerActions = [
-  "Create your account",
-  "Post your first project",
-  "Complete your profile",
-  "Invite a friend who joins",
-];
+const homeownerActions = ["account", "project", "profile", "invite"] as const;
 
 const contractorActions = [
-  "Create your account",
-  "Add a portfolio item",
-  "Complete your profile",
-  "Invite a friend who joins",
-];
+  "account",
+  "portfolio",
+  "profile",
+  "invite",
+] as const;
+
+type RewardAction =
+  | (typeof homeownerActions)[number]
+  | (typeof contractorActions)[number];
 
 function FloatingCoin() {
   const styles = useStyles();
@@ -85,8 +85,9 @@ function FloatingCoin() {
   );
 }
 
-function EarnList({ actions }: { actions: string[] }) {
+function EarnList({ actions }: { actions: readonly RewardAction[] }) {
   const styles = useStyles();
+  const { t } = useT();
   return (
     <Animated.View
       entering={FadeInDown.delay(420).duration(560)}
@@ -99,8 +100,12 @@ function EarnList({ actions }: { actions: string[] }) {
             <View style={styles.earnDot}>
               <CoinIcon size={18} />
             </View>
-            <Text style={styles.earnLabel}>{label}</Text>
-            <Text style={styles.earnPlus}>+ Coins</Text>
+            <Text style={styles.earnLabel}>
+              {t(`onboarding.rewards.actions.${label}`)}
+            </Text>
+            <Text style={styles.earnPlus}>
+              {t("onboarding.rewards.plusCoins")}
+            </Text>
           </View>
         </View>
       ))}
@@ -111,6 +116,7 @@ function EarnList({ actions }: { actions: string[] }) {
 export default function RewardsScreen() {
   const { gradients } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const role = useAppStore((state) => state.role);
   const actions = role === "contractor" ? contractorActions : homeownerActions;
 
@@ -125,7 +131,7 @@ export default function RewardsScreen() {
       centerContent={false}
       footer={
         <PrimaryButton
-          label="Next"
+          label={t("common.next")}
           onPress={() => {
             analyticsEvents.onboardingRewardsContinueTapped({ role });
             router.push(toHref("/it-solutions"));
@@ -136,9 +142,9 @@ export default function RewardsScreen() {
       <View>
         <FloatingCoin />
         <ScreenHeading
-          eyebrow="CTMASS Rewards"
-          title="Earn CTMASS Coins while you build"
-          body="Every meaningful action on the platform earns you coins — no purchases, no subscriptions."
+          eyebrow={t("onboarding.rewards.eyebrow")}
+          title={t("onboarding.rewards.title")}
+          body={t("onboarding.rewards.body")}
           delay={160}
         />
         <EarnList actions={actions} />
@@ -153,15 +159,17 @@ export default function RewardsScreen() {
               <View style={styles.shopIcon}>
                 <ShopIcon size={24} color={Brand.coin} />
               </View>
-              <Text style={styles.shopTitle}>CTMASS Shop</Text>
+              <Text style={styles.shopTitle}>
+                {t("onboarding.rewards.shopTitle")}
+              </Text>
             </View>
             <Text style={styles.shopText}>
-              Spend your coins on exclusive merch — and on our own IT services.
+              {t("onboarding.rewards.shopText")}
             </Text>
             <View style={styles.shopBadge}>
               <CodeBadgeIcon size={18} color={Brand.coin} />
               <Text style={styles.shopBadgeText}>
-                IT services — up to 50% off
+                {t("onboarding.rewards.shopBadge")}
               </Text>
             </View>
           </LinearGradient>

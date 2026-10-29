@@ -57,6 +57,12 @@ export const analyticsEvents = {
   errorBoundaryRetryTapped: define<{ attempt: number }>(
     "error_boundary_retry_tapped",
   ),
+  trackingPermissionResolved: define<{ granted: boolean; prompted: boolean }>(
+    "tracking_permission_resolved",
+  ),
+  trackingPermissionFailed: define<{ error: string }>(
+    "tracking_permission_failed",
+  ),
   deepLinkOpened: define<{
     path: string;
     initial: boolean;
@@ -82,6 +88,9 @@ export const analyticsEvents = {
     from_theme: string;
     to_theme: string;
   }>("theme_changed"),
+  languageChanged: define<{ from_language: string; to_language: string }>(
+    "language_changed",
+  ),
 
   authScreenViewed: define<{
     role: Role;
@@ -126,9 +135,7 @@ export const analyticsEvents = {
     role: Role;
     action: "create_project" | "create_trade";
   }>("onboarding_primary_action_tapped"),
-  onboardingLogInTapped: define<{ role: Role }>(
-    "onboarding_log_in_tapped",
-  ),
+  onboardingLogInTapped: define<{ role: Role }>("onboarding_log_in_tapped"),
   onboardingExploreLaterTapped: define<{ role: Role }>(
     "onboarding_explore_later_tapped",
   ),
@@ -263,6 +270,13 @@ export const analyticsEvents = {
     step: number;
     step_name: string;
   }>("trade_setup_step_completed"),
+  myTradesViewed: define("my_trades_viewed"),
+  myTradesOpened: define<{ trade_id: string }>("my_trades_opened"),
+  myTradesEditTapped: define<{ trade_id: string }>("my_trades_edit_tapped"),
+  myTradesAddTapped: define<{ trades_count: number }>("my_trades_add_tapped"),
+  tradeContactSaveFailed: define<{ error_message: string }>(
+    "trade_contact_save_failed",
+  ),
   tradeSetupSubmitted: define<{
     title: string;
     specialty: string;
@@ -276,6 +290,8 @@ export const analyticsEvents = {
     days: string[];
     response_time: string;
     about_length: number;
+    languages: string[];
+    contact_methods: string[];
     city: string | null;
     state: string | null;
   }>("trade_setup_submitted"),
@@ -517,7 +533,9 @@ export const analyticsEvents = {
     source: TradeActionSource;
   }>("compare_toggled"),
   compareOpened: define<{ count: number }>("compare_opened"),
-  compareRemoved: define<{ trade_id: string; count: number }>("compare_removed"),
+  compareRemoved: define<{ trade_id: string; count: number }>(
+    "compare_removed",
+  ),
   compareSwiped: define<{
     trade_id: string;
     action: "keep" | "drop";
@@ -531,7 +549,9 @@ export const analyticsEvents = {
   compareModeChanged: define<{ mode: "cards" | "side_by_side"; count: number }>(
     "compare_mode_changed",
   ),
-  compareSwapped: define<{ trade_id: string; count: number }>("compare_swapped"),
+  compareSwapped: define<{ trade_id: string; count: number }>(
+    "compare_swapped",
+  ),
   compareCleared: define<{ count: number }>("compare_cleared"),
   compareDifferencesToggled: define<{ enabled: boolean; count: number }>(
     "compare_differences_toggled",
@@ -546,9 +566,10 @@ export const analyticsEvents = {
     license_state: string | null;
     has_documents: boolean;
   }>("trade_credentials_saved"),
-  tradeCredentialsSaveFailed: define<{ trade_id: string; error_message: string }>(
-    "trade_credentials_save_failed",
-  ),
+  tradeCredentialsSaveFailed: define<{
+    trade_id: string;
+    error_message: string;
+  }>("trade_credentials_save_failed"),
   tradeDeleteFailed: define<{ trade_id: string; error_message: string }>(
     "trade_delete_failed",
   ),
@@ -693,6 +714,9 @@ export const analyticsEvents = {
   contactSupportOpened: define<{ method: "mailto" | "gmail" | "fallback" }>(
     "contact_support_opened",
   ),
+  appReviewRequested: define<{ method: "native" | "store" | "unavailable" }>(
+    "app_review_requested",
+  ),
   logOutTapped: define("log_out_tapped"),
   logOutCancelled: define("log_out_cancelled"),
   loggedOut: define("logged_out"),
@@ -743,23 +767,32 @@ export const analyticsEvents = {
   certificatePhotoRemoved: define<{ photos_count: number }>(
     "certificate_photo_removed",
   ),
-  certificateVisibilityToggled: define<{ is_public: boolean }>(
+  certificateEditTapped: define<{ certificate_id: string }>(
+    "certificate_edit_tapped",
+  ),
+  certificateVisibilityToggled: define<{ field: string; is_public: boolean }>(
     "certificate_visibility_toggled",
   ),
   certificateSubmitted: define<{
+    mode: "create" | "edit";
     document_type: string;
     institution: string;
     specialty: string;
     year: string;
+    has_document_number: boolean;
     photos_count: number;
     is_public: boolean;
+    photos_public: boolean;
+    hidden_fields: string[];
   }>("certificate_submitted"),
   certificateValidationFailed: define<{ fields: string[] }>(
     "certificate_validation_failed",
   ),
-  certificateSaved: define<{ photos_count: number; is_public: boolean }>(
-    "certificate_saved",
-  ),
+  certificateSaved: define<{
+    mode: "create" | "edit";
+    photos_count: number;
+    is_public: boolean;
+  }>("certificate_saved"),
   certificateSaveFailed: define<{ error_message: string }>(
     "certificate_save_failed",
   ),
@@ -922,6 +955,11 @@ export const analyticsEvents = {
     results_count: number;
     is_email: boolean;
   }>("specialist_search_performed"),
+  specialistSearchFilterChanged: define<{
+    filter: string;
+    value: string;
+    active_count: number;
+  }>("specialist_search_filter_changed"),
   specialistSearchProfileOpened: define<{
     owner_id: string;
     trade_id: string;

@@ -27,9 +27,16 @@ import {
   HeartIcon,
   PlayIcon,
 } from "@/components/icons";
-import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import {
   type VideoStory,
   incrementVideoViews,
@@ -107,6 +114,7 @@ function VideoStoryPage({
   onCountView: (id: string) => boolean;
 }) {
   const styles = useStyles();
+  const { t } = useT();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
@@ -114,7 +122,13 @@ function VideoStoryPage({
   const slides =
     story.content.length > 0
       ? story.content
-      : [{ type: "image" as const, url: story.preview, path: story.previewPath }];
+      : [
+          {
+            type: "image" as const,
+            url: story.preview,
+            path: story.previewPath,
+          },
+        ];
 
   const [slideIndex, setSlideIndex] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -164,7 +178,10 @@ function VideoStoryPage({
     if (!active || currentIsVideo || paused) return;
     const startedAt = Date.now();
     const timer = setInterval(() => {
-      const fraction = Math.min((Date.now() - startedAt) / IMAGE_DURATION_MS, 1);
+      const fraction = Math.min(
+        (Date.now() - startedAt) / IMAGE_DURATION_MS,
+        1,
+      );
       setProgress(fraction);
       if (fraction >= 1) {
         clearInterval(timer);
@@ -176,7 +193,7 @@ function VideoStoryPage({
 
   const handleLike = () => {
     if (!canInteract || !viewerId) {
-      Alert.alert("Sign in", "Create a free account to like videos.");
+      Alert.alert(t("common.signIn"), t("videoStory.signInLike"));
       return;
     }
     tapFeedback();
@@ -192,7 +209,7 @@ function VideoStoryPage({
 
   const handleReport = () => {
     if (!viewerId) {
-      Alert.alert("Sign in", "Create a free account to report videos.");
+      Alert.alert(t("common.signIn"), t("videoStory.signInReport"));
       return;
     }
     tapFeedback();
@@ -219,7 +236,7 @@ function VideoStoryPage({
         setReported(true);
         setReportOpen(false);
         setPaused(false);
-        Alert.alert("Thanks", "Thanks for reporting. Our team will take a look.");
+        Alert.alert(t("videoStory.thanks"), t("videoStory.thanksText"));
       });
   };
 
@@ -336,7 +353,7 @@ function VideoStoryPage({
         </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={liked ? "Unlike" : "Like"}
+          accessibilityLabel={liked ? t("ui.unlike") : t("ui.like")}
           hitSlop={10}
           onPress={handleLike}
           style={styles.action}
@@ -350,7 +367,7 @@ function VideoStoryPage({
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Report video"
+          accessibilityLabel={t("report.videoA11y")}
           hitSlop={10}
           onPress={handleReport}
           disabled={reported}
@@ -358,7 +375,7 @@ function VideoStoryPage({
         >
           <FlagIcon size={30} color={reported ? colors.textMuted : "#FFFFFF"} />
           <Text style={styles.actionLabel}>
-            {reported ? "Reported" : "Report"}
+            {reported ? t("report.reported") : t("publicProfile.report")}
           </Text>
         </Pressable>
       </View>
@@ -367,7 +384,7 @@ function VideoStoryPage({
         <View style={StyleSheet.absoluteFill}>
           <Pressable
             style={styles.reportBackdrop}
-            accessibilityLabel="Dismiss report"
+            accessibilityLabel={t("report.dismiss")}
             onPress={closeReport}
           />
           <KeyboardAvoidingView
@@ -381,14 +398,14 @@ function VideoStoryPage({
                 { paddingBottom: insets.bottom + Spacing.base },
               ]}
             >
-              <Text style={styles.reportTitle}>Report this video</Text>
+              <Text style={styles.reportTitle}>{t("report.videoTitle")}</Text>
               <Text style={styles.reportSubtitle}>
-                Tell us what&apos;s wrong so our team can review it.
+                {t("report.videoSubtitle")}
               </Text>
               <TextInput
                 value={reportText}
                 onChangeText={setReportText}
-                placeholder="Describe the problem"
+                placeholder={t("report.videoPlaceholder")}
                 placeholderTextColor="rgba(255,255,255,0.5)"
                 style={styles.reportInput}
                 multiline
@@ -399,16 +416,18 @@ function VideoStoryPage({
               <View style={styles.reportButtons}>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Cancel"
+                  accessibilityLabel={t("common.cancel")}
                   onPress={closeReport}
                   disabled={submittingReport}
                   style={styles.reportCancel}
                 >
-                  <Text style={styles.reportCancelText}>Cancel</Text>
+                  <Text style={styles.reportCancelText}>
+                    {t("common.cancel")}
+                  </Text>
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Submit report"
+                  accessibilityLabel={t("report.submit")}
                   onPress={submitReport}
                   disabled={!reportText.trim() || submittingReport}
                   style={[
@@ -420,7 +439,9 @@ function VideoStoryPage({
                   {submittingReport ? (
                     <ActivityIndicator size="small" color="#04170D" />
                   ) : (
-                    <Text style={styles.reportSubmitText}>Submit report</Text>
+                    <Text style={styles.reportSubmitText}>
+                      {t("report.submit")}
+                    </Text>
                   )}
                 </Pressable>
               </View>
@@ -446,6 +467,7 @@ function VideoFeed({
   onClose: () => void;
 }) {
   const styles = useStyles();
+  const { t } = useT();
   const { height, width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [activeIndex, setActiveIndex] = useState(initialIndex);
@@ -500,7 +522,7 @@ function VideoFeed({
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Close"
+        accessibilityLabel={t("common.close")}
         hitSlop={12}
         onPress={onClose}
         style={[styles.close, { top: insets.top + 24 }]}

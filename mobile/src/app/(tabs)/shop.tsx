@@ -28,6 +28,7 @@ import { useRequireAuth } from "@/hooks/use-require-auth";
 import { AD_PLACEMENTS } from "@/lib/ad-placements";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
 import {
   formatCoins,
@@ -42,10 +43,10 @@ import { useLoyaltyStore } from "@/store/use-loyalty-store";
 
 type PriceSort = "default" | "asc" | "desc";
 
-const SORT_OPTIONS: { value: PriceSort; label: string }[] = [
-  { value: "default", label: "Default" },
-  { value: "asc", label: "Price" },
-  { value: "desc", label: "Price" },
+const SORT_OPTIONS: { value: PriceSort; label: "default" | "price" }[] = [
+  { value: "default", label: "default" },
+  { value: "asc", label: "price" },
+  { value: "desc", label: "price" },
 ];
 
 const CATEGORY_ORDER: string[] = [
@@ -76,6 +77,7 @@ function SkeletonCard() {
 export default function ShopTab() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const uid = useAuthStore((state) => state.user?.uid);
   const role = useAuthStore((state) => state.user?.role ?? null);
   const balance = useLoyaltyStore((state) => state.balance);
@@ -193,36 +195,34 @@ export default function ShopTab() {
   const listHeader = (
     <View style={styles.listHeader}>
       <View style={styles.rewardsRow}>
-        <Text style={styles.rewardsTitle}>Available rewards</Text>
+        <Text style={styles.rewardsTitle}>{t("shop.tab.rewards")}</Text>
         <PressableScale
-          accessibilityLabel="View my orders"
+          accessibilityLabel={t("shop.tab.ordersA11y")}
           onPress={openOrders}
         >
           <View style={styles.ordersPill}>
-            <Text style={styles.ordersText}>My orders</Text>
+            <Text style={styles.ordersText}>{t("shop.tab.orders")}</Text>
           </View>
         </PressableScale>
       </View>
-      <Text style={styles.rewardsSubtitle}>
-        Spend your earned CTMASS Coins on exclusive merch and platform perks.
-      </Text>
+      <Text style={styles.rewardsSubtitle}>{t("shop.tab.subtitle")}</Text>
 
       <View style={styles.filterGroup}>
-        <Text style={styles.filterLabel}>Category</Text>
+        <Text style={styles.filterLabel}>{t("shop.tab.category")}</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.chipsRow}
         >
           <FilterChip
-            label="All"
+            label={t("home.all")}
             active={categoryFilter === "all"}
             onPress={() => changeCategory("all")}
           />
           {categories.map((category) => (
             <FilterChip
               key={category}
-              label={category}
+              label={tx(category)}
               active={categoryFilter === category}
               onPress={() => changeCategory(category)}
             />
@@ -233,7 +233,7 @@ export default function ShopTab() {
       <View style={styles.filterDivider} />
 
       <View style={styles.filterGroup}>
-        <Text style={styles.filterLabel}>Sort by</Text>
+        <Text style={styles.filterLabel}>{t("shop.tab.sortBy")}</Text>
         <View style={styles.sortRow}>
           {SORT_OPTIONS.map((option) => {
             const active = priceSort === option.value;
@@ -249,7 +249,7 @@ export default function ShopTab() {
                   <Text
                     style={[styles.sortText, active && styles.sortTextActive]}
                   >
-                    {option.label}
+                    {t(`shop.tab.sort.${option.label}`)}
                   </Text>
                   {option.value === "asc" ? (
                     <ArrowUpIcon
@@ -284,9 +284,9 @@ export default function ShopTab() {
     <ScreenBackground>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.header}>
-          <Text style={styles.heading}>Shop</Text>
+          <Text style={styles.heading}>{t("tabs.shop")}</Text>
           <PressableScale
-            accessibilityLabel="View your coin balance and ways to earn"
+            accessibilityLabel={t("shop.tab.balanceA11y")}
             onPress={openEarnScreen}
           >
             <View style={styles.balancePill}>
@@ -334,9 +334,7 @@ export default function ShopTab() {
                 entering={FadeIn.duration(300)}
                 style={styles.empty}
               >
-                <Text style={styles.emptyText}>
-                  No items match your filters.
-                </Text>
+                <Text style={styles.emptyText}>{t("shop.tab.noItems")}</Text>
               </Animated.View>
             )
           }

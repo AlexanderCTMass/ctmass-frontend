@@ -34,11 +34,13 @@ import {
   getUnreadCount,
   hasMessagesAfter,
   parseMessageBody,
+  translateChatText,
   startChat,
   subscribeThreads,
 } from "@/lib/chat";
 import { timeAgo } from "@/lib/format";
 import { selectFeedback, tapFeedback } from "@/lib/haptics";
+import { type Translate, useT } from "@/lib/i18n";
 import { chatHref } from "@/lib/navigation";
 import { fetchProjectById } from "@/lib/projects";
 import {
@@ -95,12 +97,23 @@ async function fetchProjectTitleCached(
   }
 }
 
+const PREVIEW_EMPTY = "\u0000empty";
+const PREVIEW_PHOTO = "\u0000photo";
+const PREVIEW_ATTACHMENT = "\u0000attachment";
+
 function previewText(text: string, mine: boolean): string {
-  if (!text) return "No messages yet";
+  if (!text) return PREVIEW_EMPTY;
   return (
     parseMessageBody(text, mine).text.replace(/\s+/g, " ").trim() ||
-    "Attachment"
+    PREVIEW_ATTACHMENT
   );
+}
+
+function previewLabel(value: string, t: Translate): string {
+  if (value === PREVIEW_EMPTY) return t("chats.noMessages");
+  if (value === PREVIEW_PHOTO) return t("chats.photo");
+  if (value === PREVIEW_ATTACHMENT) return t("chats.attachment");
+  return translateChatText(t, value);
 }
 
 async function enrichThreads(
@@ -132,16 +145,16 @@ async function enrichThreads(
         lastText = thread.lastText
           ? previewText(thread.lastText, thread.lastSenderId === uid)
           : thread.lastIsAttachment
-            ? "Photo"
-            : "No messages yet";
+            ? PREVIEW_PHOTO
+            : PREVIEW_EMPTY;
         lastAt = thread.updatedAt ?? null;
       } else {
         const last = await getLastMessage(thread.id);
         lastText = last?.text
           ? previewText(last.text, last.senderId === uid)
           : last && last.attachments.length > 0
-            ? "Photo"
-            : "No messages yet";
+            ? PREVIEW_PHOTO
+            : PREVIEW_EMPTY;
         lastAt = last?.createdAt ?? thread.updatedAt ?? null;
       }
 
@@ -174,12 +187,15 @@ function Row({
   onLongPress: () => void;
 }) {
   const styles = useStyles();
+  const { t, tx } = useT();
   return (
     <PressableScale
       accessibilityLabel={
         selecting
-          ? `${selected ? "Deselect" : "Select"} chat with ${row.peerName}`
-          : `Open chat with ${row.peerName}`
+          ? selected
+            ? t("chats.deselectA11y", { name: row.peerName })
+            : t("chats.selectA11y", { name: row.peerName })
+          : t("chats.openA11y", { name: row.peerName })
       }
       onPress={onPress}
       onLongPress={onLongPress}
@@ -204,12 +220,12 @@ function Row({
                 row.unreadCount > 0 && styles.rowTimeUnread,
               ]}
             >
-              {timeAgo(row.lastAt)}
+              {timeAgo(row.lastAt, t)}
             </Text>
           </View>
           {row.projectTitle ? (
             <Text style={styles.rowProject} numberOfLines={1}>
-              {row.projectTitle}
+              {tx(row.projectTitle)}
             </Text>
           ) : null}
           <View style={styles.rowBottom}>
@@ -220,7 +236,7 @@ function Row({
               ]}
               numberOfLines={1}
             >
-              {row.lastText}
+              {previewLabel(row.lastText, t)}
             </Text>
             {row.unreadCount > 0 ? (
               <View style={styles.unreadBadge}>
@@ -247,9 +263,10 @@ function PersonRow({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   return (
     <PressableScale
-      accessibilityLabel={`Start a chat with ${person.name}`}
+      accessibilityLabel={t("chats.startA11y", { name: person.name })}
       onPress={onPress}
       disabled={busy}
     >
@@ -292,6 +309,7 @@ function SkeletonRow() {
 export default function ChatsTab() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const uid = useAuthStore((state) => state.user?.uid);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [rows, setRows] = useState<ThreadRow[]>([]);
@@ -449,7 +467,7 @@ export default function ChatsTab() {
         error_message: errorMessage(error),
       });
       applyThreads(threadsRef.current);
-      Alert.alert("Couldn't delete", "Please try again.");
+      Alert.alert(t("tradePage.deleteFailed"), t("common.pleaseTryAgain"));
     }
   };
 
@@ -457,14 +475,14 @@ export default function ChatsTab() {
     tapFeedback();
     const many = selected.length > 1;
     Alert.alert(
-      many ? `Delete ${selected.length} chats?` : "Delete chat?",
       many
-        ? "These chats and their history will be removed from your list."
-        : "This chat and its history will be removed from your list.",
+        ? t("chats.deleteManyTitle", { count: selected.length })
+        : t("chats.deleteOneTitle"),
+      many ? t("chats.deleteManyText") : t("chats.deleteOneText"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: t("common.delete"),
           style: "destructive",
           onPress: () => void deleteSelected(),
         },
@@ -493,7 +511,7 @@ export default function ChatsTab() {
 
     listData = [];
     if (threadMatches.length > 0) {
-      listData.push({ kind: "header", id: "h:chats", title: "Chats" });
+      listData.push({ kind: "header", id: "h:chats", title: t("chats.chats") });
       for (const row of threadMatches) {
         listData.push({ kind: "thread", id: `t:${row.id}`, row });
       }
@@ -502,7 +520,7 @@ export default function ChatsTab() {
       listData.push({
         kind: "header",
         id: "h:people",
-        title: "Start a new chat",
+        title: t("chats.startNew"),
       });
       for (const person of peopleMatches) {
         listData.push({ kind: "person", id: `p:${person.uid}`, person });
@@ -539,8 +557,8 @@ export default function ChatsTab() {
     return (
       <GuestGate
         gate="chats"
-        title="Sign in to message"
-        text="Create a free account to start conversations and reply to people you connect with."
+        title={t("chats.guestTitle")}
+        text={t("chats.guestText")}
       />
     );
   }
@@ -553,7 +571,7 @@ export default function ChatsTab() {
             <View style={styles.selectionBar}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Cancel selection"
+                accessibilityLabel={t("chats.cancelSelection")}
                 hitSlop={8}
                 style={styles.selectionButton}
                 onPress={() => {
@@ -564,11 +582,11 @@ export default function ChatsTab() {
                 <CloseIcon size={20} color={colors.text} />
               </Pressable>
               <Text style={styles.selectionCount}>
-                {selected.length} selected
+                {t("chats.selected", { count: selected.length })}
               </Text>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Delete selected chats"
+                accessibilityLabel={t("chats.deleteSelected")}
                 hitSlop={8}
                 style={styles.selectionButton}
                 onPress={confirmDelete}
@@ -577,12 +595,12 @@ export default function ChatsTab() {
               </Pressable>
             </View>
           ) : (
-            <Text style={styles.heading}>Messages</Text>
+            <Text style={styles.heading}>{t("chats.title")}</Text>
           )}
           <TextInput
             value={search}
             onChangeText={setSearch}
-            placeholder="Search people…"
+            placeholder={t("chats.search")}
             placeholderTextColor={colors.textMuted}
             style={styles.search}
           />
@@ -645,16 +663,20 @@ export default function ChatsTab() {
                 >
                   {searching ? (
                     <>
-                      <Text style={styles.emptyTitle}>Nothing found</Text>
+                      <Text style={styles.emptyTitle}>
+                        {t("chats.nothingFound")}
+                      </Text>
                       <Text style={styles.emptyText}>
-                        Try a different name or email to start a new chat.
+                        {t("chats.nothingFoundText")}
                       </Text>
                     </>
                   ) : (
                     <>
-                      <Text style={styles.emptyTitle}>No messages yet</Text>
+                      <Text style={styles.emptyTitle}>
+                        {t("chats.noMessages")}
+                      </Text>
                       <Text style={styles.emptyText}>
-                        When you connect with someone, your chats appear here.
+                        {t("chats.emptyText")}
                       </Text>
                     </>
                   )}

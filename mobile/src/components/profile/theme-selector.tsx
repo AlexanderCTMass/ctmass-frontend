@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
 
 import { Brand, Radius, Spacing, makeStyles } from "@/constants/theme";
@@ -10,14 +11,11 @@ import {
   useThemeStore,
 } from "@/store/use-theme-store";
 
-const OPTIONS: { value: ThemePreference; label: string }[] = [
-  { value: "system", label: "System" },
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-];
+const OPTIONS: ThemePreference[] = ["system", "light", "dark"];
 
 export function ThemeSelector() {
   const styles = useStyles();
+  const { t } = useTranslation();
   const preference = useThemeStore((state) => state.preference);
   const setPreference = useThemeStore((state) => state.setPreference);
 
@@ -41,23 +39,24 @@ export function ThemeSelector() {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>Appearance</Text>
+      <Text style={styles.title}>{t("profile.theme.title")}</Text>
       <View style={styles.options}>
         {OPTIONS.map((option) => {
-          const selected = option.value === preference;
+          const selected = option === preference;
+          const label = t(`profile.theme.options.${option}`);
           return (
             <Pressable
-              key={option.value}
+              key={option}
               accessibilityRole="radio"
               accessibilityState={{ selected }}
-              accessibilityLabel={`${option.label} theme`}
-              onPress={() => select(option.value)}
+              accessibilityLabel={t("profile.theme.optionA11y", { label })}
+              onPress={() => select(option)}
               style={[styles.option, selected && styles.optionActive]}
             >
               <Text
                 style={[styles.optionText, selected && styles.optionTextActive]}
               >
-                {option.label}
+                {label}
               </Text>
             </Pressable>
           );
@@ -65,8 +64,8 @@ export function ThemeSelector() {
       </View>
       <Text style={styles.hint}>
         {preference === "system"
-          ? "System keeps the theme your phone used when you chose it. Tap System again to pick up a change."
-          : `The app always uses the ${preference} theme.`}
+          ? t("profile.theme.systemHint")
+          : t(`profile.theme.fixedHint.${preference}`)}
       </Text>
     </View>
   );

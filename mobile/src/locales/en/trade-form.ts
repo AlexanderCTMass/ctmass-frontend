@@ -1,0 +1,82 @@
+export const form = {
+  optional: "Optional",
+};
+
+export const tradeForm = {
+  errors: {
+    numbersOnly: "Numbers only.",
+    title: "Enter a trade name.",
+    specialty: "Pick your trade.",
+    customSpecialty: "Describe your trade.",
+    yearsRealistic: "Enter a realistic number of years.",
+    rateMax: "The upper rate must be higher.",
+    years: "Add your years in this trade.",
+    services: "Pick at least one service.",
+    pricingModel: "Choose how you price this trade.",
+    days: "Choose when you work.",
+    location: "Add your service location.",
+  },
+  tradeName: "Trade name",
+  tradeNameHint:
+    "What homeowners see on your card, e.g. your business name plus the trade.",
+  tradeNamePlaceholder: "e.g. Mike's Plumbing",
+  primaryTrade: "Primary trade",
+  primaryTradeHint:
+    "Each trade gets its own page with its own experience, prices and reviews. Add your other trades later.",
+  describeTrade: "Describe your trade",
+  addService: "Add your own service",
+  servicesSelected: "{{count}}/{{max}} selected. Tap a service to remove it.",
+  services: "Services you offer",
+  servicesHint:
+    "Specific jobs you take on in this trade. Homeowners see them on your card.",
+  yearsHint:
+    "Only hands-on experience in this trade, not total career or years in business.",
+  yearsPlaceholder: "e.g. 8",
+  yearsNote: "Shown as provided by you. CTMASS does not verify experience.",
+  pricingModel: "How do you price this trade?",
+  pricingModelHint: "Each trade has its own pricing.",
+  rateHint: "Enter one amount, or a range.",
+  from: "From",
+  to: "To",
+  example: "e.g. {{value}}",
+  serviceCallFee: "Service call / diagnostic fee",
+  credited: "Credited toward the repair",
+  travelFee: "Travel fee",
+  travelPlaceholder: "e.g. Free within 15 miles, then $1/mile",
+  afterHours: "After-hours / emergency pricing",
+  afterHoursPlaceholder: "e.g. +50% after 6pm, $150 dispatch",
+  materials: "Materials & parts",
+  materialsPlaceholder: "e.g. Parts billed separately",
+  pricingNote: "Pricing note",
+  pricingNotePlaceholder: "Anything else homeowners should know",
+  location: "Business location",
+  locationHint:
+    "Used to measure distance. Homeowners only see your city and state.",
+  towns: "Towns you serve",
+  townsHint: "Separate with commas.",
+  townsPlaceholder: "e.g. Hartford, West Hartford, Glastonbury",
+  days: "Working days",
+  hours: "Working hours",
+  newWork: "New work",
+  accepting: "Accepting new projects",
+  acceptingHint: "Turn off when you're fully booked.",
+  emergency: "Emergency service",
+  emergencyPlaceholder: "Hours, extra fee and coverage area",
+  responseTime: "Typical response time",
+  responseTimeHint: "Your own commitment. It is labeled “Set by contractor”.",
+  contactNote:
+    "Shared by all your trades. You can also change it in Edit profile.",
+  phoneHint: "Shown on your trades so homeowners can call or text you.",
+  about: "About your work",
+  aboutHint: "Typical projects, what makes you different.",
+  aboutPlaceholder: "What you do, how you work, what makes you great…",
+  estimatePlaceholder: "e.g. Written estimate within 48 hours",
+  warrantyPlaceholder: "What's covered and what isn't",
+  workBy: "Who does the work",
+};
+
+export const tradePicker = {
+  search: "Search trades, e.g. EV charger",
+  notOnList: "Not on the list",
+  noMatch: "No trades match. Pick “Other” and describe it.",
+};

@@ -7,12 +7,14 @@ import { CoinIcon } from "@/components/icons";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Radius, Spacing, makeStyles } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
+import { useT } from "@/lib/i18n";
 import { formatCoins } from "@/lib/shop";
 import { toHref } from "@/lib/navigation";
 import { useLoyaltyStore } from "@/store/use-loyalty-store";
 
 export function EarnCoinsModal() {
   const styles = useStyles();
+  const { t, tx } = useT();
   const earn = useLoyaltyStore((state) => state.earn);
   const clearEarn = useLoyaltyStore((state) => state.clearEarn);
   const balance = useLoyaltyStore((state) => state.balance);
@@ -54,35 +56,39 @@ export function EarnCoinsModal() {
             <CoinIcon size={72} />
           </Animated.View>
 
-          <Text style={styles.amount}>+{formatCoins(amount)} coins</Text>
+          <Text style={styles.amount}>
+            +{t("shop.coinsAmount", { amount: formatCoins(amount) })}
+          </Text>
           <Text style={styles.subtitle}>
             {earn?.reason
-              ? `${earn.reason.charAt(0).toUpperCase()}${earn.reason.slice(1)}`
-              : "Added to your balance"}
+              ? tx(
+                  `${earn.reason.charAt(0).toUpperCase()}${earn.reason.slice(1)}`,
+                )
+              : t("shop.earn.added")}
           </Text>
 
           <View style={styles.gapBox}>
             {gap > 0 ? (
               <Text style={styles.gapText}>
-                Earn{" "}
+                {t("shop.earn.earnPrefix")}{" "}
                 <Text style={styles.gapStrong}>
-                  {formatCoins(gap)} more coins
+                  {t("shop.earn.moreCoins", { amount: formatCoins(gap) })}
                 </Text>{" "}
-                to unlock your first shop reward.
+                {t("shop.earn.earnSuffix")}
               </Text>
             ) : knowsGoal ? (
-              <Text style={styles.gapText}>
-                You have enough coins for your first shop reward! 🎉
-              </Text>
+              <Text style={styles.gapText}>{t("shop.earn.enough")}</Text>
             ) : (
-              <Text style={styles.gapText}>
-                Keep earning coins to unlock shop rewards.
-              </Text>
+              <Text style={styles.gapText}>{t("shop.earn.keepEarning")}</Text>
             )}
           </View>
 
           <View style={styles.actions}>
-            <PrimaryButton label="Got it" withArrow={false} onPress={dismiss} />
+            <PrimaryButton
+              label={t("chat.gotIt")}
+              withArrow={false}
+              onPress={dismiss}
+            />
             <Pressable
               accessibilityRole="button"
               onPress={() => {
@@ -92,7 +98,7 @@ export function EarnCoinsModal() {
               }}
               style={styles.shopLink}
             >
-              <Text style={styles.shopLinkText}>Open Shop</Text>
+              <Text style={styles.shopLinkText}>{t("shop.earn.openShop")}</Text>
             </Pressable>
           </View>
         </Animated.View>

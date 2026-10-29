@@ -3,6 +3,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { GeoPlace } from "@/lib/mapbox";
 import type { TradeDetailsInput } from "@/lib/trade-details";
+import type { TradeContactInput } from "@/lib/user-profile";
 import { persistedStorage } from "@/lib/storage";
 
 export type TradeDraft = {
@@ -11,6 +12,7 @@ export type TradeDraft = {
   location: GeoPlace | null;
   about: string;
   details: TradeDetailsInput | null;
+  contact: TradeContactInput | null;
   createdTradeId: string | null;
 };
 
@@ -26,6 +28,7 @@ const initial: TradeDraft = {
   location: null,
   about: "",
   details: null,
+  contact: null,
   createdTradeId: null,
 };
 

@@ -1,8 +1,15 @@
-import { doc, getDoc, updateDoc } from "@react-native-firebase/firestore";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+} from "@react-native-firebase/firestore";
 
+import type { ContactMethod } from "@/constants/project-request";
 import {
   type BusinessDetails,
   type ContactSettings,
+  contactSettingsPayload,
   readBusiness,
   readContactSettings,
 } from "@/lib/business-profile";
@@ -99,4 +106,46 @@ export async function updateEditableProfile(
 export async function updateAvatar(uid: string, avatar: string): Promise<void> {
   const db = getDb();
   await updateDoc(doc(db, "profiles", uid), { avatar });
+}
+
+export type TradeContactInput = {
+  languages: string[];
+  methods: ContactMethod[];
+  phone: string;
+};
+
+export function normalizeUSPhone(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  return `+1${digits.slice(-10)}`;
+}
+
+export async function saveTradeContact(
+  uid: string,
+  input: TradeContactInput,
+): Promise<void> {
+  const db = getDb();
+  const ref = doc(db, "profiles", uid);
+  const snapshot = await getDoc(ref);
+  const raw = snapshot.exists() ? snapshot.data() : undefined;
+  const data =
+    raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const current = readContactSettings(data);
+  const wantsPhone = input.methods.some(
+    (method) => method === "phone" || method === "sms",
+  );
+  const wantsEmail = input.methods.includes("email");
+  await setDoc(
+    ref,
+    {
+      business: { languages: input.languages },
+      contactSettings: contactSettingsPayload(input.methods, {
+        showPhone: wantsPhone || current.showPhone,
+        showEmail: wantsEmail || current.showEmail,
+      }),
+      ...(wantsPhone && input.phone
+        ? { phone: normalizeUSPhone(input.phone) }
+        : {}),
+    },
+    { merge: true },
+  );
 }

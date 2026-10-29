@@ -4,6 +4,7 @@ import { Text, View } from "react-native";
 import { EyeIcon, ReviewIcon } from "@/components/icons";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { useT } from "@/lib/i18n";
 import type { PortfolioItem } from "@/lib/portfolio";
 
 export function PortfolioTile({
@@ -19,10 +20,11 @@ export function PortfolioTile({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const hidden = showOwnerState && !item.isPublic;
   return (
     <PressableScale
-      accessibilityLabel={item.title}
+      accessibilityLabel={tx(item.title)}
       onPress={onPress}
       onLongPress={onLongPress}
       style={styles.wrap}
@@ -40,7 +42,7 @@ export function PortfolioTile({
           ) : null}
           {item.beforeImage ? (
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>Before / After</Text>
+              <Text style={styles.badgeText}>{t("portfolio.beforeAfter")}</Text>
             </View>
           ) : null}
           {showOwnerState && item.isFavorite ? (
@@ -51,13 +53,13 @@ export function PortfolioTile({
           {hidden ? (
             <View style={styles.hiddenBadge}>
               <EyeIcon size={13} color="#FFFFFF" />
-              <Text style={styles.badgeText}>Hidden</Text>
+              <Text style={styles.badgeText}>{t("setup.hidden")}</Text>
             </View>
           ) : null}
         </View>
         <View style={styles.body}>
           <Text style={styles.title} numberOfLines={1}>
-            {item.title}
+            {tx(item.title)}
           </Text>
           {item.location ? (
             <Text style={styles.meta} numberOfLines={1}>

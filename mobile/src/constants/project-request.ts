@@ -1,3 +1,5 @@
+import { type Translate, dateLocale, translateData } from "@/lib/i18n";
+
 export type ContactMethod = "app" | "phone" | "sms" | "email";
 
 export type ContactBestTime =
@@ -49,14 +51,19 @@ export const START_OPTIONS: StartOption[] = [
   { key: "flexible", label: "I'm flexible", type: "specialist" },
 ];
 
-export function contactMethodLabel(method: ContactMethod): string {
-  return CONTACT_METHODS.find((item) => item.value === method)?.label ?? method;
+export function contactMethodLabel(
+  method: ContactMethod,
+  t: Translate,
+): string {
+  const label = CONTACT_METHODS.find((item) => item.value === method)?.label;
+  return label ? translateData(t, label) : method;
 }
 
-export function bestTimeLabel(time: ContactBestTime): string {
+export function bestTimeLabel(time: ContactBestTime, t: Translate): string {
   const item = CONTACT_BEST_TIMES.find((entry) => entry.value === time);
   if (!item) return time;
-  return item.hint ? `${item.label} (${item.hint})` : item.label;
+  const label = translateData(t, item.label);
+  return item.hint ? `${label} (${item.hint})` : label;
 }
 
 export function parseBudget(text: string): number | null {
@@ -75,29 +82,35 @@ export function formatBudget(value: number): string {
 }
 
 function shortDate(date: Date): string {
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return date.toLocaleDateString(dateLocale(), {
+    month: "short",
+    day: "numeric",
+  });
 }
 
 export function startLabel(
   type: ProjectStartType | null,
   start: Date | null,
   end: Date | null,
+  t: Translate,
 ): string {
   switch (type) {
     case "asap":
-      return "As soon as possible";
+      return t("project.start.asap");
     case "specialist":
-      return "Flexible — specialist's choice";
+      return t("project.start.flexible");
     case "period":
       if (start && end) return `${shortDate(start)} – ${shortDate(end)}`;
-      if (end) return `By ${shortDate(end)}`;
-      if (start) return `From ${shortDate(start)}`;
-      return "Specific dates";
+      if (end) return t("project.start.by", { date: shortDate(end) });
+      if (start) return t("project.start.from", { date: shortDate(start) });
+      return t("project.start.specific");
     default:
       return "";
   }
 }
 
-export function budgetLabel(budget: number | null): string {
-  return budget ? `Up to ${formatBudget(budget)}` : "";
+export function budgetLabel(budget: number | null, t: Translate): string {
+  return budget
+    ? t("project.budgetUpTo", { amount: formatBudget(budget) })
+    : "";
 }

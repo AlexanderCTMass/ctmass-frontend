@@ -30,6 +30,7 @@ import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { errorFeedback, successFeedback } from "@/lib/haptics";
 import { getDb } from "@/lib/firebase";
+import { translateKey, useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
 import type { Role } from "@/lib/roles";
 import {
@@ -126,11 +127,12 @@ function PurchaseSheetInner({
 }: InnerProps) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const insets = useSafeAreaInsets();
   const userName = useAuthStore((state) => state.user?.name ?? "");
   const config = useMemo(
-    () => getCategoryConfig(feature.category),
-    [feature.category],
+    () => getCategoryConfig(feature.category, t),
+    [feature.category, t],
   );
   const sizeOptions = useMemo(() => getSizeOptions(feature), [feature]);
   const hasSizes = sizeOptions.length > 0;
@@ -149,16 +151,13 @@ function PurchaseSheetInner({
           email: z
             .string()
             .trim()
-            .min(1, "Email is required")
-            .email("Enter a valid email address"),
+            .min(1, "shop.validation.emailRequired")
+            .email("shop.validation.emailInvalid"),
           phone: z
             .string()
             .trim()
-            .min(1, "Phone is required")
-            .refine(
-              isValidUSPhone,
-              "Enter a valid US phone number (+1 and 10 digits)",
-            ),
+            .min(1, "shop.validation.phoneRequired")
+            .refine(isValidUSPhone, "validation.usPhone"),
           address: z.string().optional(),
           message: z.string().optional(),
           packageId: z.string().optional(),
@@ -171,14 +170,14 @@ function PurchaseSheetInner({
             ctx.addIssue({
               path: ["address"],
               code: z.ZodIssueCode.custom,
-              message: "Address is required",
+              message: "shop.validation.addressRequired",
             });
           }
           if (config.messageRequired && !value.message?.trim()) {
             ctx.addIssue({
               path: ["message"],
               code: z.ZodIssueCode.custom,
-              message: "Message is required",
+              message: "shop.validation.messageRequired",
             });
           }
         }),
@@ -362,11 +361,11 @@ function PurchaseSheetInner({
     const total = unit * qty;
 
     if (!userId) {
-      setTopError("You must be signed in to place an order.");
+      setTopError(t("shop.signInToOrder"));
       return;
     }
     if (total > 0 && balance < total) {
-      setTopError("Not enough coins to complete this purchase.");
+      setTopError(t("shop.notEnough"));
       return;
     }
 
@@ -423,7 +422,7 @@ function PurchaseSheetInner({
       retryRef.current = true;
       errorFeedback();
       setStep("form");
-      setTopError(purchaseErrorText(error));
+      setTopError(purchaseErrorText(error, t));
     }
   };
 
@@ -441,39 +440,40 @@ function PurchaseSheetInner({
           <View style={styles.doneCircle}>
             <CheckIcon size={40} color={colors.accent} />
           </View>
-          <Text style={styles.doneTitle}>Order placed!</Text>
+          <Text style={styles.doneTitle}>{t("shop.done.title")}</Text>
           <Text style={styles.doneText}>
-            Your order{" "}
-            <Text style={styles.doneStrong}>{feature.displayName}</Text> has
-            been placed.
+            {t("shop.done.orderPrefix")}{" "}
+            <Text style={styles.doneStrong}>{tx(feature.displayName)}</Text>{" "}
+            {t("shop.done.orderSuffix")}
           </Text>
           {ticket ? (
-            <Text style={styles.doneTicket}>Ticket #{ticket}</Text>
+            <Text style={styles.doneTicket}>
+              {t("shop.done.ticket", { ticket })}
+            </Text>
           ) : null}
-          <Text style={styles.doneText}>
-            Our team is on it and will follow up shortly. You can find this
-            order anytime under Shop → My orders.
-          </Text>
+          <Text style={styles.doneText}>{t("shop.done.followUp")}</Text>
           {feature.category === SHOP_CATEGORIES.IT_SERVICES ? (
             <View style={styles.doneButton}>
               <PrimaryButton
-                label="Book a call with our team"
+                label={t("shop.done.bookCall")}
                 withArrow={false}
                 onPress={bookCall}
               />
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Close"
+                accessibilityLabel={t("common.close")}
                 onPress={closeSheet}
                 style={styles.doneSecondary}
               >
-                <Text style={styles.doneSecondaryText}>Maybe later</Text>
+                <Text style={styles.doneSecondaryText}>
+                  {t("shop.maybeLater")}
+                </Text>
               </Pressable>
             </View>
           ) : (
             <View style={styles.doneButton}>
               <PrimaryButton
-                label="Close"
+                label={t("common.close")}
                 withArrow={false}
                 onPress={closeSheet}
               />
@@ -492,11 +492,11 @@ function PurchaseSheetInner({
             {config.title}
           </Text>
           <Text style={styles.headerSubtitle} numberOfLines={1}>
-            {feature.displayName} · {feature.category}
+            {tx(feature.displayName)} · {tx(feature.category)}
           </Text>
         </View>
         <Pressable
-          accessibilityLabel="Close"
+          accessibilityLabel={t("common.close")}
           onPress={closeSheet}
           disabled={submitting}
           style={styles.close}
@@ -526,7 +526,7 @@ function PurchaseSheetInner({
 
           {hasPackages ? (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Select package</Text>
+              <Text style={styles.sectionTitle}>{t("shop.selectPackage")}</Text>
               <View style={styles.packageList}>
                 {packages.map((pkg) => {
                   const selected = pkg.id === watchedPackageId;
@@ -556,16 +556,18 @@ function PurchaseSheetInner({
                       </View>
                       <View style={styles.packageInfo}>
                         <Text style={styles.packageName}>
-                          {pkg.displayName}
+                          {tx(pkg.displayName)}
                         </Text>
                         <Text style={styles.packagePrice}>
-                          {formatCoins(pkg.price)} coins
+                          {t("shop.coinsAmount", {
+                            amount: formatCoins(pkg.price),
+                          })}
                         </Text>
                       </View>
                       {pkg.isRecommended ? (
                         <View style={styles.recommended}>
                           <Text style={styles.recommendedText}>
-                            Recommended
+                            {t("shop.recommended")}
                           </Text>
                         </View>
                       ) : null}
@@ -579,7 +581,7 @@ function PurchaseSheetInner({
           {config.showItems ? (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>
-                {hasSizes ? "Items" : "Quantity"}
+                {hasSizes ? t("shop.items") : t("shop.quantity")}
               </Text>
               {fields.map((field, index) => {
                 const row = rows[index] ?? { size: defaultSize, quantity: 1 };
@@ -604,7 +606,7 @@ function PurchaseSheetInner({
                                   active && styles.sizePillTextActive,
                                 ]}
                               >
-                                {size}
+                                {tx(size)}
                               </Text>
                             </Pressable>
                           );
@@ -614,7 +616,7 @@ function PurchaseSheetInner({
                     <View style={styles.itemControls}>
                       <View style={styles.stepper}>
                         <Pressable
-                          accessibilityLabel="Decrease quantity"
+                          accessibilityLabel={t("shop.decrease")}
                           onPress={() => setQuantity(index, -1)}
                           style={styles.stepBtn}
                         >
@@ -622,7 +624,7 @@ function PurchaseSheetInner({
                         </Pressable>
                         <Text style={styles.stepValue}>{row.quantity}</Text>
                         <Pressable
-                          accessibilityLabel="Increase quantity"
+                          accessibilityLabel={t("shop.increase")}
                           onPress={() => setQuantity(index, 1)}
                           style={styles.stepBtn}
                         >
@@ -631,11 +633,13 @@ function PurchaseSheetInner({
                       </View>
                       {hasSizes && fields.length > 1 ? (
                         <Pressable
-                          accessibilityLabel="Remove item"
+                          accessibilityLabel={t("shop.removeItem")}
                           onPress={() => removeItem(index)}
                           style={styles.removeBtn}
                         >
-                          <Text style={styles.removeText}>Remove</Text>
+                          <Text style={styles.removeText}>
+                            {t("videoStory.remove")}
+                          </Text>
                         </Pressable>
                       ) : null}
                     </View>
@@ -644,7 +648,7 @@ function PurchaseSheetInner({
               })}
               {hasSizes ? (
                 <Pressable onPress={addItem} style={styles.addItem}>
-                  <Text style={styles.addItemText}>+ Add another size</Text>
+                  <Text style={styles.addItemText}>{t("shop.addSize")}</Text>
                 </Pressable>
               ) : null}
             </View>
@@ -667,18 +671,16 @@ function PurchaseSheetInner({
           />
 
           <Text style={[styles.sectionTitle, styles.contactTitle]}>
-            Contact details
+            {t("shop.contactDetails")}
           </Text>
-          <Text style={styles.contactHint}>
-            Pre-filled from your profile — update it for this order if needed.
-          </Text>
+          <Text style={styles.contactHint}>{t("shop.contactHint")}</Text>
 
           <Controller
             control={control}
             name="email"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextField
-                label="Email"
+                label={t("compare.values.email")}
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
@@ -694,7 +696,7 @@ function PurchaseSheetInner({
             name="phone"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextField
-                label="Phone"
+                label={t("compare.values.phone")}
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
@@ -710,12 +712,12 @@ function PurchaseSheetInner({
               name="address"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextField
-                  label="Address"
+                  label={t("shop.address")}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.address?.message}
-                  placeholder="Street, city, state, ZIP"
+                  placeholder={t("shop.addressPlaceholder")}
                   multiline
                 />
               )}
@@ -724,14 +726,14 @@ function PurchaseSheetInner({
 
           <View style={styles.summary}>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Total</Text>
+              <Text style={styles.summaryLabel}>{t("shop.total")}</Text>
               {isFree ? (
-                <Text style={styles.summaryFree}>Free</Text>
+                <Text style={styles.summaryFree}>{t("shop.free")}</Text>
               ) : (
                 <View style={styles.summaryPrice}>
                   <CoinIcon size={16} />
                   <Text style={styles.summaryPriceText}>
-                    {formatCoins(price)} coins
+                    {t("shop.coinsAmount", { amount: formatCoins(price) })}
                   </Text>
                 </View>
               )}
@@ -739,13 +741,17 @@ function PurchaseSheetInner({
             {!isFree ? (
               <>
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Your balance</Text>
+                  <Text style={styles.summaryLabel}>
+                    {t("shop.yourBalance")}
+                  </Text>
                   <Text style={styles.summaryValue}>
                     {formatCoins(balance)}
                   </Text>
                 </View>
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Balance after</Text>
+                  <Text style={styles.summaryLabel}>
+                    {t("shop.balanceAfter")}
+                  </Text>
                   <Text
                     style={[
                       styles.summaryValueStrong,
@@ -761,15 +767,13 @@ function PurchaseSheetInner({
 
           {!canAfford ? (
             <View style={styles.errorBanner}>
-              <Text style={styles.errorBannerText}>
-                Not enough coins to complete this purchase.
-              </Text>
+              <Text style={styles.errorBannerText}>{t("shop.notEnough")}</Text>
             </View>
           ) : null}
 
           <View style={styles.submit}>
             <PrimaryButton
-              label={submitting ? "Submitting…" : config.submitLabel}
+              label={submitting ? t("shop.submitting") : config.submitLabel}
               withArrow={false}
               loading={submitting}
               disabled={!canAfford || submitting}
@@ -820,6 +824,7 @@ function TextField({
 }: TextFieldProps) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   return (
     <View style={styles.fieldWrap}>
       <Text style={styles.label}>{label}</Text>
@@ -838,7 +843,9 @@ function TextField({
           error ? styles.inputError : null,
         ]}
       />
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? (
+        <Text style={styles.errorText}>{translateKey(t, error)}</Text>
+      ) : null}
     </View>
   );
 }

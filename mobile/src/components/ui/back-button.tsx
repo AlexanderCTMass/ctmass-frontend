@@ -4,13 +4,15 @@ import { ChevronLeftIcon } from "@/components/icons";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents, currentScreen } from "@/lib/analytics-events";
+import { useT } from "@/lib/i18n";
 
 export function BackButton({ onPress }: { onPress: () => void }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   return (
     <PressableScale
-      accessibilityLabel="Go back"
+      accessibilityLabel={t("ui.goBack")}
       onPress={() => {
         analyticsEvents.backButtonTapped({ screen: currentScreen() });
         onPress();

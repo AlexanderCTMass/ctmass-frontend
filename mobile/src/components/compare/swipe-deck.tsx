@@ -14,6 +14,7 @@ import { scheduleOnRN } from "react-native-worklets";
 
 import { Brand, Radius, makeStyles } from "@/constants/theme";
 import { tickFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 
 export type SwipeDirection = 1 | -1;
 
@@ -31,6 +32,7 @@ function TopCard({
   children: React.ReactNode;
 }) {
   const styles = useStyles();
+  const { t } = useT();
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const width = useSharedValue(360);
@@ -59,8 +61,13 @@ function TopCard({
       if (decided.value === 1) return;
       translateX.value = event.translationX;
       translateY.value = event.translationY * 0.25;
-      const t = width.value * 0.28;
-      const zone = event.translationX > t ? 1 : event.translationX < -t ? -1 : 0;
+      const threshold = width.value * 0.28;
+      const zone =
+        event.translationX > threshold
+          ? 1
+          : event.translationX < -threshold
+            ? -1
+            : 0;
       if (zone !== armed.value) {
         if (zone !== 0) scheduleOnRN(tick);
         armed.value = zone;
@@ -68,10 +75,12 @@ function TopCard({
     })
     .onEnd((event) => {
       if (decided.value === 1) return;
-      const t = width.value * 0.28;
+      const threshold = width.value * 0.28;
       const x = translateX.value;
-      const goRight = x > t || (x > t * 0.4 && event.velocityX > 900);
-      const goLeft = x < -t || (x < -t * 0.4 && event.velocityX < -900);
+      const goRight =
+        x > threshold || (x > threshold * 0.4 && event.velocityX > 900);
+      const goLeft =
+        x < -threshold || (x < -threshold * 0.4 && event.velocityX < -900);
       armed.value = 0;
       if (!goRight && !goLeft) {
         translateX.value = withSpring(0, SPRING);
@@ -128,19 +137,26 @@ function TopCard({
 
   return (
     <GestureDetector gesture={pan}>
-      <Animated.View style={[styles.layer, styles.top, cardStyle]} onLayout={onLayout}>
+      <Animated.View
+        style={[styles.layer, styles.top, cardStyle]}
+        onLayout={onLayout}
+      >
         {children}
         <Animated.View
           pointerEvents="none"
           style={[styles.stamp, styles.keep, keepStyle]}
         >
-          <Text style={[styles.stampText, styles.keepText]}>KEEP</Text>
+          <Text style={[styles.stampText, styles.keepText]}>
+            {t("compare.keepStamp")}
+          </Text>
         </Animated.View>
         <Animated.View
           pointerEvents="none"
           style={[styles.stamp, styles.drop, dropStyle]}
         >
-          <Text style={[styles.stampText, styles.dropText]}>DROP</Text>
+          <Text style={[styles.stampText, styles.dropText]}>
+            {t("compare.dropStamp")}
+          </Text>
         </Animated.View>
       </Animated.View>
     </GestureDetector>

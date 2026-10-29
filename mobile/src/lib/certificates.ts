@@ -3,12 +3,16 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  limit,
+  query,
   serverTimestamp,
   setDoc,
+  updateDoc,
 } from "@react-native-firebase/firestore";
 
 import { getDb } from "@/lib/firebase";
 import { deleteImage } from "@/lib/storage-upload";
+import i18n from "@/lib/i18n";
 
 export type CertificateFile = {
   id: string;
@@ -16,6 +20,16 @@ export type CertificateFile = {
   url: string;
   type: string;
   isPublic: boolean;
+  uploadedAt: string;
+  size: number;
+  tags: string[];
+};
+
+export type CertificateVisibility = {
+  institution: boolean;
+  specialty: boolean;
+  year: boolean;
+  number: boolean;
 };
 
 export type Certificate = {
@@ -24,23 +38,30 @@ export type Certificate = {
   institution: string;
   specialty: string;
   year: string;
+  documentNumber: string;
+  isPublic: boolean;
+  visibility: CertificateVisibility;
   files: CertificateFile[];
   linkedTradeIds: string[];
 };
 
-export type NewCertificateFile = {
+export type CertificateFileInput = {
   url: string;
   name: string;
   type: string;
-  isPublic: boolean;
+  id?: string;
 };
 
-export type NewCertificate = {
+export type CertificateInput = {
   documentType: string;
   institution: string;
   specialty: string;
   year: string;
-  files: NewCertificateFile[];
+  documentNumber: string;
+  isPublic: boolean;
+  showPhotos: boolean;
+  visibility: CertificateVisibility;
+  files: CertificateFileInput[];
 };
 
 function str(value: unknown, fallback = ""): string {
@@ -64,16 +85,34 @@ function mapFiles(data: Record<string, unknown>): CertificateFile[] {
       const file = asRecord(item);
       return {
         id: str(file.id) || String(index),
-        name: str(file.name) || "Document",
+        name: str(file.name) || i18n.t("tradePage.document"),
         url: str(file.url),
         type: str(file.type),
         isPublic: file.isPublic !== false,
+        uploadedAt: str(file.uploadedAt),
+        size: typeof file.size === "number" ? file.size : 0,
+        tags: Array.isArray(file.tags)
+          ? file.tags.filter((tag): tag is string => typeof tag === "string")
+          : [],
       };
     })
     .filter((file) => file.url.length > 0);
 }
 
-function mapCertificate(id: string, data: Record<string, unknown>): Certificate {
+function readVisibility(value: unknown): CertificateVisibility {
+  const raw = asRecord(value);
+  return {
+    institution: raw.showInstitution !== false,
+    specialty: raw.showSpecialty !== false && raw.showDegree !== false,
+    year: raw.showStartEndDates !== false,
+    number: raw.showDocumentNumber !== false,
+  };
+}
+
+function mapCertificate(
+  id: string,
+  data: Record<string, unknown>,
+): Certificate {
   return {
     id,
     documentType: str(data.documentType) || str(data.certificateType),
@@ -81,6 +120,9 @@ function mapCertificate(id: string, data: Record<string, unknown>): Certificate 
       str(data.institution) || str(data.issuingOrganization) || str(data.title),
     specialty: str(data.specialty) || str(data.degree),
     year: str(data.year) || str(data.startYear),
+    documentNumber: str(data.documentNumber),
+    isPublic: data.isPublic !== false,
+    visibility: readVisibility(data.visibility),
     files: mapFiles(data),
     linkedTradeIds: Array.isArray(data.linkedTradeIds)
       ? data.linkedTradeIds.filter((id): id is string => typeof id === "string")
@@ -97,41 +139,65 @@ export async function fetchCertificates(uid: string): Promise<Certificate[]> {
   );
 }
 
+export async function hasAnyCertificate(uid: string): Promise<boolean> {
+  if (!uid) return false;
+  const snapshot = await getDocs(
+    query(collection(getDb(), "profiles", uid, "education"), limit(1)),
+  );
+  return !snapshot.empty;
+}
+
+export function publicView(cert: Certificate): Certificate | null {
+  if (!cert.isPublic) return null;
+  const view: Certificate = {
+    ...cert,
+    institution: cert.visibility.institution ? cert.institution : "",
+    specialty: cert.visibility.specialty ? cert.specialty : "",
+    year: cert.visibility.year ? cert.year : "",
+    documentNumber: cert.visibility.number ? cert.documentNumber : "",
+    files: cert.files.filter((file) => file.isPublic),
+  };
+  const hasContent =
+    view.files.length > 0 ||
+    Boolean(view.documentType || view.institution || view.specialty);
+  return hasContent ? view : null;
+}
+
 export async function fetchPublicCertificates(
   uid: string,
 ): Promise<Certificate[]> {
   const all = await fetchCertificates(uid);
   return all
-    .map((cert) => ({
-      ...cert,
-      files: cert.files.filter((file) => file.isPublic),
-    }))
-    .filter((cert) => cert.files.length > 0);
+    .map(publicView)
+    .filter((cert): cert is Certificate => cert !== null);
 }
 
-export async function addCertificate(
-  uid: string,
-  input: NewCertificate,
-): Promise<string> {
-  const db = getDb();
-  const ref = doc(collection(db, "profiles", uid, "education"));
+function certificateFields(
+  certificateId: string,
+  input: CertificateInput,
+  existing: CertificateFile[] = [],
+) {
   const uploadedAt = new Date().toISOString().split("T")[0];
+  const filesPublic = input.isPublic && input.showPhotos;
+  const visibility = input.isPublic
+    ? input.visibility
+    : { institution: false, specialty: false, year: false, number: false };
+  const stamp = Date.now().toString(36);
+  const known = new Map(existing.map((file) => [file.id, file]));
   const files = input.files.map((file, index) => ({
-    id: `${ref.id}_${index}`,
+    id: file.id ?? `${certificateId}_${stamp}_${index}`,
     name: file.name,
     url: file.url,
-    size: 0,
+    size: (file.id ? known.get(file.id)?.size : undefined) ?? 0,
     type: file.type,
-    isPublic: file.isPublic,
+    isPublic: filesPublic,
   }));
   const certificates = files.map((file) => ({
     ...file,
-    tags: [],
-    uploadedAt,
+    tags: known.get(file.id)?.tags ?? [],
+    uploadedAt: known.get(file.id)?.uploadedAt || uploadedAt,
   }));
-
-  await setDoc(ref, {
-    id: ref.id,
+  return {
     documentType: input.documentType,
     certificateType: input.documentType,
     institution: input.institution,
@@ -141,22 +207,53 @@ export async function addCertificate(
     degree: input.specialty,
     year: input.year,
     startYear: input.year,
+    documentNumber: input.documentNumber,
+    isPublic: input.isPublic,
     visibility: {
-      showInstitution: true,
-      showSpecialty: true,
-      showDegree: true,
-      showStartEndDates: true,
-      showGPA: true,
-      showDocumentNumber: true,
+      showInstitution: visibility.institution,
+      showSpecialty: visibility.specialty,
+      showDegree: visibility.specialty,
+      showStartEndDates: visibility.year,
+      showGPA: input.isPublic,
+      showDocumentNumber: visibility.number,
     },
-    linkedTradeIds: [],
     certificates,
     files,
+  };
+}
+
+export async function addCertificate(
+  uid: string,
+  input: CertificateInput,
+): Promise<string> {
+  const db = getDb();
+  const ref = doc(collection(db, "profiles", uid, "education"));
+  await setDoc(ref, {
+    id: ref.id,
+    ...certificateFields(ref.id, input),
+    linkedTradeIds: [],
     source: "mobile",
     createdAt: serverTimestamp(),
   });
-
   return ref.id;
+}
+
+export async function updateCertificate(
+  uid: string,
+  previous: Certificate,
+  input: CertificateInput,
+): Promise<void> {
+  const db = getDb();
+  await updateDoc(doc(db, "profiles", uid, "education", previous.id), {
+    ...certificateFields(previous.id, input, previous.files),
+    updatedAt: serverTimestamp(),
+  });
+  const kept = new Set(input.files.map((file) => file.url));
+  await Promise.all(
+    previous.files
+      .filter((file) => !kept.has(file.url))
+      .map((file) => deleteImage(file.url).catch(() => undefined)),
+  );
 }
 
 export async function deleteCertificate(
@@ -169,4 +266,26 @@ export async function deleteCertificate(
   );
   const db = getDb();
   await deleteDoc(doc(db, "profiles", uid, "education", certificateId));
+}
+
+export function certificateTitle(
+  cert: Certificate,
+  translate: (value: string) => string,
+): string {
+  return cert.institution || translate(cert.documentType);
+}
+
+export function certificateSubtitle(
+  cert: Certificate,
+  translate: (value: string) => string,
+  numberLabel: (number: string) => string,
+): string {
+  return [
+    cert.institution ? translate(cert.documentType) : "",
+    cert.specialty,
+    cert.year,
+    cert.documentNumber ? numberLabel(cert.documentNumber) : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }

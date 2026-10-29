@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { Radius, Spacing, makeStyles } from "@/constants/theme";
+import { useT } from "@/lib/i18n";
 import type { SocialGroup } from "@/lib/social-groups";
 
 export function CommunityBadges({ groups }: { groups: SocialGroup[] }) {
   const styles = useStyles();
+  const { tx } = useT();
   const [activeKey, setActiveKey] = useState<string>(groups[0]?.value ?? "");
 
   if (groups.length === 0) return null;
@@ -25,7 +27,7 @@ export function CommunityBadges({ groups }: { groups: SocialGroup[] }) {
             <Pressable
               key={group.value}
               accessibilityRole="button"
-              accessibilityLabel={group.label}
+              accessibilityLabel={tx(group.label)}
               onPress={() => setActiveKey(group.value)}
               style={[styles.chip, isActive && styles.chipActive]}
             >
@@ -34,7 +36,7 @@ export function CommunityBadges({ groups }: { groups: SocialGroup[] }) {
                 style={[styles.chipText, isActive && styles.chipTextActive]}
                 numberOfLines={1}
               >
-                {group.label}
+                {tx(group.label)}
               </Text>
             </Pressable>
           );
@@ -43,8 +45,8 @@ export function CommunityBadges({ groups }: { groups: SocialGroup[] }) {
 
       {active.description ? (
         <View style={styles.descBox}>
-          <Text style={styles.descTitle}>{active.label}</Text>
-          <Text style={styles.descText}>{active.description}</Text>
+          <Text style={styles.descTitle}>{tx(active.label)}</Text>
+          <Text style={styles.descText}>{tx(active.description)}</Text>
         </View>
       ) : null}
     </View>

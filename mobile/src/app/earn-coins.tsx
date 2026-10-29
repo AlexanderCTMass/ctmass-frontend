@@ -15,6 +15,7 @@ import {
 import { BackButton } from "@/components/ui/back-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { useT } from "@/lib/i18n";
 import {
   coinsForRole,
   isRuleEnabledForRole,
@@ -42,6 +43,7 @@ const CATEGORY_ICON: Record<string, ActionIcon> = {
 
 export default function EarnCoinsScreen() {
   const styles = useStyles();
+  const { t } = useT();
   const role = useAuthStore((state) => state.user?.role ?? null);
   const balance = useLoyaltyStore((state) => state.balance);
   const minShopPrice = useLoyaltyStore((state) => state.minShopPrice);
@@ -73,7 +75,7 @@ export default function EarnCoinsScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>How to Earn Coins</Text>
+          <Text style={styles.headerTitle}>{t("shop.earnScreen.title")}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -82,23 +84,23 @@ export default function EarnCoinsScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.balanceCard}>
-            <Text style={styles.balanceLabel}>Your balance</Text>
+            <Text style={styles.balanceLabel}>{t("shop.yourBalance")}</Text>
             <View style={styles.balanceRow}>
               <CoinIcon size={32} />
               <Text style={styles.balanceValue}>{formatCoins(balance)}</Text>
             </View>
             <Text style={styles.balanceGap}>
               {gap > 0
-                ? `Earn ${formatCoins(gap)} more coins to unlock your first shop reward.`
+                ? t("shop.earnScreen.gap", { amount: formatCoins(gap) })
                 : minShopPrice > 0
-                  ? "You have enough coins for your first shop reward! 🎉"
-                  : "Complete actions below to earn CTMASS Coins."}
+                  ? t("shop.earn.enough")
+                  : t("shop.earnScreen.completeBelow")}
             </Text>
           </View>
 
-          <Text style={styles.sectionTitle}>Ways to earn</Text>
+          <Text style={styles.sectionTitle}>{t("shop.earnScreen.ways")}</Text>
           <Text style={styles.sectionSubtitle}>
-            Complete these actions to earn coins and unlock rewards.
+            {t("shop.earnScreen.waysText")}
           </Text>
 
           {isLoading && actions.length === 0 ? (
@@ -137,6 +139,7 @@ function SkeletonActionCard() {
 function ActionRow({ rule, coins }: { rule: LoyaltyRule; coins: number }) {
   const { colors, isDark } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const color =
     (isDark ? LOYALTY_CATEGORY_COLORS : LOYALTY_CATEGORY_COLORS_LIGHT)[
       rule.category
@@ -150,7 +153,7 @@ function ActionRow({ rule, coins }: { rule: LoyaltyRule; coins: number }) {
       <View style={styles.actionBody}>
         <View style={styles.actionTopRow}>
           <Text style={styles.actionTitle} numberOfLines={2}>
-            {rule.displayName}
+            {tx(rule.displayName)}
           </Text>
           <View style={styles.coinPill}>
             <CoinIcon size={15} />
@@ -158,11 +161,11 @@ function ActionRow({ rule, coins }: { rule: LoyaltyRule; coins: number }) {
           </View>
         </View>
         {rule.description ? (
-          <Text style={styles.actionDescription}>{rule.description}</Text>
+          <Text style={styles.actionDescription}>{tx(rule.description)}</Text>
         ) : null}
         {rule.maxPerUser === 1 ? (
           <View style={styles.onceChip}>
-            <Text style={styles.onceChipText}>Once only</Text>
+            <Text style={styles.onceChipText}>{t("shop.earnScreen.once")}</Text>
           </View>
         ) : null}
       </View>

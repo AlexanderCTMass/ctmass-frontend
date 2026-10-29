@@ -1,13 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useRef } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { z } from "zod";
 
 import {
@@ -27,9 +21,16 @@ import {
   type ContactPreferences,
   PHONE_CONTACT_METHODS,
 } from "@/constants/project-request";
-import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
 import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { selectFeedback } from "@/lib/haptics";
+import { translateKey, useT } from "@/lib/i18n";
 import { isValidUSPhone } from "@/lib/shop-form";
 
 const METHOD_VALUES = ["app", "phone", "sms", "email"] as const;
@@ -52,7 +53,7 @@ const schema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["bestTime"],
-        message: "Choose the best time to reach you",
+        message: "validation.bestTime",
       });
     }
     const needsPhone = values.methods.some((method) =>
@@ -62,7 +63,7 @@ const schema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["phone"],
-        message: "Enter a valid US phone number (+1 and 10 digits)",
+        message: "validation.usPhone",
       });
     }
   });
@@ -74,7 +75,13 @@ function normalizePhone(value: string): string {
   return `+1${digits.slice(-10)}`;
 }
 
-function MethodIcon({ method, color }: { method: ContactMethod; color: string }) {
+function MethodIcon({
+  method,
+  color,
+}: {
+  method: ContactMethod;
+  color: string;
+}) {
   switch (method) {
     case "app":
       return <ResponsesIcon size={20} color={color} />;
@@ -96,6 +103,7 @@ export function ContactPreferencesForm({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const scrollRef = useRef<ScrollView>(null);
   const phoneY = useRef(0);
 
@@ -162,7 +170,7 @@ export function ContactPreferencesForm({
                     key={item.value}
                     accessibilityRole="switch"
                     accessibilityState={{ checked: active }}
-                    accessibilityLabel={item.label}
+                    accessibilityLabel={tx(item.label)}
                     onPress={toggle}
                     style={[styles.methodRow, active && styles.methodRowActive]}
                   >
@@ -177,7 +185,7 @@ export function ContactPreferencesForm({
                         color={active ? colors.accent : colors.textSecondary}
                       />
                     </View>
-                    <Text style={styles.methodLabel}>{item.label}</Text>
+                    <Text style={styles.methodLabel}>{tx(item.label)}</Text>
                     <View
                       pointerEvents="none"
                       accessibilityElementsHidden
@@ -198,7 +206,7 @@ export function ContactPreferencesForm({
               phoneY.current = event.nativeEvent.layout.y;
             }}
           >
-            <Text style={styles.sectionLabel}>Phone number</Text>
+            <Text style={styles.sectionLabel}>{t("project.phoneNumber")}</Text>
             <Controller
               control={control}
               name="phone"
@@ -230,7 +238,9 @@ export function ContactPreferencesForm({
                     ]}
                   />
                   {error && (isDirty || value) ? (
-                    <Text style={styles.errorText}>{error.message}</Text>
+                    <Text style={styles.errorText}>
+                      {translateKey(t, error.message)}
+                    </Text>
                   ) : null}
                 </>
               )}
@@ -240,7 +250,9 @@ export function ContactPreferencesForm({
 
         <View style={styles.sectionHeader}>
           <ClockIcon size={15} color={colors.textSecondary} />
-          <Text style={styles.sectionLabel}>Best time to reach you</Text>
+          <Text style={styles.sectionLabel}>
+            {t("project.bestTimeToReach")}
+          </Text>
         </View>
         <Controller
           control={control}
@@ -254,7 +266,7 @@ export function ContactPreferencesForm({
                     key={item.value}
                     accessibilityRole="radio"
                     accessibilityState={{ selected: active }}
-                    accessibilityLabel={item.label}
+                    accessibilityLabel={tx(item.label)}
                     onPress={() => {
                       selectFeedback();
                       onChange(item.value);
@@ -262,13 +274,19 @@ export function ContactPreferencesForm({
                     style={[styles.chip, active && styles.chipActive]}
                   >
                     <Text
-                      style={[styles.chipLabel, active && styles.chipLabelActive]}
+                      style={[
+                        styles.chipLabel,
+                        active && styles.chipLabelActive,
+                      ]}
                     >
-                      {item.label}
+                      {tx(item.label)}
                     </Text>
                     {item.hint ? (
                       <Text
-                        style={[styles.chipHint, active && styles.chipHintActive]}
+                        style={[
+                          styles.chipHint,
+                          active && styles.chipHintActive,
+                        ]}
                       >
                         {item.hint}
                       </Text>
@@ -283,7 +301,7 @@ export function ContactPreferencesForm({
 
       <View style={styles.footer}>
         <PrimaryButton
-          label="Confirm"
+          label={t("project.confirm")}
           withArrow={false}
           disabled={!isValid}
           onPress={() => {
@@ -329,7 +347,9 @@ const useStyles = makeStyles((t) => ({
   },
   methodRowActive: {
     borderColor: "rgba(22,179,100,0.45)",
-    backgroundColor: t.isDark ? "rgba(22,179,100,0.10)" : "rgba(22,179,100,0.07)",
+    backgroundColor: t.isDark
+      ? "rgba(22,179,100,0.10)"
+      : "rgba(22,179,100,0.07)",
   },
   methodIcon: {
     width: 34,

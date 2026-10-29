@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import { type ReactNode, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -21,6 +22,7 @@ export function GuestGate({
   children?: ReactNode;
 }) {
   const styles = useStyles();
+  const { t } = useTranslation();
 
   useEffect(() => {
     analyticsEvents.guestGateViewed({ gate });
@@ -34,7 +36,7 @@ export function GuestGate({
           <Text style={styles.text}>{text}</Text>
           <View style={styles.action}>
             <PrimaryButton
-              label="Sign in"
+              label={t("common.signIn")}
               onPress={() => {
                 analyticsEvents.guestGateSignInTapped({ gate });
                 router.push(toHref("/auth"));
