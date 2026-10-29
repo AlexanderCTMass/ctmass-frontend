@@ -5,6 +5,7 @@ import {
   runTransaction,
   serverTimestamp,
 } from "@react-native-firebase/firestore";
+import { Platform } from "react-native";
 
 import { getDb } from "@/lib/firebase";
 import { findEmailInviter } from "@/lib/friends";
@@ -24,6 +25,7 @@ export type Profile = {
   notifications: string[];
   notificationList: unknown[];
   source: string;
+  platform: string;
 };
 
 export type EnsureProfileResult = {
@@ -62,6 +64,7 @@ export async function ensureProfile(
     notifications: ["EVENTS_NOTIFICATIONS"],
     notificationList: [],
     source: "mobile",
+    platform: Platform.OS,
   };
 
   let referral: { invitedBy: string; invitedVia: string } | null =

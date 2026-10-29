@@ -20,6 +20,7 @@ import { customersApi } from 'src/api/customers';
 import { useAuth } from 'src/hooks/use-auth';
 import { emailSender } from 'src/libs/email-sender';
 import { EmailSenderFeatureToggles } from 'src/featureToggles/EmailSenderFeatureToggles';
+import { AdminEmailComposer, EMPTY_EMAIL_DRAFT, isEmailDraftReady } from './admin-email-composer';
 
 const EMAIL_OPTIONS = {
     CUSTOM: 'Custom message',
@@ -31,13 +32,13 @@ export const CustomerEmailsSummary = (props) => {
     const { customer } = props;
     const { sendPasswordResetEmail, user } = useAuth();
     const [emailOption, setEmailOption] = useState(EMAIL_OPTIONS.CUSTOM);
-    const [subject, setSubject] = useState('');
-    const [message, setMessage] = useState('');
+    const [draft, setDraft] = useState(EMPTY_EMAIL_DRAFT);
+    const [uploading, setUploading] = useState(false);
     const [sending, setSending] = useState(false);
     const [history, setHistory] = useState(() => [...(customer.emailActions || [])]);
 
     const isCustom = emailOption === EMAIL_OPTIONS.CUSTOM;
-    const canSend = Boolean(customer.email) && !sending && (!isCustom || (subject.trim() && message.trim()));
+    const canSend = Boolean(customer.email) && !sending && !uploading && (!isCustom || isEmailDraftReady(draft));
 
     const recordEmail = async (description) => {
         const entry = {
@@ -71,10 +72,9 @@ export const CustomerEmailsSummary = (props) => {
                     await recordEmail('Hello message');
                     break;
                 case EMAIL_OPTIONS.CUSTOM:
-                    await emailSender.sendAdminDirectMessage(customer, subject.trim(), message.trim());
-                    await recordEmail(`Custom: ${subject.trim()}`);
-                    setSubject('');
-                    setMessage('');
+                    await emailSender.sendAdminDirectMessage(customer, draft.subject.trim(), draft.message.trim(), draft.images);
+                    await recordEmail(`Custom: ${draft.subject.trim()}${draft.images.length ? ` (+${draft.images.length} image${draft.images.length > 1 ? 's' : ''})` : ''}`);
+                    setDraft(EMPTY_EMAIL_DRAFT);
                     break;
                 default:
                     break;
@@ -124,24 +124,12 @@ export const CustomerEmailsSummary = (props) => {
                         ))}
                     </TextField>
                     {isCustom && (
-                        <>
-                            <TextField
-                                fullWidth
-                                inputProps={{ maxLength: 150 }}
-                                label="Subject"
-                                onChange={(event) => setSubject(event.target.value)}
-                                value={subject}
-                            />
-                            <TextField
-                                fullWidth
-                                inputProps={{ maxLength: 5000 }}
-                                label="Message"
-                                minRows={5}
-                                multiline
-                                onChange={(event) => setMessage(event.target.value)}
-                                value={message}
-                            />
-                        </>
+                        <AdminEmailComposer
+                            disabled={sending}
+                            onChange={setDraft}
+                            onUploadingChange={setUploading}
+                            value={draft}
+                        />
                     )}
                     <Typography
                         color="text.secondary"
