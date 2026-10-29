@@ -21,10 +21,20 @@ import {
 } from "@/lib/notifications";
 import { configurePushDisplay } from "@/lib/push-display";
 import { routeFromPushData } from "@/lib/push-routing";
+import {
+  wasAdTrackingPromptedThisLaunch,
+  whenAdTrackingSettled,
+} from "@/lib/tracking";
+import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
 
 async function enablePush(uid: string): Promise<void> {
-  if (!wasNotificationPermissionAsked() && !(await hasNotificationPermission())) {
+  await whenAdTrackingSettled();
+  if (
+    !wasAdTrackingPromptedThisLaunch() &&
+    !wasNotificationPermissionAsked() &&
+    !(await hasNotificationPermission())
+  ) {
     const result = await requestNotificationPermission();
     analyticsEvents.notificationPermissionResult({
       granted: result === "granted",
@@ -37,6 +47,9 @@ async function enablePush(uid: string): Promise<void> {
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const uid = useAuthStore((state) => state.user?.uid);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasCompletedOnboarding = useAppStore(
+    (state) => state.hasCompletedOnboarding,
+  );
 
   useEffect(() => {
     const teardownDisplay = configurePushDisplay();
@@ -78,9 +91,14 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!uid || !isAuthenticated || !hasCompletedOnboarding) return;
+    void enablePush(uid);
+  }, [uid, isAuthenticated, hasCompletedOnboarding]);
+
+  useEffect(() => {
     if (!uid || !isAuthenticated) return;
 
-    void enablePush(uid);
+    void registerFcmToken(uid);
     void updateLastSeen(uid);
 
     const ref = consumePendingInviterRef();

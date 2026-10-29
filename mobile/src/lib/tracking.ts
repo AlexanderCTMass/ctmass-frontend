@@ -6,6 +6,11 @@ import { Settings } from "react-native-fbsdk-next";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 
 let started = false;
+let promptedThisLaunch = false;
+let markSettled: () => void = () => {};
+const settled = new Promise<void>((resolve) => {
+  markSettled = resolve;
+});
 
 function isAdTrackingEnabled(): boolean {
   return Constants.expoConfig?.extra?.adTrackingEnabled === true;
@@ -30,6 +35,7 @@ async function applyIosPermission(): Promise<void> {
     status === TrackingTransparency.PermissionStatus.UNDETERMINED &&
     current.canAskAgain;
   if (prompted) {
+    promptedThisLaunch = true;
     ({ granted, status } =
       await TrackingTransparency.requestTrackingPermissionsAsync());
   }
@@ -51,6 +57,15 @@ function reportFailure(error: unknown): void {
   analyticsEvents.trackingPermissionFailed({ error: errorMessage(error) });
 }
 
+export function whenAdTrackingSettled(): Promise<void> {
+  if (Platform.OS !== "ios" || !isAdTrackingEnabled()) return Promise.resolve();
+  return settled;
+}
+
+export function wasAdTrackingPromptedThisLaunch(): boolean {
+  return promptedThisLaunch;
+}
+
 export async function initAdTracking(): Promise<void> {
   if (started || !isAdTrackingEnabled()) return;
   started = true;
@@ -62,5 +77,7 @@ export async function initAdTracking(): Promise<void> {
     }
   } catch (error) {
     reportFailure(error);
+  } finally {
+    markSettled();
   }
 }

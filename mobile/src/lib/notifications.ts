@@ -22,6 +22,7 @@ import {
 
 import { getDb } from "@/lib/firebase";
 import { storage } from "@/lib/storage";
+import { whenAdTrackingSettled } from "@/lib/tracking";
 
 const PERMISSION_ASKED_KEY = "ctmass.notifications.permission-asked";
 
@@ -71,6 +72,7 @@ async function requestAndroidPermission(): Promise<NotificationPermissionResult>
 async function requestIosPermission(): Promise<NotificationPermissionResult> {
   const before = await hasPermission(messaging());
   if (isGranted(before)) return "granted";
+  await whenAdTrackingSettled();
   const status = await requestPermission(messaging());
   if (isGranted(status)) return "granted";
   return before === AuthorizationStatus.NOT_DETERMINED ? "denied" : "blocked";
