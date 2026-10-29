@@ -11,6 +11,7 @@ import {
 
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { useT } from "@/lib/i18n";
 
 type Props = {
   visible: boolean;
@@ -28,6 +29,7 @@ function ReviewPanel({
   onSubmit,
   onClose,
 }: Omit<Props, "visible">) {
+  const { t } = useT();
   const { colors } = useTheme();
   const styles = useStyles();
   const [rating, setRating] = useState(0);
@@ -40,7 +42,7 @@ function ReviewPanel({
     >
       <Pressable
         style={styles.backdropTap}
-        accessibilityLabel="Close"
+        accessibilityLabel={t("common.close")}
         onPress={onClose}
       />
       <View style={styles.card}>
@@ -52,7 +54,7 @@ function ReviewPanel({
             <Pressable
               key={value}
               accessibilityRole="button"
-              accessibilityLabel={`${value} star${value === 1 ? "" : "s"}`}
+              accessibilityLabel={t("review.stars", { count: value })}
               hitSlop={6}
               onPress={() => setRating(value)}
             >
@@ -71,14 +73,14 @@ function ReviewPanel({
         <TextInput
           value={message}
           onChangeText={setMessage}
-          placeholder="Add a comment (optional)"
+          placeholder={t("review.placeholder")}
           placeholderTextColor={colors.textMuted}
           style={styles.input}
           multiline
         />
 
         <PrimaryButton
-          label={submitting ? "Submitting…" : "Submit review"}
+          label={submitting ? t("shop.submitting") : t("review.submit")}
           withArrow={false}
           loading={submitting}
           disabled={submitting || rating === 0}
@@ -90,7 +92,7 @@ function ReviewPanel({
           onPress={onClose}
           disabled={submitting}
         >
-          <Text style={styles.cancel}>Cancel</Text>
+          <Text style={styles.cancel}>{t("common.cancel")}</Text>
         </Pressable>
       </View>
     </KeyboardAvoidingView>

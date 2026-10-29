@@ -17,17 +17,19 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
-import {
-  ChevronLeftIcon,
-  CloseIcon,
-  ImageIcon,
-} from "@/components/icons";
+import { ChevronLeftIcon, CloseIcon, ImageIcon } from "@/components/icons";
 import { shortPlace } from "@/components/project/project-card";
 import { ChoiceChips } from "@/components/trade/form-parts";
 import { BackButton } from "@/components/ui/back-button";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
 import {
   PROJECT_COST_RANGES,
   PROJECT_DURATIONS,
@@ -37,6 +39,7 @@ import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
 import { selectFeedback, tapFeedback } from "@/lib/haptics";
+import { translateKey, useT } from "@/lib/i18n";
 import { choosePhoto } from "@/lib/media";
 import {
   MAX_PORTFOLIO_TAGS,
@@ -51,12 +54,12 @@ import { useTradeById } from "@/queries/use-trade";
 import { useAuthStore } from "@/store/use-auth-store";
 
 const schema = z.object({
-  title: z.string().trim().min(2, "Give the project a short title."),
-  location: z.string().trim().min(2, "Where was this job done?"),
-  description: z.string().max(1000, "Keep it under 1000 characters."),
+  title: z.string().trim().min(2, "portfolio.errors.title"),
+  location: z.string().trim().min(2, "portfolio.errors.location"),
+  description: z.string().max(1000, "portfolio.errors.description"),
   tags: z.array(z.string()).max(MAX_PORTFOLIO_TAGS),
   beforeUri: z.string().nullable(),
-  afterUri: z.string().min(1, "Add an after photo."),
+  afterUri: z.string().min(1, "portfolio.errors.after"),
   date: z.date().nullable(),
   projectType: z.string(),
   costRange: z.string(),
@@ -114,11 +117,16 @@ function PhotoSlot({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   return (
     <View style={styles.slot}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={uri ? `Change ${label.toLowerCase()} photo` : `Add ${label.toLowerCase()} photo`}
+        accessibilityLabel={
+          uri
+            ? t("portfolio.changePhotoA11y", { label })
+            : t("portfolio.addPhotoA11y", { label })
+        }
         onPress={onPick}
         style={[styles.slotMedia, !uri && styles.slotEmpty]}
       >
@@ -132,13 +140,13 @@ function PhotoSlot({
         ) : (
           <>
             <ImageIcon size={26} color={colors.accent} />
-            <Text style={styles.slotAdd}>Add photo</Text>
+            <Text style={styles.slotAdd}>{t("certificate.addPhoto")}</Text>
           </>
         )}
         {uri ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Remove ${label.toLowerCase()} photo`}
+            accessibilityLabel={t("portfolio.removePhotoA11y", { label })}
             hitSlop={8}
             onPress={onRemove}
             style={styles.slotRemove}
@@ -149,7 +157,11 @@ function PhotoSlot({
       </Pressable>
       <Text style={styles.slotLabel}>
         {label}
-        {required ? <Text style={styles.required}> *</Text> : " (optional)"}
+        {required ? (
+          <Text style={styles.required}> *</Text>
+        ) : (
+          ` (${t("form.optional").toLowerCase()})`
+        )}
       </Text>
     </View>
   );
@@ -164,6 +176,7 @@ function MonthPicker({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, locale } = useT();
   const current = startOfMonth(new Date());
   const atLatest = value ? value.getTime() >= current.getTime() : true;
   if (!value) {
@@ -173,7 +186,7 @@ function MonthPicker({
         onPress={() => onChange(current)}
         style={styles.monthEmpty}
       >
-        <Text style={styles.monthEmptyText}>+ Add when it was done</Text>
+        <Text style={styles.monthEmptyText}>{t("portfolio.addDate")}</Text>
       </Pressable>
     );
   }
@@ -181,7 +194,7 @@ function MonthPicker({
     <View style={styles.monthRow}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Previous month"
+        accessibilityLabel={t("portfolio.prevMonth")}
         hitSlop={8}
         onPress={() => {
           selectFeedback();
@@ -192,28 +205,32 @@ function MonthPicker({
         <ChevronLeftIcon size={18} color={colors.text} />
       </Pressable>
       <Text style={styles.monthLabel}>
-        {value.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+        {value.toLocaleDateString(locale, { month: "long", year: "numeric" })}
       </Text>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Next month"
+        accessibilityLabel={t("portfolio.nextMonth")}
         hitSlop={8}
         disabled={atLatest}
         onPress={() => {
           selectFeedback();
           onChange(shiftMonth(value, 1));
         }}
-        style={[styles.monthButton, styles.monthNext, atLatest && styles.disabled]}
+        style={[
+          styles.monthButton,
+          styles.monthNext,
+          atLatest && styles.disabled,
+        ]}
       >
         <ChevronLeftIcon size={18} color={colors.text} />
       </Pressable>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Remove date"
+        accessibilityLabel={t("portfolio.removeDate")}
         hitSlop={8}
         onPress={() => onChange(null)}
       >
-        <Text style={styles.monthClear}>Clear</Text>
+        <Text style={styles.monthClear}>{t("trade.tray.clear")}</Text>
       </Pressable>
     </View>
   );
@@ -228,6 +245,7 @@ function PortfolioForm({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const queryClient = useQueryClient();
   const isEdit = Boolean(item);
   const [tagDraft, setTagDraft] = useState("");
@@ -306,7 +324,7 @@ function PortfolioForm({
           findObjectionable(values.tags.join(" ")) ? "tags" : null,
         ].filter((field): field is string => field !== null),
       });
-      setFormError("Please remove inappropriate language from your project.");
+      setFormError(t("portfolio.filterError"));
       return;
     }
     if (saving) return;
@@ -318,7 +336,9 @@ function PortfolioForm({
       location: values.location,
       shortDescription: values.description,
       specialtyId:
-        item?.specialtyId || trade.primarySpecialtyId || slug(trade.specialtyLabel),
+        item?.specialtyId ||
+        trade.primarySpecialtyId ||
+        slug(trade.specialtyLabel),
       tags: values.tags,
       beforeUri: values.beforeUri,
       afterUri: values.afterUri,
@@ -352,7 +372,7 @@ function PortfolioForm({
         error_message: errorMessage(error),
       });
       setSaving(false);
-      setFormError("Couldn't save the project. Check your connection and try again.");
+      setFormError(t("portfolio.saveFailed"));
     }
   };
 
@@ -365,7 +385,7 @@ function PortfolioForm({
       <View style={styles.header}>
         <BackButton onPress={() => router.back()} />
         <Text style={styles.headerTitle}>
-          {isEdit ? "Edit project" : "Add project"}
+          {isEdit ? t("portfolio.edit") : t("portfolio.add")}
         </Text>
         <View style={styles.headerSpacer} />
       </View>
@@ -376,15 +396,12 @@ function PortfolioForm({
         keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.intro}>
-          Show a finished job. A before photo is optional — before/after pairs
-          get the most attention.
-        </Text>
+        <Text style={styles.intro}>{t("portfolio.intro")}</Text>
 
-        <Section label="Photos">
+        <Section label={t("tradePage.photos")}>
           <View style={styles.slots}>
             <PhotoSlot
-              label="Before"
+              label={t("portfolio.before")}
               uri={beforeUri}
               onPick={() => void pick("beforeUri")}
               onRemove={() =>
@@ -392,19 +409,23 @@ function PortfolioForm({
               }
             />
             <PhotoSlot
-              label="After"
+              label={t("portfolio.after")}
               required
               uri={afterUri || null}
               onPick={() => void pick("afterUri")}
-              onRemove={() => setValue("afterUri", "", { shouldValidate: true })}
+              onRemove={() =>
+                setValue("afterUri", "", { shouldValidate: true })
+              }
             />
           </View>
           {errors.afterUri ? (
-            <Text style={styles.error}>{errors.afterUri.message}</Text>
+            <Text style={styles.error}>
+              {translateKey(t, errors.afterUri.message)}
+            </Text>
           ) : null}
         </Section>
 
-        <Section label="When was it done?">
+        <Section label={t("portfolio.when")}>
           <Controller
             control={control}
             name="date"
@@ -414,7 +435,7 @@ function PortfolioForm({
           />
         </Section>
 
-        <Section label="Project title">
+        <Section label={t("portfolio.titleLabel")}>
           <Controller
             control={control}
             name="title"
@@ -423,7 +444,7 @@ function PortfolioForm({
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
-                placeholder="e.g. Kitchen faucet replacement"
+                placeholder={t("portfolio.titlePlaceholder")}
                 placeholderTextColor={colors.textMuted}
                 style={styles.input}
                 maxLength={80}
@@ -431,11 +452,13 @@ function PortfolioForm({
             )}
           />
           {errors.title ? (
-            <Text style={styles.error}>{errors.title.message}</Text>
+            <Text style={styles.error}>
+              {translateKey(t, errors.title.message)}
+            </Text>
           ) : null}
         </Section>
 
-        <Section label="Location" hint="City and state is enough.">
+        <Section label={t("setup.location")} hint={t("portfolio.locationHint")}>
           <Controller
             control={control}
             name="location"
@@ -444,7 +467,7 @@ function PortfolioForm({
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
-                placeholder="e.g. Hartford, Connecticut"
+                placeholder={t("portfolio.locationPlaceholder")}
                 placeholderTextColor={colors.textMuted}
                 style={styles.input}
                 maxLength={80}
@@ -452,11 +475,16 @@ function PortfolioForm({
             )}
           />
           {errors.location ? (
-            <Text style={styles.error}>{errors.location.message}</Text>
+            <Text style={styles.error}>
+              {translateKey(t, errors.location.message)}
+            </Text>
           ) : null}
         </Section>
 
-        <Section label="What did you do?" hint="Optional.">
+        <Section
+          label={t("portfolio.whatDid")}
+          hint={t("portfolio.optionalHint")}
+        >
           <Controller
             control={control}
             name="description"
@@ -465,7 +493,7 @@ function PortfolioForm({
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
-                placeholder="The problem, what you did, and the result."
+                placeholder={t("portfolio.whatDidPlaceholder")}
                 placeholderTextColor={colors.textMuted}
                 style={[styles.input, styles.textArea]}
                 multiline
@@ -474,43 +502,66 @@ function PortfolioForm({
             )}
           />
           {errors.description ? (
-            <Text style={styles.error}>{errors.description.message}</Text>
+            <Text style={styles.error}>
+              {translateKey(t, errors.description.message)}
+            </Text>
           ) : null}
         </Section>
 
-        <Section label="Project type" hint="Optional.">
+        <Section
+          label={t("portfolio.projectType")}
+          hint={t("portfolio.optionalHint")}
+        >
           <Controller
             control={control}
             name="projectType"
             render={({ field: { value, onChange } }) => (
-              <ChoiceChips options={PROJECT_TYPES} value={value} onChange={onChange} allowClear />
+              <ChoiceChips
+                options={PROJECT_TYPES}
+                value={value}
+                onChange={onChange}
+                allowClear
+              />
             )}
           />
         </Section>
 
-        <Section label="Approximate cost" hint="Optional. Leave empty to keep it private.">
+        <Section label={t("portfolio.cost")} hint={t("portfolio.costHint")}>
           <Controller
             control={control}
             name="costRange"
             render={({ field: { value, onChange } }) => (
-              <ChoiceChips options={PROJECT_COST_RANGES} value={value} onChange={onChange} allowClear />
-            )}
-          />
-        </Section>
-
-        <Section label="How long did it take?" hint="Optional.">
-          <Controller
-            control={control}
-            name="duration"
-            render={({ field: { value, onChange } }) => (
-              <ChoiceChips options={PROJECT_DURATIONS} value={value} onChange={onChange} allowClear />
+              <ChoiceChips
+                options={PROJECT_COST_RANGES}
+                value={value}
+                onChange={onChange}
+                allowClear
+              />
             )}
           />
         </Section>
 
         <Section
-          label="Tags"
-          hint={`Optional, up to ${MAX_PORTFOLIO_TAGS}. e.g. faucet, kitchen`}
+          label={t("portfolio.duration")}
+          hint={t("portfolio.optionalHint")}
+        >
+          <Controller
+            control={control}
+            name="duration"
+            render={({ field: { value, onChange } }) => (
+              <ChoiceChips
+                options={PROJECT_DURATIONS}
+                value={value}
+                onChange={onChange}
+                allowClear
+              />
+            )}
+          />
+        </Section>
+
+        <Section
+          label={t("portfolio.tags")}
+          hint={t("portfolio.tagsHint", { count: MAX_PORTFOLIO_TAGS })}
         >
           {tags.length > 0 ? (
             <View style={styles.tagWrap}>
@@ -518,7 +569,7 @@ function PortfolioForm({
                 <Pressable
                   key={tag}
                   accessibilityRole="button"
-                  accessibilityLabel={`Remove tag ${tag}`}
+                  accessibilityLabel={t("portfolio.removeTagA11y", { tag })}
                   onPress={() => removeTag(tag)}
                   style={styles.tagChip}
                 >
@@ -534,7 +585,7 @@ function PortfolioForm({
                 value={tagDraft}
                 onChangeText={setTagDraft}
                 onSubmitEditing={addTag}
-                placeholder="Add a tag"
+                placeholder={t("portfolio.addTag")}
                 placeholderTextColor={colors.textMuted}
                 style={[styles.input, styles.tagInput]}
                 autoCapitalize="none"
@@ -545,12 +596,12 @@ function PortfolioForm({
               />
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Add tag"
+                accessibilityLabel={t("portfolio.addTag")}
                 disabled={!tagDraft.trim()}
                 onPress={addTag}
                 style={[styles.tagAdd, !tagDraft.trim() && styles.disabled]}
               >
-                <Text style={styles.tagAddText}>Add</Text>
+                <Text style={styles.tagAddText}>{t("compare.add")}</Text>
               </Pressable>
             </View>
           ) : null}
@@ -560,7 +611,13 @@ function PortfolioForm({
       <View style={styles.footer}>
         {formError ? <Text style={styles.formError}>{formError}</Text> : null}
         <PrimaryButton
-          label={saving ? "Saving…" : isEdit ? "Save changes" : "Add to portfolio"}
+          label={
+            saving
+              ? t("setup.saving")
+              : isEdit
+                ? t("portfolio.saveChanges")
+                : t("portfolio.addToPortfolio")
+          }
           onPress={() => void handleSubmit(onSubmit)()}
           disabled={!isValid || saving}
           loading={saving}
@@ -573,11 +630,13 @@ function PortfolioForm({
 export default function PortfolioEditScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const params = useLocalSearchParams<{
     tradeId?: string;
     portfolioId?: string;
   }>();
-  const tradeId = typeof params.tradeId === "string" ? params.tradeId : undefined;
+  const tradeId =
+    typeof params.tradeId === "string" ? params.tradeId : undefined;
   const portfolioId =
     typeof params.portfolioId === "string" ? params.portfolioId : undefined;
   const uid = useAuthStore((state) => state.user?.uid);
@@ -603,9 +662,7 @@ export default function PortfolioEditScreen() {
               <View style={styles.headerSpacer} />
             </View>
             <View style={styles.center}>
-              <Text style={styles.missing}>
-                This project can&apos;t be edited.
-              </Text>
+              <Text style={styles.missing}>{t("portfolio.cantEdit")}</Text>
             </View>
           </>
         ) : (

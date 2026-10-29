@@ -7,19 +7,25 @@ import { PressableScale } from "@/components/ui/pressable-scale";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { shareProfileLink } from "@/lib/share";
 
 export function ProfileShareActions({
   url,
   name,
   targetUid,
+  avatar,
+  businessName,
 }: {
   url: string;
   name: string;
   targetUid: string;
+  avatar?: string | null;
+  businessName?: string;
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const [qrOpen, setQrOpen] = useState(false);
   const [sharingLink, setSharingLink] = useState(false);
 
@@ -30,12 +36,11 @@ export function ProfileShareActions({
     void shareProfileLink(url, name).finally(() => setSharingLink(false));
   };
 
-
   return (
     <View style={styles.row}>
       <View style={styles.col}>
         <PressableScale
-          accessibilityLabel="Share profile"
+          accessibilityLabel={t("qr.shareProfile")}
           onPress={handleShareLink}
           disabled={sharingLink}
           scaleTo={0.98}
@@ -46,7 +51,7 @@ export function ProfileShareActions({
             ) : (
               <>
                 <ShareIcon size={18} color={colors.accent} />
-                <Text style={styles.buttonText}>Share profile</Text>
+                <Text style={styles.buttonText}>{t("qr.shareProfile")}</Text>
               </>
             )}
           </View>
@@ -55,7 +60,7 @@ export function ProfileShareActions({
 
       <View style={styles.col}>
         <PressableScale
-          accessibilityLabel="Show QR code"
+          accessibilityLabel={t("qr.showQr")}
           onPress={() => {
             tapFeedback();
             analyticsEvents.profileQrOpened({ target_uid: targetUid });
@@ -65,7 +70,7 @@ export function ProfileShareActions({
         >
           <View style={styles.button}>
             <QrCodeIcon size={18} color={colors.accent} />
-            <Text style={styles.buttonText}>QR code</Text>
+            <Text style={styles.buttonText}>{t("qr.qrCode")}</Text>
           </View>
         </PressableScale>
       </View>
@@ -76,6 +81,8 @@ export function ProfileShareActions({
         url={url}
         name={name}
         targetUid={targetUid}
+        avatar={avatar}
+        businessName={businessName}
         showReward
       />
     </View>

@@ -1,58 +1,17 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { getAuth } from "firebase-admin/auth";
-import { getStorage } from "firebase-admin/storage";
 import { logger } from "firebase-functions/v2";
+import {
+  createStepRunner,
+  deleteProfileDocument,
+  purgeUserData,
+} from "../account/purge-user-data.js";
 
-const deleteBatch = async (db, query) => {
-  const snapshot = await query.get();
-  if (snapshot.empty) return 0;
-
-  const batches = [];
-  let batch = db.batch();
-  let count = 0;
-
-  snapshot.docs.forEach((docSnap) => {
-    batch.delete(docSnap.ref);
-    count++;
-    if (count === 400) {
-      batches.push(batch.commit());
-      batch = db.batch();
-      count = 0;
-    }
-  });
-  if (count > 0) batches.push(batch.commit());
-
-  await Promise.all(batches);
-  return snapshot.size;
-};
-
-const updateBatch = async (db, query, updates) => {
-  const snapshot = await query.get();
-  if (snapshot.empty) return 0;
-
-  const batches = [];
-  let batch = db.batch();
-  let count = 0;
-
-  snapshot.docs.forEach((docSnap) => {
-    batch.update(docSnap.ref, updates);
-    count++;
-    if (count === 400) {
-      batches.push(batch.commit());
-      batch = db.batch();
-      count = 0;
-    }
-  });
-  if (count > 0) batches.push(batch.commit());
-
-  await Promise.all(batches);
-  return snapshot.size;
-};
+const ADMIN_EMAILS = ["alex.neu.ctmass@gmail.com", "george.ctmass@gmail.com"];
 
 export const deleteUserAccount = onCall(
   {
-    timeoutSeconds: 120,
+    timeoutSeconds: 300,
     memory: "512MiB",
   },
   async (request) => {
@@ -64,8 +23,14 @@ export const deleteUserAccount = onCall(
     const db = getFirestore();
 
     const callerDoc = await db.collection("profiles").doc(callerUid).get();
-    const callerRole = callerDoc.exists ? callerDoc.data().role : null;
-    if (!callerDoc.exists || (callerRole !== "ADMIN" && callerRole !== "admin")) {
+    const callerProfile = callerDoc.exists ? callerDoc.data() : {};
+    const tokenEmail = request.auth.token?.email_verified ? request.auth.token.email : null;
+    const isCallerAdmin =
+      callerProfile.role === "ADMIN" ||
+      callerProfile.role === "admin" ||
+      callerProfile.isAdmin === true ||
+      ADMIN_EMAILS.includes(tokenEmail);
+    if (!callerDoc.exists || !isCallerAdmin) {
       throw new HttpsError("permission-denied", "Must be an admin to delete accounts");
     }
 
@@ -85,6 +50,10 @@ export const deleteUserAccount = onCall(
     }
     const targetData = targetDoc.data();
 
+    if (ADMIN_EMAILS.includes(targetData.email)) {
+      throw new HttpsError("failed-precondition", "This admin account cannot be deleted");
+    }
+
     if (targetData.role === "ADMIN" || targetData.role === "admin") {
       const adminsSnap = await db
         .collection("profiles")
@@ -96,17 +65,7 @@ export const deleteUserAccount = onCall(
     }
 
     const callerData = callerDoc.data();
-    const errors = [];
-
-    const run = async (stepName, fn) => {
-      try {
-        await fn();
-        logger.info(`deleteUserAccount [${stepName}] OK`, { userId });
-      } catch (err) {
-        logger.error(`deleteUserAccount [${stepName}] FAILED`, { userId, error: err.message });
-        errors.push({ step: stepName, error: err.message || String(err) });
-      }
-    };
+    const { run, errors } = createStepRunner(logger, "deleteUserAccount", userId);
 
     await run("mark_deleted", async () => {
       await db.collection("profiles").doc(userId).update({
@@ -116,72 +75,13 @@ export const deleteUserAccount = onCall(
       });
     });
 
-    await run("loyalty_transactions", async () => {
-      await deleteBatch(db, db.collection("loyalty_transactions").where("userId", "==", userId));
-    });
-
-    await run("admin_manual_transactions", async () => {
-      await deleteBatch(db, db.collection("admin_manual_transactions").where("userId", "==", userId));
-    });
-
-    await run("notifications", async () => {
-      await deleteBatch(db, db.collection("notifications").where("userId", "==", userId));
-    });
-
-    await run("user_sessions", async () => {
-      await deleteBatch(db, db.collection("user_sessions").where("userId", "==", userId));
-    });
-
-    await run("projects", async () => {
-      const displayName = targetData.name || targetData.businessName || targetData.email || "Deleted User";
-      await updateBatch(db, db.collection("projects").where("userId", "==", userId), {
-        status: "deleted",
-        deletedAt: FieldValue.serverTimestamp(),
-        deletedBy: callerUid,
-        originalAuthorName: displayName,
-      });
-    });
-
-    await run("reviews", async () => {
-      await Promise.allSettled([
-        updateBatch(db, db.collection("reviews").where("userId", "==", userId), {
-          isActive: false,
-          content: "[Account deleted by admin request]",
-          deletedAuthorId: userId,
-        }),
-        updateBatch(db, db.collection("reviews").where("authorId", "==", userId), {
-          isActive: false,
-          content: "[Account deleted by admin request]",
-          deletedAuthorId: userId,
-        }),
-      ]);
-    });
-
-    await run("referrals", async () => {
-      await Promise.all([
-        deleteBatch(db, db.collection("referrals").where("referredUserId", "==", userId)),
-        updateBatch(db, db.collection("referrals").where("referrerId", "==", userId), {
-          referrerId: null,
-          referrerName: "Deleted User",
-        }),
-      ]);
-    });
-
-    await run("chat_messages", async () => {
-      await updateBatch(db, db.collection("chat_messages").where("senderId", "==", userId), {
-        senderName: "Deleted User",
-        senderPhotoURL: null,
-        senderId: null,
-      });
-    });
-
-    await run("storage", async () => {
-      const bucket = getStorage().bucket();
-      await bucket.deleteFiles({ prefix: `users/${userId}/` });
-    });
-
-    await run("auth", async () => {
-      await getAuth().deleteUser(userId);
+    await purgeUserData({
+      db,
+      run,
+      userId,
+      profile: targetData,
+      deletedBy: callerUid,
+      reviewNote: "[Account deleted by admin request]",
     });
 
     const cleanupStatus = errors.length === 0 ? "success" : "partial";
@@ -207,9 +107,7 @@ export const deleteUserAccount = onCall(
       });
     });
 
-    await run("profiles_delete", async () => {
-      await db.collection("profiles").doc(userId).delete();
-    });
+    await deleteProfileDocument(db, run, userId);
 
     logger.info("deleteUserAccount completed", { userId, cleanupStatus, errorsCount: errors.length });
 

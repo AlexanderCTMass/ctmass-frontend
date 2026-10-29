@@ -19,6 +19,7 @@ import {
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
 import { tapFeedback } from "@/lib/haptics";
+import { type Translate, useT } from "@/lib/i18n";
 import { chatHref } from "@/lib/navigation";
 import { cancelProject, type ProjectDetail } from "@/lib/projects";
 import { useContractorJobs } from "@/queries/use-projects";
@@ -29,23 +30,24 @@ type Tab = "active" | "history";
 function statusMeta(
   state: string,
   colors: ThemeColors,
+  t: Translate,
 ): { label: string; tint: string; bg: string } {
   switch (state) {
     case "completed":
       return {
-        label: "Completed",
+        label: t("jobs.status.completed"),
         tint: colors.accent,
         bg: "rgba(22,179,100,0.14)",
       };
     case "cancelled":
       return {
-        label: "Cancelled",
+        label: t("jobs.status.cancelled"),
         tint: colors.textSecondary,
         bg: colors.surfaceStrong,
       };
     default:
       return {
-        label: "In progress",
+        label: t("jobs.status.inProgress"),
         tint: colors.accent,
         bg: "rgba(22,179,100,0.14)",
       };
@@ -63,16 +65,17 @@ function JobCard({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
-  const status = statusMeta(project.state, colors);
-  const meta = [project.customerName, project.specialtyLabel]
+  const { t, tx } = useT();
+  const status = statusMeta(project.state, colors, t);
+  const meta = [project.customerName, tx(project.specialtyLabel)]
     .filter(Boolean)
     .join(" · ");
   return (
     <View style={styles.card}>
-      <PressableScale accessibilityLabel={project.title} onPress={onOpen}>
+      <PressableScale accessibilityLabel={tx(project.title)} onPress={onOpen}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle} numberOfLines={1}>
-            {project.title}
+            {tx(project.title)}
           </Text>
           <View style={[styles.chip, { backgroundColor: status.bg }]}>
             <Text style={[styles.chipText, { color: status.tint }]}>
@@ -81,22 +84,16 @@ function JobCard({
           </View>
         </View>
         <Text style={styles.cardMeta} numberOfLines={1}>
-          {meta || "Direct job"}
+          {meta || t("jobs.directJob")}
         </Text>
         {project.completionRequested && project.state === "in_progress" ? (
-          <Text style={styles.cardHint}>
-            Waiting for the customer to confirm completion.
-          </Text>
+          <Text style={styles.cardHint}>{t("chat.waitingConfirm")}</Text>
         ) : null}
       </PressableScale>
       {onCancel ? (
         <View style={styles.cardActions}>
-          <Pressable
-            accessibilityRole="button"
-            hitSlop={8}
-            onPress={onCancel}
-          >
-            <Text style={styles.cancelLink}>Cancel job</Text>
+          <Pressable accessibilityRole="button" hitSlop={8} onPress={onCancel}>
+            <Text style={styles.cancelLink}>{t("jobs.cancelJob")}</Text>
           </Pressable>
         </View>
       ) : null}
@@ -107,6 +104,7 @@ function JobCard({
 export default function MyJobsScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const uid = useAuthStore((state) => state.user?.uid);
   const queryClient = useQueryClient();
   const jobs = useContractorJobs(uid);
@@ -167,7 +165,7 @@ export default function MyJobsScreen() {
         project_id: project.id,
         error_message: errorMessage(error),
       });
-      Alert.alert("Couldn't cancel", "Please try again.");
+      Alert.alert(t("jobs.cancelFailed"), t("common.pleaseTryAgain"));
     } finally {
       setCancelling(null);
     }
@@ -175,18 +173,14 @@ export default function MyJobsScreen() {
 
   const confirmCancel = (project: ProjectDetail) => {
     tapFeedback();
-    Alert.alert(
-      "Cancel this job?",
-      "The customer will be notified. This can't be undone.",
-      [
-        { text: "Keep job", style: "cancel" },
-        {
-          text: "Cancel job",
-          style: "destructive",
-          onPress: () => void runCancel(project),
-        },
-      ],
-    );
+    Alert.alert(t("jobs.cancelTitle"), t("jobs.cancelText"), [
+      { text: t("jobs.keepJob"), style: "cancel" },
+      {
+        text: t("jobs.cancelJob"),
+        style: "destructive",
+        onPress: () => void runCancel(project),
+      },
+    ]);
   };
 
   return (
@@ -194,7 +188,7 @@ export default function MyJobsScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>My jobs</Text>
+          <Text style={styles.headerTitle}>{t("home.myJobs")}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -217,8 +211,8 @@ export default function MyJobsScreen() {
                   style={[styles.tabText, activeTab && styles.tabTextActive]}
                 >
                   {value === "active"
-                    ? `Active${active.length ? ` (${active.length})` : ""}`
-                    : `History${history.length ? ` (${history.length})` : ""}`}
+                    ? `${t("jobs.active")}${active.length ? ` (${active.length})` : ""}`
+                    : `${t("jobs.history")}${history.length ? ` (${history.length})` : ""}`}
                 </Text>
               </Pressable>
             );
@@ -248,12 +242,14 @@ export default function MyJobsScreen() {
             ListEmptyComponent={
               <View style={styles.empty}>
                 <Text style={styles.emptyTitle}>
-                  {tab === "active" ? "No active jobs" : "No past jobs yet"}
+                  {tab === "active"
+                    ? t("jobs.emptyActive")
+                    : t("jobs.emptyHistory")}
                 </Text>
                 <Text style={styles.emptyText}>
                   {tab === "active"
-                    ? "Jobs you're selected for show up here."
-                    : "Completed and cancelled jobs appear here."}
+                    ? t("jobs.emptyActiveText")
+                    : t("jobs.emptyHistoryText")}
                 </Text>
               </View>
             }

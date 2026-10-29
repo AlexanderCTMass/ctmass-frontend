@@ -11,11 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  ChevronLeftIcon,
-  HeartIcon,
-  ResponsesIcon,
-} from "@/components/icons";
+import { ChevronLeftIcon, HeartIcon, ResponsesIcon } from "@/components/icons";
 import { ProjectDetails } from "@/components/project/project-details";
 import { TradeCard } from "@/components/trade/trade-card";
 import { Avatar } from "@/components/ui/avatar";
@@ -29,8 +25,13 @@ import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
 import { distanceMiles } from "@/lib/geo";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { chatHref, toHref } from "@/lib/navigation";
-import { cancelProject, type ProjectDetail, type Responder } from "@/lib/projects";
+import {
+  cancelProject,
+  type ProjectDetail,
+  type Responder,
+} from "@/lib/projects";
 import type { Specialist } from "@/lib/trades";
 import { useProject } from "@/queries/use-project";
 import { useSpecialists } from "@/queries/use-specialists";
@@ -54,6 +55,7 @@ function InProgressView({
   uid: string;
 }) {
   const styles = useStyles();
+  const { t } = useT();
   const [opening, setOpening] = useState(false);
   const open = async () => {
     analyticsEvents.myRequestOpenChatTapped({
@@ -73,22 +75,25 @@ function InProgressView({
 
   return (
     <View style={styles.inProgress}>
-      <Text style={styles.sectionTitle}>Your specialist</Text>
+      <Text style={styles.sectionTitle}>{t("myRequest.yourSpecialist")}</Text>
       <View style={styles.specialistCard}>
-        <Avatar name={project.contractorName || "Specialist"} size={46} />
+        <Avatar
+          name={project.contractorName || t("myRequest.specialist")}
+          size={46}
+        />
         <View style={styles.specialistBody}>
           <Text style={styles.specialistName} numberOfLines={1}>
-            {project.contractorName || "Specialist"}
+            {project.contractorName || t("myRequest.specialist")}
           </Text>
           <Text style={styles.specialistMeta}>
             {project.state === "completed"
-              ? "Project completed"
-              : "Working on your project"}
+              ? t("chat.projectCompleted")
+              : t("myRequest.working")}
           </Text>
         </View>
       </View>
       <PrimaryButton
-        label={opening ? "Opening…" : "Open chat"}
+        label={opening ? t("friends.opening") : t("home.openChat")}
         onPress={() => void open()}
         disabled={opening}
       />
@@ -107,6 +112,7 @@ function ResponderRow({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   return (
     <PressableScale
       accessibilityLabel={responder.userName}
@@ -132,9 +138,9 @@ function ResponderRow({
         </View>
         <View style={styles.rowBody}>
           <Text style={styles.rowName} numberOfLines={1}>
-            {responder.userName || "Specialist"}
+            {responder.userName || t("myRequest.specialist")}
           </Text>
-          <Text style={styles.rowMeta}>Tap to view profile</Text>
+          <Text style={styles.rowMeta}>{t("myRequest.tapProfile")}</Text>
         </View>
         <View style={styles.chevron}>
           <ChevronLeftIcon size={18} color={colors.textMuted} />
@@ -152,6 +158,7 @@ function LookingSpecialists({
   uid: string;
 }) {
   const styles = useStyles();
+  const { t } = useT();
   const { data, isLoading } = useSpecialists(project.specialtyLabel, uid);
   const specialists = (data?.items ?? []).filter(
     (specialist) => !project.declinedBy.includes(specialist.ownerId),
@@ -191,13 +198,11 @@ function LookingSpecialists({
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Specialists for this job</Text>
+      <Text style={styles.sectionTitle}>{t("myRequest.forThisJob")}</Text>
       {isLoading ? (
-        <Text style={styles.loading}>Finding specialists…</Text>
+        <Text style={styles.loading}>{t("myRequest.finding")}</Text>
       ) : specialists.length === 0 ? (
-        <Text style={styles.loading}>
-          No specialists yet — we&apos;ll notify you when a match appears.
-        </Text>
+        <Text style={styles.loading}>{t("myRequest.noSpecialists")}</Text>
       ) : (
         <View style={styles.cards}>
           {specialists.map((specialist) => {
@@ -223,6 +228,7 @@ function LookingSpecialists({
 export default function MyRequestScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const params = useLocalSearchParams<{ id?: string }>();
   const id = typeof params.id === "string" ? params.id : undefined;
   const uid = useAuthStore((state) => state.user?.uid) ?? "";
@@ -266,24 +272,20 @@ export default function MyRequestScreen() {
         error_message: errorMessage(error),
       });
       setCancelling(false);
-      Alert.alert("Couldn't cancel", "Please try again.");
+      Alert.alert(t("jobs.cancelFailed"), t("common.pleaseTryAgain"));
     }
   };
 
   const confirmCancel = () => {
     tapFeedback();
-    Alert.alert(
-      "Cancel this request?",
-      "This can't be undone. Any specialist working on it will be notified.",
-      [
-        { text: "Keep request", style: "cancel" },
-        {
-          text: "Cancel request",
-          style: "destructive",
-          onPress: () => void runCancel(),
-        },
-      ],
-    );
+    Alert.alert(t("myRequest.cancelTitle"), t("myRequest.cancelText"), [
+      { text: t("myRequest.keep"), style: "cancel" },
+      {
+        text: t("myRequest.cancel"),
+        style: "destructive",
+        onPress: () => void runCancel(),
+      },
+    ]);
   };
 
   const viewedRef = useRef(false);
@@ -298,14 +300,14 @@ export default function MyRequestScreen() {
   }, [project]);
 
   const statusLabel = cancelled
-    ? "Cancelled"
+    ? t("jobs.status.cancelled")
     : completed
-      ? "Completed"
+      ? t("jobs.status.completed")
       : assigned
-        ? "In progress"
+        ? t("jobs.status.inProgress")
         : hasResponses
-          ? `${responders.length} ${responders.length === 1 ? "response" : "responses"}`
-          : "Looking for specialists";
+          ? t("project.responses", { count: responders.length })
+          : t("myRequest.looking");
 
   return (
     <ScreenBackground>
@@ -320,9 +322,7 @@ export default function MyRequestScreen() {
           </View>
         ) : !project ? (
           <View style={styles.center}>
-            <Text style={styles.missing}>
-              This request is no longer available.
-            </Text>
+            <Text style={styles.missing}>{t("myRequest.unavailable")}</Text>
           </View>
         ) : (
           <ScrollView
@@ -330,9 +330,11 @@ export default function MyRequestScreen() {
             showsVerticalScrollIndicator={false}
           >
             {project.requestId ? (
-              <Text style={styles.requestId}>Request #{project.requestId}</Text>
+              <Text style={styles.requestId}>
+                {t("specialists.requestNumber", { id: project.requestId })}
+              </Text>
             ) : null}
-            <Text style={styles.title}>{project.title}</Text>
+            <Text style={styles.title}>{tx(project.title)}</Text>
             <View style={styles.statusRow}>
               <ResponsesIcon size={14} color={colors.accent} />
               <Text style={styles.statusText}>{statusLabel}</Text>
@@ -341,9 +343,7 @@ export default function MyRequestScreen() {
               <View style={styles.statusRow}>
                 <HeartIcon size={14} color={colors.accent} filled />
                 <Text style={styles.statusText}>
-                  {likeCount}{" "}
-                  {likeCount === 1 ? "contractor likes" : "contractors like"}{" "}
-                  your request
+                  {t("project.likes", { count: likeCount })}
                 </Text>
               </View>
             ) : null}
@@ -353,14 +353,16 @@ export default function MyRequestScreen() {
             {cancelled ? (
               <View style={styles.cancelledCard}>
                 <Text style={styles.cancelledText}>
-                  This request was cancelled.
+                  {t("myRequest.wasCancelled")}
                 </Text>
               </View>
             ) : assigned ? (
               <InProgressView project={project} uid={uid} />
             ) : hasResponses ? (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Responses</Text>
+                <Text style={styles.sectionTitle}>
+                  {t("project.responsesLabel")}
+                </Text>
                 {responders.map((responder, index) => (
                   <ResponderRow
                     key={responder.threadId || responder.userId}
@@ -377,14 +379,16 @@ export default function MyRequestScreen() {
             {canCancel ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Cancel request"
+                accessibilityLabel={t("myRequest.cancel")}
                 hitSlop={8}
                 disabled={cancelling}
                 onPress={confirmCancel}
                 style={styles.cancelWrap}
               >
                 <Text style={styles.cancelLink}>
-                  {cancelling ? "Cancelling…" : "Cancel request"}
+                  {cancelling
+                    ? t("myRequest.cancelling")
+                    : t("myRequest.cancel")}
                 </Text>
               </Pressable>
             ) : null}

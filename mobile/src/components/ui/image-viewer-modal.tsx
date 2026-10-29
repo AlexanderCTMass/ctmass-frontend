@@ -14,6 +14,7 @@ import Animated, {
 import { CloseIcon } from "@/components/icons";
 import { ModalSafeArea } from "@/components/ui/modal-safe-area";
 import { Spacing } from "@/constants/theme";
+import { useT } from "@/lib/i18n";
 
 const MAX_SCALE = 4;
 const DOUBLE_TAP_SCALE = 2.5;
@@ -104,6 +105,7 @@ export function ImageViewerModal({
   uri: string | null;
   onClose: () => void;
 }) {
+  const { t } = useT();
   return (
     <Modal
       visible={uri !== null}
@@ -118,7 +120,7 @@ export function ImageViewerModal({
           <View style={styles.headerRow}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Close"
+              accessibilityLabel={t("common.close")}
               hitSlop={12}
               onPress={onClose}
               style={styles.close}

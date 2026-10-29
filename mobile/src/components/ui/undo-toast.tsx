@@ -4,10 +4,16 @@ import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 
 import { ArchiveIcon, HeartIcon } from "@/components/icons";
 import { Radius, Spacing, makeStyles } from "@/constants/theme";
+import { useT } from "@/lib/i18n";
 
 type ToastIcon = "archive" | "like";
 
-type Toast = { id: number; message: string; onUndo: () => void; icon: ToastIcon };
+type Toast = {
+  id: number;
+  message: string;
+  onUndo: () => void;
+  icon: ToastIcon;
+};
 
 const DURATION = 4500;
 
@@ -51,6 +57,7 @@ export function UndoToast({
   onHide: () => void;
 }) {
   const styles = useStyles();
+  const { t } = useT();
   return (
     <View pointerEvents="box-none" style={styles.wrap}>
       {toast ? (
@@ -71,7 +78,7 @@ export function UndoToast({
           </Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Undo"
+            accessibilityLabel={t("common.undo")}
             hitSlop={10}
             onPress={() => {
               toast.onUndo();
@@ -82,7 +89,7 @@ export function UndoToast({
               pressed && styles.undoPressed,
             ]}
           >
-            <Text style={styles.undoText}>Undo</Text>
+            <Text style={styles.undoText}>{t("common.undo")}</Text>
           </Pressable>
         </Animated.View>
       ) : null}

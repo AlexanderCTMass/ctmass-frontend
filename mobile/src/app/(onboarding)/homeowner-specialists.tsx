@@ -16,12 +16,7 @@ import { CheckIcon } from "@/components/icons";
 import { TradeCard } from "@/components/trade/trade-card";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import {
-  Brand,
-  Radius,
-  Spacing,
-  makeStyles,
-} from "@/constants/theme";
+import { Brand, Radius, Spacing, makeStyles } from "@/constants/theme";
 import { publicPhone, useTradeContact } from "@/hooks/use-trade-contact";
 import {
   analyticsEvents,
@@ -31,6 +26,7 @@ import {
 import { startChat } from "@/lib/chat";
 import { distanceMiles } from "@/lib/geo";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
 import { createProject, requestDetailsFromDraft } from "@/lib/projects";
 import { uploadImage } from "@/lib/storage-upload";
@@ -74,6 +70,7 @@ function SkeletonCard() {
 
 export default function SpecialistsScreen() {
   const styles = useStyles();
+  const { t, tx } = useT();
   const specialty = useProjectDraftStore((state) => state.specialty);
   const draftName = useProjectDraftStore((state) => state.name);
   const location = useProjectDraftStore((state) => state.location);
@@ -265,10 +262,14 @@ export default function SpecialistsScreen() {
         <View style={styles.header}>
           <View style={styles.headerText}>
             <Text style={styles.requestId}>
-              Request #{requestId ?? "CT-00000"}
+              {t("specialists.requestNumber", { id: requestId ?? "CT-00000" })}
             </Text>
-            <Text style={styles.title}>{specialty ?? "Your project"}</Text>
-            {location ? <Text style={styles.location}>{location.place_name}</Text> : null}
+            <Text style={styles.title}>
+              {specialty ? tx(specialty) : t("specialists.yourProject")}
+            </Text>
+            {location ? (
+              <Text style={styles.location}>{location.place_name}</Text>
+            ) : null}
           </View>
         </View>
 
@@ -277,9 +278,7 @@ export default function SpecialistsScreen() {
             <View style={styles.bannerIcon}>
               <CheckIcon size={14} color="#04170D" strokeWidth={3} />
             </View>
-            <Text style={styles.bannerText}>
-              You&apos;re signed in — message any specialist below.
-            </Text>
+            <Text style={styles.bannerText}>{t("specialists.signedIn")}</Text>
           </Animated.View>
         ) : null}
 
@@ -288,9 +287,7 @@ export default function SpecialistsScreen() {
           showsVerticalScrollIndicator={false}
         >
           {usedFallback && !isLoading && specialists.length > 0 ? (
-            <Text style={styles.fallbackNote}>
-              No exact match yet — showing related specialists near you.
-            </Text>
+            <Text style={styles.fallbackNote}>{t("specialists.fallback")}</Text>
           ) : null}
 
           {isLoading ? (
@@ -304,14 +301,19 @@ export default function SpecialistsScreen() {
           {specialists.map((specialist) => {
             const phone = publicPhone(specialist.owner);
             return (
-              <Animated.View key={specialist.tradeId} entering={FadeIn.duration(360)}>
+              <Animated.View
+                key={specialist.tradeId}
+                entering={FadeIn.duration(360)}
+              >
                 <TradeCard
                   specialist={specialist}
                   distance={distanceTo(specialist)}
                   phone={phone}
                   onPress={() => openTrade(specialist)}
                   onMessage={
-                    isAuthenticated ? () => handleMessage(specialist) : undefined
+                    isAuthenticated
+                      ? () => handleMessage(specialist)
+                      : undefined
                   }
                   onCall={() => contact.call(specialist, phone)}
                 />
@@ -320,16 +322,18 @@ export default function SpecialistsScreen() {
           })}
 
           {isLoading ? (
-            <SearchingHint label="Finding specialists near you…" />
+            <SearchingHint label={t("specialists.searching")} />
           ) : null}
 
           {showEmpty ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>No specialists yet</Text>
+              <Text style={styles.emptyTitle}>
+                {t("specialists.emptyTitle")}
+              </Text>
               <Text style={styles.emptyText}>
                 {isAuthenticated
-                  ? "We're still growing in your area — we'll notify you the moment a match appears."
-                  : "We're still growing in your area. Sign in and we'll notify you the moment a match appears."}
+                  ? t("specialists.emptyAuthed")
+                  : t("specialists.emptyGuest")}
               </Text>
             </View>
           ) : null}
@@ -337,13 +341,16 @@ export default function SpecialistsScreen() {
 
         {isAuthenticated ? (
           <View style={styles.footer}>
-            <PrimaryButton label="Go to home" onPress={goHome} />
+            <PrimaryButton label={t("specialists.goHome")} onPress={goHome} />
           </View>
         ) : (
           <View style={styles.footer}>
-            <PrimaryButton label="Log in to message" onPress={handleLogin} />
+            <PrimaryButton
+              label={t("specialists.loginToMessage")}
+              onPress={handleLogin}
+            />
             <Text style={styles.footerNote}>
-              Free account — no credit card required.
+              {t("specialists.freeAccount")}
             </Text>
           </View>
         )}

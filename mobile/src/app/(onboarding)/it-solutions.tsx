@@ -19,23 +19,24 @@ import { analyticsEvents } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
 import { useAppStore } from "@/store/use-app-store";
+import { useT } from "@/lib/i18n";
 
-type Highlight = { label: string; hint: string; Icon: ComponentType<IconProps> };
+type Highlight = {
+  id: "apps" | "ai" | "stores";
+  Icon: ComponentType<IconProps>;
+};
 
 const highlights: Highlight[] = [
   {
-    label: "Web & mobile apps",
-    hint: "Custom sites, iOS/Android apps and web tools.",
+    id: "apps",
     Icon: CodeBadgeIcon,
   },
   {
-    label: "AI, CRM & automation",
-    hint: "Chatbots, custom CRMs and backend integrations.",
+    id: "ai",
     Icon: ToolsIcon,
   },
   {
-    label: "Stores & ongoing support",
-    hint: "E-commerce setup, tech support and maintenance.",
+    id: "stores",
     Icon: ShopIcon,
   },
 ];
@@ -43,6 +44,7 @@ const highlights: Highlight[] = [
 export default function ItSolutionsScreen() {
   const { colors, gradients } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const role = useAppStore((state) => state.role);
 
   useEffect(() => {
@@ -67,16 +69,16 @@ export default function ItSolutionsScreen() {
       centerContent={false}
       footer={
         <>
-          <PrimaryButton label="Next" onPress={goNext} />
+          <PrimaryButton label={t("common.next")} onPress={goNext} />
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Book a free IT consultation"
+            accessibilityLabel={t("onboarding.it.bookA11y")}
             onPress={goInquiry}
           >
             <View style={styles.secondaryBtn}>
               <CalendarIcon size={18} color={colors.accent} />
               <Text style={styles.secondaryText}>
-                Have a project? Book a free call
+                {t("onboarding.it.bookCall")}
               </Text>
             </View>
           </Pressable>
@@ -90,15 +92,15 @@ export default function ItSolutionsScreen() {
           </View>
         </Animated.View>
         <ScreenHeading
-          eyebrow="CTMASS IT Solutions"
-          title="We also build software for your business"
-          body="Beyond home services, our own team ships custom web and mobile products to automate and grow your business."
+          eyebrow={t("onboarding.it.eyebrow")}
+          title={t("onboarding.it.title")}
+          body={t("onboarding.it.body")}
           delay={140}
         />
         <View style={styles.list}>
           {highlights.map((item, index) => (
             <Animated.View
-              key={item.label}
+              key={item.id}
               entering={FadeInDown.delay(360 + index * 110).duration(520)}
               style={styles.row}
             >
@@ -106,8 +108,12 @@ export default function ItSolutionsScreen() {
                 <item.Icon size={20} color={colors.accent} />
               </View>
               <View style={styles.rowBody}>
-                <Text style={styles.rowLabel}>{item.label}</Text>
-                <Text style={styles.rowHint}>{item.hint}</Text>
+                <Text style={styles.rowLabel}>
+                  {t(`onboarding.it.items.${item.id}.label`)}
+                </Text>
+                <Text style={styles.rowHint}>
+                  {t(`onboarding.it.items.${item.id}.hint`)}
+                </Text>
               </View>
             </Animated.View>
           ))}
@@ -119,10 +125,11 @@ export default function ItSolutionsScreen() {
             end={{ x: 1, y: 1 }}
             style={styles.shopCard}
           >
-            <Text style={styles.shopTitle}>Two ways to get started</Text>
+            <Text style={styles.shopTitle}>
+              {t("onboarding.it.twoWaysTitle")}
+            </Text>
             <Text style={styles.shopText}>
-              Redeem these services with CTMASS Coins in the Shop — or book a
-              free 30-minute call with our team at a time that suits you.
+              {t("onboarding.it.twoWaysText")}
             </Text>
           </LinearGradient>
         </Animated.View>

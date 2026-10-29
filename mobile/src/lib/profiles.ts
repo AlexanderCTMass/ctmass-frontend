@@ -6,6 +6,7 @@ import {
 } from "@react-native-firebase/firestore";
 
 import { getDb } from "@/lib/firebase";
+import i18n from "@/lib/i18n";
 
 export type ProfileBrief = {
   uid: string;
@@ -29,12 +30,13 @@ export async function fetchProfileBrief(uid: string): Promise<ProfileBrief> {
   const db = getDb();
   const snapshot = await getDoc(doc(db, "profiles", uid));
   if (!snapshot.exists()) {
-    return { uid, name: "Deleted User", avatar: null };
+    return { uid, name: i18n.t("publicProfile.deletedUser"), avatar: null };
   }
   const raw = snapshot.data();
   const data =
     raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
-  const name = str(data.name) || str(data.businessName) || "User";
+  const name =
+    str(data.name) || str(data.businessName) || i18n.t("publicProfile.user");
   const avatar = str(data.avatar) || null;
   return { uid, name, avatar };
 }
@@ -45,7 +47,10 @@ export async function fetchAllPeople(): Promise<PersonResult[]> {
   return snapshot.docs.map((docSnap) => {
     const data = (docSnap.data() ?? {}) as Record<string, unknown>;
     const name =
-      str(data.name) || str(data.businessName) || str(data.email) || "User";
+      str(data.name) ||
+      str(data.businessName) ||
+      str(data.email) ||
+      i18n.t("publicProfile.user");
     return {
       uid: docSnap.id,
       name,

@@ -31,6 +31,7 @@ import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { errorFeedback, successFeedback, tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { choosePhoto } from "@/lib/media";
 import { uploadImage } from "@/lib/storage-upload";
 import {
@@ -44,15 +45,21 @@ import { useAuthStore } from "@/store/use-auth-store";
 const INSURANCE_TYPES = [
   { value: "General liability", label: "General liability" },
   { value: "Workers' compensation", label: "Workers' compensation" },
-  { value: "General liability + workers' comp", label: "Liability + workers' comp" },
+  {
+    value: "General liability + workers' comp",
+    label: "Liability + workers' comp",
+  },
   { value: "Commercial auto", label: "Commercial auto" },
 ];
 
 const expiry = z
   .string()
-  .refine((value) => value === "" || parseExpiry(value) !== null, "Use MM/YYYY.");
+  .refine(
+    (value) => value === "" || parseExpiry(value) !== null,
+    "credentials.errors.format",
+  );
 
-const EXPIRED = "This date has passed. Add a current document.";
+const EXPIRED = "credentials.errors.expired";
 
 function isPast(value: string): boolean {
   const date = parseExpiry(value);
@@ -74,21 +81,45 @@ const schema = z
   })
   .superRefine((values, ctx) => {
     if (values.licenseOn) {
-      if (!(US_STATE_CODES as readonly string[]).includes(values.licenseState.toUpperCase())) {
-        ctx.addIssue({ code: "custom", path: ["licenseState"], message: "Enter a US state code, e.g. CT." });
+      if (
+        !(US_STATE_CODES as readonly string[]).includes(
+          values.licenseState.toUpperCase(),
+        )
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["licenseState"],
+          message: "credentials.errors.state",
+        });
       }
       if (values.licenseType.trim().length < 2) {
-        ctx.addIssue({ code: "custom", path: ["licenseType"], message: "Enter the license type." });
+        ctx.addIssue({
+          code: "custom",
+          path: ["licenseType"],
+          message: "credentials.errors.licenseType",
+        });
       }
       if (isPast(values.licenseExpiry)) {
-        ctx.addIssue({ code: "custom", path: ["licenseExpiry"], message: EXPIRED });
+        ctx.addIssue({
+          code: "custom",
+          path: ["licenseExpiry"],
+          message: EXPIRED,
+        });
       }
     }
     if (values.insuranceOn && isPast(values.insuranceExpiry)) {
-      ctx.addIssue({ code: "custom", path: ["insuranceExpiry"], message: EXPIRED });
+      ctx.addIssue({
+        code: "custom",
+        path: ["insuranceExpiry"],
+        message: EXPIRED,
+      });
     }
     if (values.insuranceOn && !values.insuranceType.trim()) {
-      ctx.addIssue({ code: "custom", path: ["insuranceType"], message: "Choose the insurance type." });
+      ctx.addIssue({
+        code: "custom",
+        path: ["insuranceType"],
+        message: "credentials.errors.insuranceType",
+      });
     }
   });
 
@@ -110,7 +141,9 @@ function formatExpiry(date: Date | null): string {
 
 function maskExpiry(text: string): string {
   const digits = text.replace(/[^0-9]/g, "").slice(0, 6);
-  return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+  return digits.length > 2
+    ? `${digits.slice(0, 2)}/${digits.slice(2)}`
+    : digits;
 }
 
 function defaults(trade: TradeProfile): FormValues {
@@ -139,6 +172,7 @@ function DocumentField({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   return (
     <Controller
       control={control}
@@ -146,10 +180,14 @@ function DocumentField({
       render={({ field: { value, onChange } }) =>
         value ? (
           <View style={styles.docPreview}>
-            <Image source={{ uri: value }} style={styles.docImage} contentFit="cover" />
+            <Image
+              source={{ uri: value }}
+              style={styles.docImage}
+              contentFit="cover"
+            />
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Remove document"
+              accessibilityLabel={t("credentials.removeDoc")}
               hitSlop={8}
               onPress={() => {
                 tapFeedback();
@@ -163,7 +201,7 @@ function DocumentField({
         ) : (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Add a photo of the document"
+            accessibilityLabel={t("credentials.addDoc")}
             onPress={() => {
               tapFeedback();
               void choosePhoto().then((uri) => {
@@ -173,7 +211,7 @@ function DocumentField({
             style={({ pressed }) => [styles.docAdd, pressed && styles.pressed]}
           >
             <ImageIcon size={20} color={colors.accent} />
-            <Text style={styles.docAddText}>Add a photo of the document</Text>
+            <Text style={styles.docAddText}>{t("credentials.addDoc")}</Text>
           </Pressable>
         )
       }
@@ -184,6 +222,7 @@ function DocumentField({
 function CredentialsForm({ trade }: { trade: TradeProfile }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const uid = useAuthStore((state) => state.user?.uid);
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
@@ -203,7 +242,10 @@ function CredentialsForm({ trade }: { trade: TradeProfile }) {
 
   const upload = async (uri: string, kind: string): Promise<string> => {
     if (!uri || uri.startsWith("http")) return uri;
-    return uploadImage(uri, `trades/${uid}/${trade.tradeId}/credentials/${kind}_${Date.now()}.jpg`);
+    return uploadImage(
+      uri,
+      `trades/${uid}/${trade.tradeId}/credentials/${kind}_${Date.now()}.jpg`,
+    );
   };
 
   const onSubmit = async (values: FormValues) => {
@@ -212,8 +254,12 @@ function CredentialsForm({ trade }: { trade: TradeProfile }) {
     setTopError(null);
     try {
       const [licenseDoc, insuranceDoc] = await Promise.all([
-        values.licenseOn ? upload(values.licenseDoc, "license") : Promise.resolve(""),
-        values.insuranceOn ? upload(values.insuranceDoc, "insurance") : Promise.resolve(""),
+        values.licenseOn
+          ? upload(values.licenseDoc, "license")
+          : Promise.resolve(""),
+        values.insuranceOn
+          ? upload(values.insuranceDoc, "insurance")
+          : Promise.resolve(""),
       ]);
       const license: CredentialInput | null = values.licenseOn
         ? {
@@ -253,7 +299,7 @@ function CredentialsForm({ trade }: { trade: TradeProfile }) {
       });
       errorFeedback();
       setSaving(false);
-      setTopError("Could not save. Check your connection and try again.");
+      setTopError(t("credentials.saveFailed"));
     }
   };
 
@@ -265,7 +311,9 @@ function CredentialsForm({ trade }: { trade: TradeProfile }) {
     >
       <View style={styles.header}>
         <BackButton onPress={() => router.back()} />
-        <Text style={styles.headerTitle}>License & insurance</Text>
+        <Text style={styles.headerTitle}>
+          {t("tradePage.licenseInsurance")}
+        </Text>
         <View style={styles.headerSpacer} />
       </View>
       <ScrollView
@@ -277,8 +325,9 @@ function CredentialsForm({ trade }: { trade: TradeProfile }) {
         <View style={styles.intro}>
           <ShieldCheckIcon size={20} color={colors.accent} />
           <Text style={styles.introText}>
-            For {trade.specialtyLabel || trade.name}. Homeowners see “License
-            provided” or “Insurance provided”. CTMASS does not verify documents.
+            {t("credentials.intro", {
+              trade: tx(trade.specialtyLabel) || trade.name,
+            })}
           </Text>
         </View>
 
@@ -286,28 +335,45 @@ function CredentialsForm({ trade }: { trade: TradeProfile }) {
           control={control}
           name="licenseOn"
           render={({ field: { value, onChange } }) => (
-            <ToggleRow label="I have a license for this trade" value={value} onChange={onChange} />
+            <ToggleRow
+              label={t("credentials.hasLicense")}
+              value={value}
+              onChange={onChange}
+            />
           )}
         />
         {licenseOn ? (
           <>
-            <FormSection label="State" error={errors.licenseState?.message}>
+            <FormSection
+              label={t("credentials.state")}
+              error={errors.licenseState?.message}
+            >
               <Controller
                 control={control}
                 name="licenseState"
                 render={({ field: { value, onChange, onBlur } }) => (
                   <FormInput
                     value={value}
-                    onChangeText={(text) => onChange(text.replace(/[^a-z]/gi, "").slice(0, 2).toUpperCase())}
+                    onChangeText={(text) =>
+                      onChange(
+                        text
+                          .replace(/[^a-z]/gi, "")
+                          .slice(0, 2)
+                          .toUpperCase(),
+                      )
+                    }
                     onBlur={onBlur}
-                    placeholder="e.g. CT"
+                    placeholder={t("tradeForm.example", { value: "CT" })}
                     autoCapitalize="characters"
                     autoCorrect={false}
                   />
                 )}
               />
             </FormSection>
-            <FormSection label="License type" error={errors.licenseType?.message}>
+            <FormSection
+              label={t("credentials.licenseType")}
+              error={errors.licenseType?.message}
+            >
               <Controller
                 control={control}
                 name="licenseType"
@@ -316,13 +382,13 @@ function CredentialsForm({ trade }: { trade: TradeProfile }) {
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
-                    placeholder="e.g. E-2 Unlimited Electrical Journeyperson"
+                    placeholder={t("credentials.licenseTypePlaceholder")}
                     maxLength={80}
                   />
                 )}
               />
             </FormSection>
-            <FormSection label="License number" optional>
+            <FormSection label={t("credentials.licenseNumber")} optional>
               <Controller
                 control={control}
                 name="licenseNumber"
@@ -331,14 +397,18 @@ function CredentialsForm({ trade }: { trade: TradeProfile }) {
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
-                    placeholder="As shown on the license"
+                    placeholder={t("credentials.licenseNumberPlaceholder")}
                     autoCapitalize="characters"
                     maxLength={40}
                   />
                 )}
               />
             </FormSection>
-            <FormSection label="Expires" error={errors.licenseExpiry?.message} optional>
+            <FormSection
+              label={t("credentials.expires")}
+              error={errors.licenseExpiry?.message}
+              optional
+            >
               <Controller
                 control={control}
                 name="licenseExpiry"
@@ -347,13 +417,17 @@ function CredentialsForm({ trade }: { trade: TradeProfile }) {
                     value={value}
                     onChangeText={(text) => onChange(maskExpiry(text))}
                     onBlur={onBlur}
-                    placeholder="MM/YYYY"
+                    placeholder={t("credentials.datePlaceholder")}
                     keyboardType="number-pad"
                   />
                 )}
               />
             </FormSection>
-            <FormSection label="Document" hint="Kept private. Homeowners only see that a license was provided." optional>
+            <FormSection
+              label={t("tradePage.document")}
+              hint={t("credentials.licenseDocHint")}
+              optional
+            >
               <DocumentField control={control} name="licenseDoc" />
             </FormSection>
           </>
@@ -365,21 +439,36 @@ function CredentialsForm({ trade }: { trade: TradeProfile }) {
           control={control}
           name="insuranceOn"
           render={({ field: { value, onChange } }) => (
-            <ToggleRow label="I carry insurance" value={value} onChange={onChange} />
+            <ToggleRow
+              label={t("credentials.hasInsurance")}
+              value={value}
+              onChange={onChange}
+            />
           )}
         />
         {insuranceOn ? (
           <>
-            <FormSection label="Insurance type" error={errors.insuranceType?.message}>
+            <FormSection
+              label={t("credentials.insuranceType")}
+              error={errors.insuranceType?.message}
+            >
               <Controller
                 control={control}
                 name="insuranceType"
                 render={({ field: { value, onChange } }) => (
-                  <ChoiceChips options={INSURANCE_TYPES} value={value} onChange={onChange} />
+                  <ChoiceChips
+                    options={INSURANCE_TYPES}
+                    value={value}
+                    onChange={onChange}
+                  />
                 )}
               />
             </FormSection>
-            <FormSection label="Valid through" error={errors.insuranceExpiry?.message} optional>
+            <FormSection
+              label={t("credentials.validThrough")}
+              error={errors.insuranceExpiry?.message}
+              optional
+            >
               <Controller
                 control={control}
                 name="insuranceExpiry"
@@ -388,13 +477,17 @@ function CredentialsForm({ trade }: { trade: TradeProfile }) {
                     value={value}
                     onChangeText={(text) => onChange(maskExpiry(text))}
                     onBlur={onBlur}
-                    placeholder="MM/YYYY"
+                    placeholder={t("credentials.datePlaceholder")}
                     keyboardType="number-pad"
                   />
                 )}
               />
             </FormSection>
-            <FormSection label="Certificate of insurance" hint="Kept private. Homeowners only see that insurance was provided." optional>
+            <FormSection
+              label={t("credentials.coi")}
+              hint={t("credentials.coiHint")}
+              optional
+            >
               <DocumentField control={control} name="insuranceDoc" />
             </FormSection>
           </>
@@ -403,7 +496,7 @@ function CredentialsForm({ trade }: { trade: TradeProfile }) {
       <View style={styles.footer}>
         {topError ? <Text style={styles.error}>{topError}</Text> : null}
         <PrimaryButton
-          label={saving ? "Saving…" : "Save"}
+          label={saving ? t("setup.saving") : t("common.save")}
           loading={saving}
           disabled={!isDirty || saving}
           onPress={() => void handleSubmit(onSubmit)()}
@@ -416,8 +509,10 @@ function CredentialsForm({ trade }: { trade: TradeProfile }) {
 export default function TradeCredentialsScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const params = useLocalSearchParams<{ tradeId?: string; source?: string }>();
-  const tradeId = typeof params.tradeId === "string" ? params.tradeId : undefined;
+  const tradeId =
+    typeof params.tradeId === "string" ? params.tradeId : undefined;
   const uid = useAuthStore((state) => state.user?.uid);
   const { data: trade, isLoading } = useTradeById(tradeId);
 
@@ -446,7 +541,7 @@ export default function TradeCredentialsScreen() {
               <BackButton onPress={() => router.back()} />
             </View>
             <View style={styles.center}>
-              <Text style={styles.missing}>This trade isn&apos;t available.</Text>
+              <Text style={styles.missing}>{t("tradeEdit.unavailable")}</Text>
             </View>
           </>
         )}

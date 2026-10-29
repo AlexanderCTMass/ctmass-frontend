@@ -33,7 +33,13 @@ import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { analyticsEvents } from "@/lib/analytics-events";
 import {
@@ -44,13 +50,19 @@ import {
 import { notifyFriendAdded } from "@/lib/app-notifications";
 import { confirmFriendship, fetchFriendIds } from "@/lib/friends";
 import { tapFeedback } from "@/lib/haptics";
+import { type Translate, useT } from "@/lib/i18n";
 import {
   type BlockState,
   blockUser,
   fetchBlockState,
   unblockUser,
 } from "@/lib/moderation";
-import { type Certificate, fetchPublicCertificates } from "@/lib/certificates";
+import {
+  type Certificate,
+  certificateSubtitle,
+  certificateTitle,
+  fetchPublicCertificates,
+} from "@/lib/certificates";
 import { toHref } from "@/lib/navigation";
 import { fetchProfileBrief } from "@/lib/profiles";
 import {
@@ -67,27 +79,32 @@ import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
 import { useProjectDraftStore } from "@/store/use-project-draft-store";
 
-function roleLabel(role: string | null): string {
-  if (role === "WORKER") return "Contractor";
-  if (role === "CUSTOMER") return "Homeowner";
-  return "Member";
+function roleLabel(role: string | null, t: Translate): string {
+  if (role === "WORKER") return t("common.roles.contractor");
+  if (role === "CUSTOMER") return t("common.roles.homeowner");
+  return t("common.roles.member");
 }
 
 export default function PublicProfileScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
+  const certNumber = (number: string) =>
+    t("trade.sections.licenseNumber", { number });
   const params = useLocalSearchParams<{
     uid?: string;
     name?: string;
     connect?: string;
   }>();
   const targetId = typeof params.uid === "string" ? params.uid : "";
-  const fallbackName = typeof params.name === "string" ? params.name : "User";
+  const fallbackName =
+    typeof params.name === "string" ? params.name : t("publicProfile.user");
   const wantsConnect = params.connect === "1";
   const uid = useAuthStore((state) => state.user?.uid) ?? "";
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const authReady = useAuthStore((state) => !state.isInitializing);
   const myName = useAuthStore((state) => state.user?.name ?? "");
+  const myRole = useAuthStore((state) => state.user?.role ?? null);
   const queryClient = useQueryClient();
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
@@ -137,34 +154,36 @@ export default function PublicProfileScreen() {
       fetchUserVideos(targetId).catch(() => [] as VideoStory[]),
       fetchReviews(targetId).catch(() => [] as Review[]),
     ])
-      .then(async ([profileData, tradeList, certList, videoList, reviewList]) => {
-        if (!active) return;
-        setProfile(profileData);
-        setTrades(tradeList);
-        setCertificates(certList);
-        setVideos(videoList);
-        setReviews(reviewList);
-        setLoading(false);
+      .then(
+        async ([profileData, tradeList, certList, videoList, reviewList]) => {
+          if (!active) return;
+          setProfile(profileData);
+          setTrades(tradeList);
+          setCertificates(certList);
+          setVideos(videoList);
+          setReviews(reviewList);
+          setLoading(false);
 
-        const authorIds = [
-          ...new Set(reviewList.map((review) => review.authorId).filter(Boolean)),
-        ];
-        if (authorIds.length > 0) {
-          const briefs = await Promise.all(
-            authorIds.map((id) =>
-              fetchProfileBrief(id)
-                .then(
-                  (brief) =>
-                    [id, { name: brief.name, avatar: brief.avatar }] as const,
-                )
-                .catch(
-                  () => [id, { name: "Client", avatar: null }] as const,
-                ),
+          const authorIds = [
+            ...new Set(
+              reviewList.map((review) => review.authorId).filter(Boolean),
             ),
-          );
-          if (active) setReviewAuthors(Object.fromEntries(briefs));
-        }
-      })
+          ];
+          if (authorIds.length > 0) {
+            const briefs = await Promise.all(
+              authorIds.map((id) =>
+                fetchProfileBrief(id)
+                  .then(
+                    (brief) =>
+                      [id, { name: brief.name, avatar: brief.avatar }] as const,
+                  )
+                  .catch(() => [id, { name: "", avatar: null }] as const),
+              ),
+            );
+            if (active) setReviewAuthors(Object.fromEntries(briefs));
+          }
+        },
+      )
       .catch(() => {
         if (active) setLoading(false);
       });
@@ -223,13 +242,17 @@ export default function PublicProfileScreen() {
       startRequest(trades[0]);
       return;
     }
-    Alert.alert("Request services", "Which service do you need?", [
-      ...trades.slice(0, 6).map((trade) => ({
-        text: trade.specialtyLabel || trade.name,
-        onPress: () => startRequest(trade),
-      })),
-      { text: "Cancel", style: "cancel" as const },
-    ]);
+    Alert.alert(
+      t("publicProfile.requestServices"),
+      t("publicProfile.whichService"),
+      [
+        ...trades.slice(0, 6).map((trade) => ({
+          text: tx(trade.specialtyLabel) || trade.name,
+          onPress: () => startRequest(trade),
+        })),
+        { text: t("common.cancel"), style: "cancel" as const },
+      ],
+    );
   };
 
   const viewedRef = useRef(false);
@@ -280,7 +303,7 @@ export default function PublicProfileScreen() {
         target_uid: targetId,
         action: "block",
       });
-      Alert.alert("Couldn't block", "Please try again.");
+      Alert.alert(t("publicProfile.blockFailed"), t("common.pleaseTryAgain"));
     } finally {
       setBusy(false);
     }
@@ -298,7 +321,7 @@ export default function PublicProfileScreen() {
         target_uid: targetId,
         action: "unblock",
       });
-      Alert.alert("Couldn't unblock", "Please try again.");
+      Alert.alert(t("publicProfile.unblockFailed"), t("common.pleaseTryAgain"));
     } finally {
       setBusy(false);
     }
@@ -313,17 +336,17 @@ export default function PublicProfileScreen() {
     tapFeedback();
     analyticsEvents.blockUserTapped({ target_uid: targetId });
     Alert.alert(
-      `Block ${name}?`,
-      "They won't be able to message you, and you won't see their messages.",
+      t("publicProfile.blockTitle", { name }),
+      t("publicProfile.blockText"),
       [
         {
-          text: "Cancel",
+          text: t("common.cancel"),
           style: "cancel",
           onPress: () =>
             analyticsEvents.blockUserCancelled({ target_uid: targetId }),
         },
         {
-          text: "Block",
+          text: t("publicProfile.block"),
           style: "destructive",
           onPress: () => void runBlock(),
         },
@@ -342,7 +365,10 @@ export default function PublicProfileScreen() {
       setFriendDone(true);
     } catch {
       analyticsEvents.friendInviteAcceptFailed({ inviter_uid: targetId });
-      Alert.alert("Couldn't add friend", "Please try again.");
+      Alert.alert(
+        t("publicProfile.addFriendFailed"),
+        t("common.pleaseTryAgain"),
+      );
     } finally {
       setFriendBusy(false);
     }
@@ -398,7 +424,9 @@ export default function PublicProfileScreen() {
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
           <Text style={styles.headerTitle}>
-            {isOwnProfile ? "Your public profile" : "Profile"}
+            {isOwnProfile
+              ? t("publicProfile.yourPublic")
+              : t("profile.tab.title")}
           </Text>
           <View style={styles.spacer} />
         </View>
@@ -418,7 +446,7 @@ export default function PublicProfileScreen() {
             <View style={styles.topCard}>
               <Pressable
                 accessibilityRole="imagebutton"
-                accessibilityLabel="Open profile photo"
+                accessibilityLabel={t("publicProfile.openPhoto")}
                 disabled={!profile?.avatar}
                 onPress={() => setViewerUri(profile?.avatar ?? null)}
               >
@@ -428,7 +456,7 @@ export default function PublicProfileScreen() {
                 {name}
               </Text>
               <Text style={styles.role}>
-                {roleLabel(profile?.role ?? null)}
+                {roleLabel(profile?.role ?? null, t)}
               </Text>
               {profile?.address ? (
                 <Text style={styles.address} numberOfLines={2}>
@@ -437,13 +465,15 @@ export default function PublicProfileScreen() {
               ) : null}
               {isContractor && trades.length > 0 && !isOwnProfile ? (
                 <PressableScale
-                  accessibilityLabel="Request services"
+                  accessibilityLabel={t("publicProfile.requestServices")}
                   onPress={handleRequestServices}
                   style={styles.requestCtaWrap}
                   scaleTo={0.98}
                 >
                   <View style={styles.requestCta}>
-                    <Text style={styles.requestCtaText}>Request services</Text>
+                    <Text style={styles.requestCtaText}>
+                      {t("publicProfile.requestServices")}
+                    </Text>
                   </View>
                 </PressableScale>
               ) : null}
@@ -456,21 +486,25 @@ export default function PublicProfileScreen() {
               <View style={styles.infoCard}>
                 {profile?.businessName ? (
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Business</Text>
+                    <Text style={styles.infoLabel}>
+                      {t("tradePage.business")}
+                    </Text>
                     <Text style={styles.infoValue}>{profile.businessName}</Text>
                   </View>
                 ) : null}
                 {profile?.professionalRole ? (
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Role</Text>
+                    <Text style={styles.infoLabel}>
+                      {t("trade.sections.role")}
+                    </Text>
                     <Text style={styles.infoValue}>
-                      {profile.professionalRole}
+                      {tx(profile.professionalRole)}
                     </Text>
                   </View>
                 ) : null}
                 {profile?.shortBio ? (
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>About</Text>
+                    <Text style={styles.infoLabel}>{t("tradePage.about")}</Text>
                     <Text style={styles.infoValue}>{profile.shortBio}</Text>
                   </View>
                 ) : null}
@@ -479,12 +513,16 @@ export default function PublicProfileScreen() {
 
             {trades.length > 0 ? (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Trades</Text>
+                <Text style={styles.sectionTitle}>
+                  {t("publicProfile.trades")}
+                </Text>
                 <View style={styles.tradesList}>
                   {trades.map((trade, index) => (
                     <PressableScale
                       key={trade.tradeId}
-                      accessibilityLabel={`Open ${trade.name}`}
+                      accessibilityLabel={t("compare.openA11y", {
+                        name: trade.name,
+                      })}
                       onPress={() => {
                         tapFeedback();
                         analyticsEvents.publicProfileTradeOpened({
@@ -517,9 +555,11 @@ export default function PublicProfileScreen() {
                               numberOfLines={1}
                             >
                               {[
-                                trade.specialtyLabel,
+                                tx(trade.specialtyLabel),
                                 trade.details.experienceYears !== null
-                                  ? `${trade.details.experienceYears} yrs`
+                                  ? t("trade.yearsShort", {
+                                      count: trade.details.experienceYears,
+                                    })
                                   : "",
                               ]
                                 .filter(Boolean)
@@ -527,7 +567,7 @@ export default function PublicProfileScreen() {
                             </Text>
                           ) : null}
                           <Text style={styles.tradeMeta} numberOfLines={1}>
-                            {priceLine(trade.details.rates)}
+                            {priceLine(trade.details.rates, t)}
                           </Text>
                           {trade.placeName ? (
                             <View style={styles.tradeMetaRow}>
@@ -560,7 +600,9 @@ export default function PublicProfileScreen() {
               <View style={styles.section}>
                 <View style={styles.sectionTitleRow}>
                   <BuildingIcon size={18} color={colors.accent} />
-                  <Text style={styles.sectionTitle}>Business</Text>
+                  <Text style={styles.sectionTitle}>
+                    {t("tradePage.business")}
+                  </Text>
                 </View>
                 <BusinessPanel owner={trades[0].owner} />
               </View>
@@ -570,7 +612,9 @@ export default function PublicProfileScreen() {
               <View style={styles.section}>
                 <View style={styles.sectionTitleRow}>
                   <UsersIcon size={18} color={colors.accent} />
-                  <Text style={styles.sectionTitle}>Community</Text>
+                  <Text style={styles.sectionTitle}>
+                    {t("publicProfile.community")}
+                  </Text>
                 </View>
                 <CommunityBadges groups={profile.socialGroups} />
               </View>
@@ -580,31 +624,34 @@ export default function PublicProfileScreen() {
               <View style={styles.section}>
                 <View style={styles.sectionTitleRow}>
                   <ReviewIcon size={18} color={colors.coin} />
-                  <Text style={styles.sectionTitle}>Reviews</Text>
+                  <Text style={styles.sectionTitle}>
+                    {t("tradePage.reviews")}
+                  </Text>
                   <View style={styles.reviewSummary}>
                     <Text style={styles.reviewAvg}>
                       ★ {summary.average.toFixed(1)}
                     </Text>
-                    <Text style={styles.reviewCount}>
-                      ({summary.count})
-                    </Text>
+                    <Text style={styles.reviewCount}>({summary.count})</Text>
                   </View>
                 </View>
                 <View style={styles.certList}>
                   {visibleReviews.map((review) => {
                     const author = reviewAuthors[review.authorId];
-                    const filled = Math.max(0, Math.min(5, Math.round(review.rating)));
+                    const filled = Math.max(
+                      0,
+                      Math.min(5, Math.round(review.rating)),
+                    );
                     return (
                       <View key={review.id} style={styles.reviewCard}>
                         <View style={styles.reviewHead}>
                           <Avatar
-                            name={author?.name || "Client"}
+                            name={author?.name || t("tradePage.client")}
                             url={author?.avatar ?? null}
                             size={38}
                           />
                           <View style={styles.reviewHeadBody}>
                             <Text style={styles.reviewAuthor} numberOfLines={1}>
-                              {author?.name || "Client"}
+                              {author?.name || t("tradePage.client")}
                             </Text>
                             <Text style={styles.reviewStars}>
                               {"★".repeat(filled)}
@@ -627,8 +674,10 @@ export default function PublicProfileScreen() {
                   >
                     <Text style={styles.reviewMore}>
                       {showAllReviews
-                        ? "Show fewer reviews"
-                        : `Show all ${reviews.length} reviews`}
+                        ? t("publicProfile.showFewerReviews")
+                        : t("publicProfile.showAllReviews", {
+                            count: reviews.length,
+                          })}
                     </Text>
                   </Pressable>
                 ) : null}
@@ -640,28 +689,29 @@ export default function PublicProfileScreen() {
                 <View style={styles.sectionTitleRow}>
                   <AwardIcon size={18} color={colors.accent} />
                   <Text style={styles.sectionTitle}>
-                    Certificates &amp; documents
+                    {t("publicProfile.certificates")}
                   </Text>
                 </View>
                 <View style={styles.certList}>
                   {certificates.map((cert) => (
                     <View key={cert.id} style={styles.certCard}>
-                      {cert.institution || cert.documentType ? (
+                      {certificateTitle(cert, tx) ? (
                         <Text style={styles.certTitle} numberOfLines={2}>
-                          {cert.institution || cert.documentType}
+                          {certificateTitle(cert, tx)}
                         </Text>
                       ) : null}
-                      {cert.documentType && cert.institution ? (
-                        <Text style={styles.certSub} numberOfLines={1}>
-                          {cert.documentType}
-                          {cert.year ? ` · ${cert.year}` : ""}
+                      {certificateSubtitle(cert, tx, certNumber) ? (
+                        <Text style={styles.certSub} numberOfLines={2}>
+                          {certificateSubtitle(cert, tx, certNumber)}
                         </Text>
                       ) : null}
                       <View style={styles.certPhotos}>
                         {cert.files.map((file) => (
                           <PressableScale
                             key={file.id}
-                            accessibilityLabel={`Open ${file.name}`}
+                            accessibilityLabel={t("compare.openA11y", {
+                              name: file.name,
+                            })}
                             onPress={() => {
                               tapFeedback();
                               analyticsEvents.publicProfileCertificateOpened({
@@ -691,7 +741,9 @@ export default function PublicProfileScreen() {
               <View style={styles.section}>
                 <View style={styles.sectionTitleRow}>
                   <PlayIcon size={18} color={colors.accent} />
-                  <Text style={styles.sectionTitle}>Video stories</Text>
+                  <Text style={styles.sectionTitle}>
+                    {t("publicProfile.videoStories")}
+                  </Text>
                 </View>
                 <ScrollView
                   horizontal
@@ -701,7 +753,9 @@ export default function PublicProfileScreen() {
                   {videos.map((video, index) => (
                     <PressableScale
                       key={video.id}
-                      accessibilityLabel={`Play ${video.title || "video"}`}
+                      accessibilityLabel={t("publicProfile.playA11y", {
+                        title: video.title || t("publicProfile.video"),
+                      })}
                       onPress={() => {
                         tapFeedback();
                         analyticsEvents.videoViewerOpened({
@@ -743,7 +797,7 @@ export default function PublicProfileScreen() {
             {block.blockedMe && !block.iBlocked ? (
               <View style={styles.noticeCard}>
                 <Text style={styles.noticeText}>
-                  This user has restricted messaging with you.
+                  {t("publicProfile.restricted")}
                 </Text>
               </View>
             ) : null}
@@ -753,6 +807,10 @@ export default function PublicProfileScreen() {
                 url={profileShareUrl(targetId)}
                 name={name}
                 targetUid={targetId}
+                avatar={profile?.avatar ?? null}
+                businessName={
+                  myRole === "WORKER" ? (profile?.businessName ?? "") : ""
+                }
               />
             ) : (
               <View style={styles.actions}>
@@ -762,12 +820,14 @@ export default function PublicProfileScreen() {
                   <View style={styles.friendBadge}>
                     <UsersIcon size={18} color={colors.accent} />
                     <Text style={styles.friendBadgeText}>
-                      You&apos;re friends
+                      {t("publicProfile.youreFriends")}
                     </Text>
                   </View>
                 ) : (
                   <PressableScale
-                    accessibilityLabel={`Add ${name} as a friend`}
+                    accessibilityLabel={t("publicProfile.addFriendA11y", {
+                      name,
+                    })}
                     onPress={handleAddFriend}
                     disabled={friendBusy}
                     scaleTo={0.98}
@@ -775,24 +835,32 @@ export default function PublicProfileScreen() {
                     <View style={styles.friendButton}>
                       <UsersIcon size={18} color={colors.accent} />
                       <Text style={styles.friendButtonText}>
-                        {friendBusy ? "Adding…" : "Add friend"}
+                        {friendBusy
+                          ? t("publicProfile.adding")
+                          : t("publicProfile.addFriend")}
                       </Text>
                     </View>
                   </PressableScale>
                 )}
 
                 <PressableScale
-                  accessibilityLabel={`Report ${name}`}
+                  accessibilityLabel={t("publicProfile.reportA11y", { name })}
                   onPress={goReport}
                   scaleTo={0.98}
                 >
                   <View style={styles.reportButton}>
-                    <Text style={styles.reportText}>Report</Text>
+                    <Text style={styles.reportText}>
+                      {t("publicProfile.report")}
+                    </Text>
                   </View>
                 </PressableScale>
 
                 <PressableScale
-                  accessibilityLabel={block.iBlocked ? "Unblock" : "Block"}
+                  accessibilityLabel={
+                    block.iBlocked
+                      ? t("publicProfile.unblock")
+                      : t("publicProfile.block")
+                  }
                   onPress={handleBlockToggle}
                   disabled={busy}
                   scaleTo={0.98}
@@ -812,8 +880,8 @@ export default function PublicProfileScreen() {
                       {busy
                         ? "…"
                         : block.iBlocked
-                          ? "Unblock user"
-                          : "Block user"}
+                          ? t("publicProfile.unblockUser")
+                          : t("publicProfile.blockUser")}
                     </Text>
                   </View>
                 </PressableScale>
@@ -826,11 +894,17 @@ export default function PublicProfileScreen() {
           <View style={styles.ctaBar}>
             <Text style={styles.ctaTitle} numberOfLines={2}>
               {profile
-                ? `Add ${name.split(" ")[0] || name} as a friend?`
-                : "Connect on CTMASS?"}
+                ? t("publicProfile.addFriendQuestion", {
+                    name: name.split(" ")[0] || name,
+                  })
+                : t("publicProfile.connectQuestion")}
             </Text>
             <PrimaryButton
-              label={friendBusy ? "Adding…" : "Add friend"}
+              label={
+                friendBusy
+                  ? t("publicProfile.adding")
+                  : t("publicProfile.addFriend")
+              }
               withArrow={false}
               loading={friendBusy}
               disabled={friendBusy}
@@ -841,7 +915,9 @@ export default function PublicProfileScreen() {
               hitSlop={8}
               onPress={handleExplore}
             >
-              <Text style={styles.ctaSecondary}>Skip for now</Text>
+              <Text style={styles.ctaSecondary}>
+                {t("publicProfile.skipForNow")}
+              </Text>
             </Pressable>
           </View>
         ) : null}

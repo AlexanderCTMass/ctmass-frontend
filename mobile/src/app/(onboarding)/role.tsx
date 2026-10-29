@@ -28,33 +28,16 @@ import { setAnalyticsUserProperties } from "@/lib/analytics";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { selectFeedback, successFeedback } from "@/lib/haptics";
 import { type UserRole, useAppStore } from "@/store/use-app-store";
+import { useT } from "@/lib/i18n";
 
 type RoleOption = {
-  role: UserRole;
-  title: string;
-  subtitle: string;
-  points: string[];
+  role: "homeowner" | "contractor";
   Icon: (props: IconProps) => React.JSX.Element;
 };
 
 const options: RoleOption[] = [
-  {
-    role: "homeowner",
-    title: "I'm a Homeowner",
-    subtitle: "I need work done on my property",
-    points: [
-      "Post a project for free",
-      "Get proposals from local pros",
-    ],
-    Icon: HomeIcon,
-  },
-  {
-    role: "contractor",
-    title: "I'm a Contractor",
-    subtitle: "I provide construction services",
-    points: ["Find real local projects", "Never pay for a lead"],
-    Icon: ToolsIcon,
-  },
+  { role: "homeowner", Icon: HomeIcon },
+  { role: "contractor", Icon: ToolsIcon },
 ];
 
 function RoleCard({
@@ -70,7 +53,13 @@ function RoleCard({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const { Icon } = option;
+  const title = t(`onboarding.role.${option.role}.title`);
+  const points = [
+    t(`onboarding.role.${option.role}.point1`),
+    t(`onboarding.role.${option.role}.point2`),
+  ];
 
   const cardStyle = useAnimatedStyle(() => ({
     borderColor: withTiming(selected ? Brand.primary : colors.border, {
@@ -85,7 +74,7 @@ function RoleCard({
   return (
     <Animated.View entering={FadeInDown.delay(320 + index * 140).duration(560)}>
       <PressableScale
-        accessibilityLabel={option.title}
+        accessibilityLabel={title}
         onPress={() => onSelect(option.role)}
       >
         <Animated.View style={[styles.card, cardStyle]}>
@@ -94,8 +83,10 @@ function RoleCard({
               <Icon size={28} color={colors.accent} />
             </View>
             <View style={styles.cardHeading}>
-              <Text style={styles.cardTitle}>{option.title}</Text>
-              <Text style={styles.cardSubtitle}>{option.subtitle}</Text>
+              <Text style={styles.cardTitle}>{title}</Text>
+              <Text style={styles.cardSubtitle}>
+                {t(`onboarding.role.${option.role}.subtitle`)}
+              </Text>
             </View>
             {selected ? (
               <View style={styles.check}>
@@ -104,7 +95,7 @@ function RoleCard({
             ) : null}
           </View>
           <View style={styles.points}>
-            {option.points.map((point) => (
+            {points.map((point) => (
               <View key={point} style={styles.pointRow}>
                 <View style={styles.pointDot} />
                 <Text style={styles.pointText}>{point}</Text>
@@ -119,6 +110,7 @@ function RoleCard({
 
 export default function RoleScreen() {
   const styles = useStyles();
+  const { t } = useT();
   const setRole = useAppStore((state) => state.setRole);
   const [selected, setSelected] = useState<UserRole | null>(null);
   const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -163,16 +155,14 @@ export default function RoleScreen() {
       total={6}
       centerContent={false}
       footer={
-        <Text style={styles.footerNote}>
-          No credit card required. Sign up in less than 2 minutes.
-        </Text>
+        <Text style={styles.footerNote}>{t("onboarding.role.footer")}</Text>
       }
     >
       <View>
         <ScreenHeading
-          eyebrow="Choose your path"
-          title="How will you use CTMASS?"
-          body="Pick the experience that fits you. You can change this later in your profile."
+          eyebrow={t("onboarding.role.eyebrow")}
+          title={t("onboarding.role.title")}
+          body={t("onboarding.role.body")}
         />
         <View style={styles.cards}>
           {options.map((option, index) => (

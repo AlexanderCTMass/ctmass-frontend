@@ -8,6 +8,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { ArrowRightIcon } from "@/components/icons";
+import { useT } from "@/lib/i18n";
 
 const MIN = 0.04;
 const MAX = 0.96;
@@ -23,6 +24,7 @@ export function BeforeAfterSlider({
   height: number;
   interactive?: boolean;
 }) {
+  const { t } = useT();
   const [width, setWidth] = useState(0);
   const position = useSharedValue(0.5);
 
@@ -67,10 +69,10 @@ export function BeforeAfterSlider({
           />
         </Animated.View>
         <View style={[styles.label, styles.labelLeft]}>
-          <Text style={styles.labelText}>Before</Text>
+          <Text style={styles.labelText}>{t("portfolio.before")}</Text>
         </View>
         <View style={[styles.label, styles.labelRight]}>
-          <Text style={styles.labelText}>After</Text>
+          <Text style={styles.labelText}>{t("portfolio.after")}</Text>
         </View>
         {width > 0 ? (
           <Animated.View style={[styles.handleLine, handleStyle]}>

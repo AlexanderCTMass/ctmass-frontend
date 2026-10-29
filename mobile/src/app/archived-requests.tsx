@@ -25,6 +25,7 @@ import { analyticsEvents } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
 import { distanceBetweenCenters } from "@/lib/geo";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { chatHref, toHref } from "@/lib/navigation";
 import type { ProjectDetail } from "@/lib/projects";
 import { useInvitedProjects } from "@/queries/use-projects";
@@ -34,6 +35,7 @@ import { useAuthStore } from "@/store/use-auth-store";
 export default function ArchivedRequestsScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const queryClient = useQueryClient();
   const uid = useAuthStore((state) => state.user?.uid);
   const invited = useInvitedProjects(uid);
@@ -97,18 +99,18 @@ export default function ArchivedRequestsScreen() {
 
   const openMenu = (project: ProjectDetail) => {
     tapFeedback();
-    Alert.alert(project.title, "What would you like to do with this request?", [
-      { text: "Restore", onPress: () => restore(project, "menu") },
+    Alert.alert(tx(project.title), t("home.menuQuestion"), [
+      { text: t("ui.restore"), onPress: () => restore(project, "menu") },
       ...(isInvited(project)
         ? [
             {
-              text: "Delete",
+              text: t("common.delete"),
               style: "destructive" as const,
               onPress: () => actions.remove(project),
             },
           ]
         : []),
-      { text: "Cancel", style: "cancel" },
+      { text: t("common.cancel"), style: "cancel" },
     ]);
   };
 
@@ -123,10 +125,8 @@ export default function ArchivedRequestsScreen() {
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
           <View style={styles.headerText}>
-            <Text style={styles.title}>Archived requests</Text>
-            <Text style={styles.subtitle}>
-              Swipe right or use the menu to bring a request back to Home.
-            </Text>
+            <Text style={styles.title}>{t("archive.title")}</Text>
+            <Text style={styles.subtitle}>{t("archive.subtitle")}</Text>
           </View>
         </View>
 
@@ -144,10 +144,10 @@ export default function ArchivedRequestsScreen() {
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
               <View style={styles.empty}>
-                <Text style={styles.emptyTitle}>Archive is empty</Text>
-                <Text style={styles.emptyText}>
-                  Requests you swipe left on the Home tab will show up here.
+                <Text style={styles.emptyTitle}>
+                  {t("search.empty.archiveTitle")}
                 </Text>
+                <Text style={styles.emptyText}>{t("archive.emptyText")}</Text>
               </View>
             }
             renderItem={({ item }) => (
@@ -158,7 +158,7 @@ export default function ArchivedRequestsScreen() {
                 <ProjectCard
                   project={item}
                   badge={{
-                    label: "Archived",
+                    label: t("archive.badge"),
                     tint: colors.textSecondary,
                     bg: colors.surfaceStrong,
                   }}
@@ -166,7 +166,11 @@ export default function ArchivedRequestsScreen() {
                     myCenter,
                     item.locationCenter,
                   )}
-                  ctaLabel={isInvited(item) ? "Open chat" : "View details"}
+                  ctaLabel={
+                    isInvited(item)
+                      ? t("home.openChat")
+                      : t("archive.viewDetails")
+                  }
                   showResponses={false}
                   onPress={() => open(item)}
                   onMore={() => openMenu(item)}

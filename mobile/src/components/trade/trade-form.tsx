@@ -25,6 +25,7 @@ import {
   AVAILABILITY_DAYS,
   EMERGENCY_OPTIONS,
   ESTIMATE_POLICIES,
+  LANGUAGES,
   MAX_EXPERIENCE_YEARS,
   PERMIT_OPTIONS,
   PRICE_DISCLAIMER,
@@ -45,8 +46,14 @@ import {
   defaultBasisFor,
   modelTakesRate,
 } from "@/constants/trade-options";
+import {
+  CONTACT_METHODS,
+  type ContactMethod,
+  PHONE_CONTACT_METHODS,
+} from "@/constants/project-request";
 import { servicesForTrade } from "@/constants/trade-services";
 import { OTHER_TRADE_LABEL, findTrade } from "@/constants/trade-taxonomy";
+import { useT } from "@/lib/i18n";
 import type { GeoPlace } from "@/lib/mapbox";
 import {
   type TradeDetails,
@@ -54,17 +61,21 @@ import {
   detailsToInput,
   emptyDetailsInput,
 } from "@/lib/trade-details";
+import { isValidUSPhone } from "@/lib/shop-form";
 
 const MAX_SERVICES = 12;
 
 const money = z
   .string()
-  .refine((value) => value === "" || /^\d{1,6}$/.test(value), "Numbers only.");
+  .refine(
+    (value) => value === "" || /^\d{1,6}$/.test(value),
+    "tradeForm.errors.numbersOnly",
+  );
 
 function baseSchema() {
   return z.object({
-    title: z.string().trim().min(2, "Enter a trade name."),
-    specialty: z.string().min(1, "Pick your trade."),
+    title: z.string().trim().min(2, "tradeForm.errors.title"),
+    specialty: z.string().min(1, "tradeForm.errors.specialty"),
     customSpecialty: z.string(),
     services: z.array(z.string()).max(MAX_SERVICES),
     experienceYears: z.string(),
@@ -96,6 +107,9 @@ function baseSchema() {
     permits: z.string(),
     workBy: z.string(),
     about: z.string(),
+    languages: z.array(z.string()),
+    contactMethods: z.array(z.string()),
+    phone: z.string(),
   });
 }
 
@@ -109,30 +123,55 @@ function issuesFor(values: TradeFormValues, strict: boolean): Issue[] {
     values.specialty === OTHER_TRADE_LABEL &&
     values.customSpecialty.trim().length < 2
   ) {
-    issues.push({ path: "customSpecialty", message: "Describe your trade." });
+    issues.push({
+      path: "customSpecialty",
+      message: "tradeForm.errors.customSpecialty",
+    });
   }
   const years = values.experienceYears;
   if (years !== "" && Number(years) > MAX_EXPERIENCE_YEARS) {
-    issues.push({ path: "experienceYears", message: "Enter a realistic number of years." });
+    issues.push({
+      path: "experienceYears",
+      message: "tradeForm.errors.yearsRealistic",
+    });
   }
-  if (values.rateMin && values.rateMax && Number(values.rateMax) < Number(values.rateMin)) {
-    issues.push({ path: "rateMax", message: "The upper rate must be higher." });
+  if (
+    values.rateMin &&
+    values.rateMax &&
+    Number(values.rateMax) < Number(values.rateMin)
+  ) {
+    issues.push({ path: "rateMax", message: "tradeForm.errors.rateMax" });
+  }
+  if (values.contactMethods.length === 0) {
+    issues.push({
+      path: "contactMethods",
+      message: "business.errors.contactMethods",
+    });
+  }
+  if (needsPhone(values.contactMethods) && !isValidUSPhone(values.phone)) {
+    issues.push({ path: "phone", message: "validation.usPhone" });
   }
   if (strict) {
     if (years === "") {
-      issues.push({ path: "experienceYears", message: "Add your years in this trade." });
+      issues.push({
+        path: "experienceYears",
+        message: "tradeForm.errors.years",
+      });
     }
     if (values.services.length === 0) {
-      issues.push({ path: "services", message: "Pick at least one service." });
+      issues.push({ path: "services", message: "tradeForm.errors.services" });
     }
     if (!values.pricingModel) {
-      issues.push({ path: "pricingModel", message: "Choose how you price this trade." });
+      issues.push({
+        path: "pricingModel",
+        message: "tradeForm.errors.pricingModel",
+      });
     }
     if (values.days.length === 0) {
-      issues.push({ path: "days", message: "Choose when you work." });
+      issues.push({ path: "days", message: "tradeForm.errors.days" });
     }
     if (!values.location) {
-      issues.push({ path: "location", message: "Add your service location." });
+      issues.push({ path: "location", message: "tradeForm.errors.location" });
     }
   }
   return issues;
@@ -141,7 +180,11 @@ function issuesFor(values: TradeFormValues, strict: boolean): Issue[] {
 export function tradeFormSchema(strict: boolean) {
   return baseSchema().superRefine((values, ctx) => {
     for (const issue of issuesFor(values, strict)) {
-      ctx.addIssue({ code: "custom", path: [issue.path], message: issue.message });
+      ctx.addIssue({
+        code: "custom",
+        path: [issue.path],
+        message: issue.message,
+      });
     }
   });
 }
@@ -151,8 +194,52 @@ export const STEP_FIELDS: (keyof TradeFormValues)[][] = [
   ["services", "experienceYears"],
   ["pricingModel", "rateMin", "rateMax", "minimumCharge", "serviceCallFee"],
   ["location", "radiusMiles", "days", "responseTime"],
+  ["languages", "contactMethods", "phone"],
   ["about"],
 ];
+
+export type TradeContactSource = {
+  languages: string[];
+  methods: ContactMethod[];
+  phone: string;
+};
+
+export function contactSourceFromProfile(
+  profile:
+    | {
+        business: { languages: string[] };
+        contactSettings: { methods: ContactMethod[] };
+        phone: string;
+      }
+    | null
+    | undefined,
+): TradeContactSource | null {
+  if (!profile) return null;
+  const phone = isValidUSPhone(profile.phone) ? profile.phone : "";
+  const methods = profile.contactSettings.methods.filter(
+    (method) => phone || !PHONE_CONTACT_METHODS.includes(method),
+  );
+  return {
+    languages: profile.business.languages,
+    methods: methods.length > 0 ? methods : ["app"],
+    phone,
+  };
+}
+
+export function needsPhone(methods: string[]): boolean {
+  return methods.some((method) =>
+    PHONE_CONTACT_METHODS.includes(method as ContactMethod),
+  );
+}
+
+export function contactFromValues(values: TradeFormValues): TradeContactSource {
+  const methods = values.contactMethods as ContactMethod[];
+  return {
+    languages: values.languages,
+    methods,
+    phone: needsPhone(methods) ? values.phone.trim() : "",
+  };
+}
 
 const text = (value: number | null) => (value === null ? "" : String(value));
 const numberOrNull = (value: string) => (value === "" ? null : Number(value));
@@ -199,7 +286,10 @@ export function tradeToFormSource(trade: {
   };
 }
 
-export function toFormValues(source: TradeFormSource | null): TradeFormValues {
+export function toFormValues(
+  source: TradeFormSource | null,
+  contact?: TradeContactSource | null,
+): TradeFormValues {
   const label = source?.specialtyLabel ?? "";
   const known = findTrade(label);
   const details: TradeDetailsInput =
@@ -239,6 +329,9 @@ export function toFormValues(source: TradeFormSource | null): TradeFormValues {
     permits: details.workPolicy.permits,
     workBy: details.workPolicy.workBy,
     about: source?.about ?? "",
+    languages: contact?.languages ?? [],
+    contactMethods: contact?.methods ?? ["app"],
+    phone: contact?.phone ?? "",
   };
 }
 
@@ -304,12 +397,13 @@ type SectionProps = {
 };
 
 export function IdentitySection({ control, errors, setValue }: SectionProps) {
+  const { t } = useT();
   const specialty = useWatch({ control, name: "specialty" });
   return (
     <>
       <FormSection
-        label="Trade name"
-        hint="What homeowners see on your card, e.g. your business name plus the trade."
+        label={t("tradeForm.tradeName")}
+        hint={t("tradeForm.tradeNameHint")}
         error={errors.title?.message}
       >
         <Controller
@@ -320,15 +414,15 @@ export function IdentitySection({ control, errors, setValue }: SectionProps) {
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
-              placeholder="e.g. Mike's Plumbing"
+              placeholder={t("tradeForm.tradeNamePlaceholder")}
               maxLength={80}
             />
           )}
         />
       </FormSection>
       <FormSection
-        label="Primary trade"
-        hint="Each trade gets its own page with its own experience, prices and reviews. Add your other trades later."
+        label={t("tradeForm.primaryTrade")}
+        hint={t("tradeForm.primaryTradeHint")}
         error={errors.specialty?.message ?? errors.customSpecialty?.message}
       >
         <Controller
@@ -358,7 +452,7 @@ export function IdentitySection({ control, errors, setValue }: SectionProps) {
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
-                placeholder="Describe your trade"
+                placeholder={t("tradeForm.describeTrade")}
                 maxLength={60}
               />
             )}
@@ -378,6 +472,7 @@ function ServicesField({
   onChange: (next: string[]) => void;
   specialty: string;
 }) {
+  const { t } = useT();
   const parts = useFormPartStyles();
   const [custom, setCustom] = useState("");
   const suggestions = servicesForTrade(specialty);
@@ -404,19 +499,23 @@ function ServicesField({
         onChangeText={setCustom}
         onSubmitEditing={add}
         onBlur={add}
-        placeholder="Add your own service"
+        placeholder={t("tradeForm.addService")}
         returnKeyType="done"
         maxLength={40}
         blurOnSubmit={false}
       />
       <Text style={parts.note}>
-        {value.length}/{MAX_SERVICES} selected. Tap a service to remove it.
+        {t("tradeForm.servicesSelected", {
+          count: value.length,
+          max: MAX_SERVICES,
+        })}
       </Text>
     </>
   );
 }
 
 export function ServicesSection({ control, errors }: SectionProps) {
+  const { t, tx } = useT();
   const specialty = useWatch({ control, name: "specialty" });
   const custom = useWatch({ control, name: "customSpecialty" });
   const years = useWatch({ control, name: "experienceYears" });
@@ -425,8 +524,8 @@ export function ServicesSection({ control, errors }: SectionProps) {
   return (
     <>
       <FormSection
-        label="Services you offer"
-        hint="Specific jobs you take on in this trade. Homeowners see them on your card."
+        label={t("tradeForm.services")}
+        hint={t("tradeForm.servicesHint")}
         error={errors.services?.message}
       >
         <Controller
@@ -442,8 +541,10 @@ export function ServicesSection({ control, errors }: SectionProps) {
         />
       </FormSection>
       <FormSection
-        label={`Years in ${label || "this trade"}`}
-        hint="Only hands-on experience in this trade, not total career or years in business."
+        label={t("trade.sections.yearsInLabel", {
+          trade: label ? tx(label) : t("tradePage.thisTrade"),
+        })}
+        hint={t("tradeForm.yearsHint")}
         error={errors.experienceYears?.message}
       >
         <Controller
@@ -454,7 +555,7 @@ export function ServicesSection({ control, errors }: SectionProps) {
               value={value}
               onChangeText={(next) => onChange(digitsOnly(next, 2))}
               onBlur={onBlur}
-              placeholder="e.g. 8"
+              placeholder={t("tradeForm.yearsPlaceholder")}
               keyboardType="number-pad"
               suffix="years"
             />
@@ -465,9 +566,7 @@ export function ServicesSection({ control, errors }: SectionProps) {
             <TierBadge years={Number(years)} />
           </View>
         ) : null}
-        <Text style={parts.note}>
-          Shown as provided by you. CTMASS does not verify experience.
-        </Text>
+        <Text style={parts.note}>{t("tradeForm.yearsNote")}</Text>
       </FormSection>
     </>
   );
@@ -535,6 +634,7 @@ function TextLine({
 }
 
 export function PricingSection({ control, errors, setValue }: SectionProps) {
+  const { t, tx } = useT();
   const parts = useFormPartStyles();
   const model = useWatch({ control, name: "pricingModel" });
   const takesRate = modelTakesRate(model);
@@ -542,8 +642,8 @@ export function PricingSection({ control, errors, setValue }: SectionProps) {
   return (
     <>
       <FormSection
-        label="How do you price this trade?"
-        hint="Each trade has its own pricing."
+        label={t("tradeForm.pricingModel")}
+        hint={t("tradeForm.pricingModelHint")}
         error={errors.pricingModel?.message}
       >
         <Controller
@@ -565,17 +665,25 @@ export function PricingSection({ control, errors, setValue }: SectionProps) {
       </FormSection>
       {takesRate ? (
         <FormSection
-          label="Rate"
-          hint="Enter one amount, or a range."
+          label={t("compare.rows.rate")}
+          hint={t("tradeForm.rateHint")}
           error={errors.rateMin?.message ?? errors.rateMax?.message}
           optional
         >
           <View style={parts.row}>
             <View style={parts.flex}>
-              <MoneyField control={control} name="rateMin" placeholder="From" />
+              <MoneyField
+                control={control}
+                name="rateMin"
+                placeholder={t("tradeForm.from")}
+              />
             </View>
             <View style={parts.flex}>
-              <MoneyField control={control} name="rateMax" placeholder="To" />
+              <MoneyField
+                control={control}
+                name="rateMax"
+                placeholder={t("tradeForm.to")}
+              />
             </View>
           </View>
           <Controller
@@ -593,50 +701,74 @@ export function PricingSection({ control, errors, setValue }: SectionProps) {
       ) : null}
       {showsFees ? (
         <>
-          <FormSection label="Minimum charge" optional>
-            <MoneyField control={control} name="minimumCharge" placeholder="e.g. 125" />
+          <FormSection label={t("trade.sections.minimumCharge")} optional>
+            <MoneyField
+              control={control}
+              name="minimumCharge"
+              placeholder={t("tradeForm.example", { value: "125" })}
+            />
           </FormSection>
-          <FormSection label="Service call / diagnostic fee" optional>
-            <MoneyField control={control} name="serviceCallFee" placeholder="e.g. 89" />
+          <FormSection label={t("tradeForm.serviceCallFee")} optional>
+            <MoneyField
+              control={control}
+              name="serviceCallFee"
+              placeholder={t("tradeForm.example", { value: "89" })}
+            />
             <Controller
               control={control}
               name="serviceCallCredited"
               render={({ field: { value, onChange } }) => (
                 <ToggleRow
-                  label="Credited toward the repair"
+                  label={t("tradeForm.credited")}
                   value={value}
                   onChange={onChange}
                 />
               )}
             />
           </FormSection>
-          <FormSection label="Travel fee" optional>
-            <TextLine control={control} name="travelFee" placeholder="e.g. Free within 15 miles, then $1/mile" />
+          <FormSection label={t("tradeForm.travelFee")} optional>
+            <TextLine
+              control={control}
+              name="travelFee"
+              placeholder={t("tradeForm.travelPlaceholder")}
+            />
           </FormSection>
-          <FormSection label="After-hours / emergency pricing" optional>
-            <TextLine control={control} name="afterHours" placeholder="e.g. +50% after 6pm, $150 dispatch" />
+          <FormSection label={t("tradeForm.afterHours")} optional>
+            <TextLine
+              control={control}
+              name="afterHours"
+              placeholder={t("tradeForm.afterHoursPlaceholder")}
+            />
           </FormSection>
-          <FormSection label="Materials & parts" optional>
-            <TextLine control={control} name="materials" placeholder="e.g. Parts billed separately" />
+          <FormSection label={t("tradeForm.materials")} optional>
+            <TextLine
+              control={control}
+              name="materials"
+              placeholder={t("tradeForm.materialsPlaceholder")}
+            />
           </FormSection>
-          <FormSection label="Pricing note" optional>
-            <TextLine control={control} name="rateNote" placeholder="Anything else homeowners should know" />
+          <FormSection label={t("tradeForm.pricingNote")} optional>
+            <TextLine
+              control={control}
+              name="rateNote"
+              placeholder={t("tradeForm.pricingNotePlaceholder")}
+            />
           </FormSection>
         </>
       ) : null}
-      <Text style={[parts.note, parts.noteSpaced]}>{PRICE_DISCLAIMER}</Text>
+      <Text style={[parts.note, parts.noteSpaced]}>{tx(PRICE_DISCLAIMER)}</Text>
     </>
   );
 }
 
 export function AreaAvailabilitySection({ control, errors }: SectionProps) {
-  const parts = useFormPartStyles();
+  const { t } = useT();
   const emergency = useWatch({ control, name: "emergency" });
   return (
     <>
       <FormSection
-        label="Business location"
-        hint="Used to measure distance. Homeowners only see your city and state."
+        label={t("tradeForm.location")}
+        hint={t("tradeForm.locationHint")}
         error={errors.location?.message}
       >
         <Controller
@@ -651,7 +783,7 @@ export function AreaAvailabilitySection({ control, errors }: SectionProps) {
           )}
         />
       </FormSection>
-      <FormSection label="Service radius">
+      <FormSection label={t("trade.sections.serviceRadius")}>
         <Controller
           control={control}
           name="radiusMiles"
@@ -667,42 +799,59 @@ export function AreaAvailabilitySection({ control, errors }: SectionProps) {
           )}
         />
       </FormSection>
-      <FormSection label="Towns you serve" hint="Separate with commas." optional>
-        <TextLine control={control} name="areas" placeholder="e.g. Hartford, West Hartford, Glastonbury" />
+      <FormSection
+        label={t("tradeForm.towns")}
+        hint={t("tradeForm.townsHint")}
+        optional
+      >
+        <TextLine
+          control={control}
+          name="areas"
+          placeholder={t("tradeForm.townsPlaceholder")}
+        />
       </FormSection>
-      <FormSection label="Working days" error={errors.days?.message}>
+      <FormSection label={t("tradeForm.days")} error={errors.days?.message}>
         <Controller
           control={control}
           name="days"
           render={({ field: { value, onChange } }) => (
-            <MultiChips options={AVAILABILITY_DAYS} value={value} onChange={onChange} />
-          )}
-        />
-      </FormSection>
-      <FormSection label="Working hours" optional>
-        <Controller
-          control={control}
-          name="hours"
-          render={({ field: { value, onChange } }) => (
-            <ChoiceChips options={WORKING_HOURS} value={value} onChange={onChange} allowClear />
-          )}
-        />
-      </FormSection>
-      <FormSection label="New work">
-        <Controller
-          control={control}
-          name="acceptingWork"
-          render={({ field: { value, onChange } }) => (
-            <ToggleRow
-              label="Accepting new projects"
-              hint="Turn off when you're fully booked."
+            <MultiChips
+              options={AVAILABILITY_DAYS}
               value={value}
               onChange={onChange}
             />
           )}
         />
       </FormSection>
-      <FormSection label="Emergency service" optional>
+      <FormSection label={t("tradeForm.hours")} optional>
+        <Controller
+          control={control}
+          name="hours"
+          render={({ field: { value, onChange } }) => (
+            <ChoiceChips
+              options={WORKING_HOURS}
+              value={value}
+              onChange={onChange}
+              allowClear
+            />
+          )}
+        />
+      </FormSection>
+      <FormSection label={t("tradeForm.newWork")}>
+        <Controller
+          control={control}
+          name="acceptingWork"
+          render={({ field: { value, onChange } }) => (
+            <ToggleRow
+              label={t("tradeForm.accepting")}
+              hint={t("tradeForm.acceptingHint")}
+              value={value}
+              onChange={onChange}
+            />
+          )}
+        />
+      </FormSection>
+      <FormSection label={t("tradeForm.emergency")} optional>
         <Controller
           control={control}
           name="emergency"
@@ -715,12 +864,16 @@ export function AreaAvailabilitySection({ control, errors }: SectionProps) {
           )}
         />
         {emergency && emergency !== "none" ? (
-          <TextLine control={control} name="emergencyNote" placeholder="Hours, extra fee and coverage area" />
+          <TextLine
+            control={control}
+            name="emergencyNote"
+            placeholder={t("tradeForm.emergencyPlaceholder")}
+          />
         ) : null}
       </FormSection>
       <FormSection
-        label="Typical response time"
-        hint="Your own commitment. It is labeled “Set by contractor”."
+        label={t("tradeForm.responseTime")}
+        hint={t("tradeForm.responseTimeHint")}
         optional
       >
         <Controller
@@ -736,17 +889,87 @@ export function AreaAvailabilitySection({ control, errors }: SectionProps) {
           )}
         />
       </FormSection>
+    </>
+  );
+}
+
+const languageOptions = LANGUAGES.map((item) => ({ value: item, label: item }));
+
+export function ContactSection({ control, errors }: SectionProps) {
+  const { t } = useT();
+  const parts = useFormPartStyles();
+  const methods = useWatch({ control, name: "contactMethods" });
+  return (
+    <>
+      <FormSection
+        label={t("trade.sections.preferredContact")}
+        hint={t("business.contactMethodsHint")}
+        error={errors.contactMethods?.message}
+      >
+        <Controller
+          control={control}
+          name="contactMethods"
+          render={({ field: { value, onChange } }) => (
+            <MultiChips
+              options={CONTACT_METHODS}
+              value={value}
+              onChange={onChange}
+            />
+          )}
+        />
+      </FormSection>
+      {needsPhone(methods) ? (
+        <FormSection
+          label={t("project.phoneNumber")}
+          hint={t("tradeForm.phoneHint")}
+          error={errors.phone?.message}
+        >
+          <Controller
+            control={control}
+            name="phone"
+            render={({ field: { value, onChange, onBlur } }) => (
+              <FormInput
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                placeholder="+1 (555) 123-4567"
+                keyboardType="phone-pad"
+                textContentType="telephoneNumber"
+                autoComplete="tel"
+              />
+            )}
+          />
+        </FormSection>
+      ) : null}
+      <FormSection label={t("business.languages")} optional>
+        <Controller
+          control={control}
+          name="languages"
+          render={({ field: { value, onChange } }) => (
+            <MultiChips
+              options={languageOptions}
+              value={value}
+              onChange={onChange}
+            />
+          )}
+        />
+      </FormSection>
       <Text style={[parts.note, parts.noteSpaced]}>
-        Your phone and email are managed in your profile settings.
+        {t("tradeForm.contactNote")}
       </Text>
     </>
   );
 }
 
 export function DetailsSection({ control }: SectionProps) {
+  const { t } = useT();
   return (
     <>
-      <FormSection label="About your work" hint="Typical projects, what makes you different." optional>
+      <FormSection
+        label={t("tradeForm.about")}
+        hint={t("tradeForm.aboutHint")}
+        optional
+      >
         <Controller
           control={control}
           name="about"
@@ -755,57 +978,89 @@ export function DetailsSection({ control }: SectionProps) {
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
-              placeholder="What you do, how you work, what makes you great…"
+              placeholder={t("tradeForm.aboutPlaceholder")}
               multiline
               maxLength={2000}
             />
           )}
         />
       </FormSection>
-      <FormSection label="Project types" optional>
+      <FormSection label={t("trade.sections.projectTypes")} optional>
         <Controller
           control={control}
           name="projectTypes"
           render={({ field: { value, onChange } }) => (
-            <MultiChips options={PROJECT_TYPES} value={value} onChange={onChange} />
+            <MultiChips
+              options={PROJECT_TYPES}
+              value={value}
+              onChange={onChange}
+            />
           )}
         />
       </FormSection>
-      <FormSection label="Estimates" optional>
+      <FormSection label={t("trade.sections.estimates")} optional>
         <Controller
           control={control}
           name="estimate"
           render={({ field: { value, onChange } }) => (
-            <ChoiceChips options={ESTIMATE_POLICIES} value={value} onChange={onChange} allowClear />
+            <ChoiceChips
+              options={ESTIMATE_POLICIES}
+              value={value}
+              onChange={onChange}
+              allowClear
+            />
           )}
         />
-        <TextLine control={control} name="estimateNote" placeholder="e.g. Written estimate within 48 hours" />
+        <TextLine
+          control={control}
+          name="estimateNote"
+          placeholder={t("tradeForm.estimatePlaceholder")}
+        />
       </FormSection>
-      <FormSection label="Workmanship warranty" optional>
+      <FormSection label={t("trade.sections.warranty")} optional>
         <Controller
           control={control}
           name="warranty"
           render={({ field: { value, onChange } }) => (
-            <ChoiceChips options={WARRANTY_OPTIONS} value={value} onChange={onChange} allowClear />
+            <ChoiceChips
+              options={WARRANTY_OPTIONS}
+              value={value}
+              onChange={onChange}
+              allowClear
+            />
           )}
         />
-        <TextLine control={control} name="warrantyTerms" placeholder="What's covered and what isn't" />
+        <TextLine
+          control={control}
+          name="warrantyTerms"
+          placeholder={t("tradeForm.warrantyPlaceholder")}
+        />
       </FormSection>
-      <FormSection label="Permits" optional>
+      <FormSection label={t("trade.sections.permits")} optional>
         <Controller
           control={control}
           name="permits"
           render={({ field: { value, onChange } }) => (
-            <ChoiceChips options={PERMIT_OPTIONS} value={value} onChange={onChange} allowClear />
+            <ChoiceChips
+              options={PERMIT_OPTIONS}
+              value={value}
+              onChange={onChange}
+              allowClear
+            />
           )}
         />
       </FormSection>
-      <FormSection label="Who does the work" optional>
+      <FormSection label={t("tradeForm.workBy")} optional>
         <Controller
           control={control}
           name="workBy"
           render={({ field: { value, onChange } }) => (
-            <ChoiceChips options={WORK_BY_OPTIONS} value={value} onChange={onChange} allowClear />
+            <ChoiceChips
+              options={WORK_BY_OPTIONS}
+              value={value}
+              onChange={onChange}
+              allowClear
+            />
           )}
         />
       </FormSection>

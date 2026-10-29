@@ -13,11 +13,13 @@ import { Brand, useTheme } from "@/constants/theme";
 import { initAnalytics, setAnalyticsUserProperties } from "@/lib/analytics";
 import { analyticsEvents } from "@/lib/analytics-events";
 import "@/lib/push-background";
+import { initAdTracking } from "@/lib/tracking";
 import { AnalyticsProvider } from "@/providers/analytics-provider";
 import { AuthProvider } from "@/providers/auth-provider";
 import { LoyaltyProvider } from "@/providers/loyalty-provider";
 import { NotificationsProvider } from "@/providers/notifications-provider";
 import { useAuthStore } from "@/store/use-auth-store";
+import { initializeLanguage } from "@/store/use-language-store";
 import {
   initializeTheme,
   resolveScheme,
@@ -35,9 +37,12 @@ const initialTheme = initializeTheme();
 if (initialTheme.firstLaunch) {
   analyticsEvents.themeInitialized({ theme: initialTheme.scheme });
 }
+const initialLanguage = initializeLanguage();
 setAnalyticsUserProperties({
   theme: initialTheme.scheme,
   theme_preference: initialTheme.preference,
+  app_language: initialLanguage.language,
+  app_language_source: initialLanguage.source,
 });
 
 const queryClient = new QueryClient({
@@ -79,6 +84,7 @@ export default function RootLayout() {
       duration_ms: Date.now() - launchStartedAt,
       theme: resolveScheme(useThemeStore.getState()),
     });
+    void initAdTracking();
   }, [showLaunchSplash]);
 
   useEffect(() => {

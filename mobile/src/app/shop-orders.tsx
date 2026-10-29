@@ -10,6 +10,7 @@ import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { selectFeedback } from "@/lib/haptics";
+import { type Translate, translateData, useT } from "@/lib/i18n";
 import {
   DEFAULT_SHOP_ITEMS,
   formatCoins,
@@ -20,53 +21,69 @@ import {
 import { useShopFeatures, useUserOrders } from "@/queries/use-shop";
 import { useAuthStore } from "@/store/use-auth-store";
 
-const STATUS_LABELS: Record<string, string> = {
-  active: "Order received",
-  processing: "In progress",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  expired: "Expired",
-  refunded: "Refunded",
-};
+const STATUS_KEYS = [
+  "active",
+  "processing",
+  "completed",
+  "cancelled",
+  "expired",
+  "refunded",
+] as const;
 
 const CLOSED_STATUSES = new Set(["cancelled", "expired", "refunded"]);
 
-function statusLabel(status: string): string {
-  if (STATUS_LABELS[status]) return STATUS_LABELS[status];
-  return status ? status.charAt(0).toUpperCase() + status.slice(1) : "Order received";
+function statusLabel(status: string, t: Translate): string {
+  const known = STATUS_KEYS.find((key) => key === status);
+  if (known) return t(`shop.orders.status.${known}`);
+  return status
+    ? status.charAt(0).toUpperCase() + status.slice(1)
+    : t("shop.orders.status.active");
 }
 
-function formatOrderDate(date: Date | null): string {
-  if (!date) return "Just now";
-  return date.toLocaleDateString("en-US", {
+function formatOrderDate(
+  date: Date | null,
+  t: Translate,
+  locale: string,
+): string {
+  if (!date) return t("shop.orders.justNow");
+  return date.toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
 }
 
-function orderDetails(order: ShopOrder, feature: ShopFeature | undefined): string {
+function orderDetails(
+  order: ShopOrder,
+  feature: ShopFeature | undefined,
+  t: Translate,
+): string {
   const sized = order.items.filter((item) => item.size);
   if (sized.length > 0) {
-    return sized.map((item) => `${item.size} × ${item.quantity}`).join(", ");
+    return sized
+      .map((item) => `${translateData(t, item.size)} × ${item.quantity}`)
+      .join(", ");
   }
   const selected = feature?.pricing.packages?.find(
     (item) => item.id === order.packageId,
   );
-  if (selected) return selected.displayName;
-  return `Quantity: ${order.totalQuantity}`;
+  if (selected) return translateData(t, selected.displayName);
+  return t("shop.orders.quantity", { count: order.totalQuantity });
 }
 
 export default function ShopOrdersScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx, locale } = useT();
   const uid = useAuthStore((state) => state.user?.uid);
   const orders = useUserOrders(uid);
   const { data: features } = useShopFeatures();
 
   const featureByKey = useMemo(() => {
     const map = new Map<string, ShopFeature>();
-    DEFAULT_SHOP_ITEMS.forEach((feature) => map.set(feature.featureKey, feature));
+    DEFAULT_SHOP_ITEMS.forEach((feature) =>
+      map.set(feature.featureKey, feature),
+    );
     (features ?? []).forEach((feature) => map.set(feature.featureKey, feature));
     return map;
   }, [features]);
@@ -85,10 +102,8 @@ export default function ShopOrdersScreen() {
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
           <View style={styles.headerText}>
-            <Text style={styles.title}>My orders</Text>
-            <Text style={styles.subtitle}>
-              Everything you redeemed with CTMASS Coins.
-            </Text>
+            <Text style={styles.title}>{t("shop.tab.orders")}</Text>
+            <Text style={styles.subtitle}>{t("shop.orders.subtitle")}</Text>
           </View>
         </View>
 
@@ -111,12 +126,14 @@ export default function ShopOrdersScreen() {
             ListEmptyComponent={
               <View style={styles.empty}>
                 <Text style={styles.emptyTitle}>
-                  {orders.isError ? "Couldn't load your orders" : "No orders yet"}
+                  {orders.isError
+                    ? t("shop.orders.loadFailed")
+                    : t("shop.orders.empty")}
                 </Text>
                 <Text style={styles.emptyText}>
                   {orders.isError
-                    ? "Check your connection and pull down to try again."
-                    : "Rewards you redeem in the Shop will show up here with their ticket number."}
+                    ? t("shop.orders.loadFailedText")
+                    : t("shop.orders.emptyText")}
                 </Text>
               </View>
             }
@@ -140,14 +157,18 @@ export default function ShopOrdersScreen() {
                   )}
                   <View style={styles.body}>
                     <Text style={styles.name} numberOfLines={2}>
-                      {feature?.displayName ?? item.featureKey}
+                      {feature?.displayName
+                        ? tx(feature.displayName)
+                        : item.featureKey}
                     </Text>
                     <Text style={styles.details} numberOfLines={2}>
-                      {orderDetails(item, feature)}
+                      {orderDetails(item, feature, t)}
                     </Text>
                     <Text style={styles.meta}>
-                      {formatOrderDate(item.purchasedAt)}
-                      {item.ticketNumber ? ` · Ticket #${item.ticketNumber}` : ""}
+                      {formatOrderDate(item.purchasedAt, t, locale)}
+                      {item.ticketNumber
+                        ? ` · ${t("shop.done.ticket", { ticket: item.ticketNumber })}`
+                        : ""}
                     </Text>
                     <View style={styles.footer}>
                       <View
@@ -159,13 +180,15 @@ export default function ShopOrdersScreen() {
                             closed && styles.badgeTextClosed,
                           ]}
                         >
-                          {statusLabel(item.status)}
+                          {statusLabel(item.status, t)}
                         </Text>
                       </View>
                       <View style={styles.price}>
                         <CoinIcon size={16} />
                         <Text style={styles.priceText}>
-                          {item.price > 0 ? formatCoins(item.price) : "Free"}
+                          {item.price > 0
+                            ? formatCoins(item.price)
+                            : t("shop.free")}
                         </Text>
                       </View>
                     </View>
@@ -268,7 +291,9 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
     borderRadius: Radius.pill,
-    backgroundColor: t.isDark ? "rgba(22,179,100,0.16)" : "rgba(22,179,100,0.12)",
+    backgroundColor: t.isDark
+      ? "rgba(22,179,100,0.16)"
+      : "rgba(22,179,100,0.12)",
   },
   badgeClosed: {
     backgroundColor: t.colors.surfaceStrong,

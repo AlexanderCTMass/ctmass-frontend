@@ -2,6 +2,7 @@ import { doc, getDoc } from "@react-native-firebase/firestore";
 
 import { getDb } from "@/lib/firebase";
 import { normalizeSocialGroups, type SocialGroup } from "@/lib/social-groups";
+import i18n from "@/lib/i18n";
 
 const SHARE_BASE_URL = "https://ctmass.com";
 
@@ -48,7 +49,8 @@ export async function fetchPublicProfile(
   const data = (snapshot.data() ?? {}) as Record<string, unknown>;
   return {
     uid,
-    name: str(data.name) || str(data.businessName) || "User",
+    name:
+      str(data.name) || str(data.businessName) || i18n.t("publicProfile.user"),
     avatar: str(data.avatar) || null,
     role: str(data.role) || null,
     businessName: str(data.businessName),

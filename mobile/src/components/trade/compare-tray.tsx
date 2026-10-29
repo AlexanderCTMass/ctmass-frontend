@@ -3,15 +3,23 @@ import { Pressable, Text } from "react-native";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 
 import { ScaleIcon } from "@/components/icons";
-import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { toHref } from "@/lib/navigation";
 import { MAX_COMPARE, useCompareStore } from "@/store/use-compare-store";
 
 export function CompareTray() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const count = useCompareStore((state) => state.tradeIds.length);
   const clear = useCompareStore((state) => state.clear);
   if (count === 0) return null;
@@ -23,11 +31,11 @@ export function CompareTray() {
     >
       <ScaleIcon size={18} color={colors.accent} strokeWidth={2} />
       <Text style={styles.count} numberOfLines={1}>
-        {count} of {MAX_COMPARE} selected
+        {t("trade.tray.selected", { count, max: MAX_COMPARE })}
       </Text>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Clear comparison"
+        accessibilityLabel={t("trade.tray.clearA11y")}
         hitSlop={8}
         onPress={() => {
           tapFeedback();
@@ -35,18 +43,18 @@ export function CompareTray() {
           clear();
         }}
       >
-        <Text style={styles.clear}>Clear</Text>
+        <Text style={styles.clear}>{t("trade.tray.clear")}</Text>
       </Pressable>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Open comparison"
+        accessibilityLabel={t("trade.tray.openA11y")}
         onPress={() => {
           tapFeedback();
           router.push(toHref("/compare"));
         }}
         style={({ pressed }) => [styles.open, pressed && styles.pressed]}
       >
-        <Text style={styles.openText}>Compare</Text>
+        <Text style={styles.openText}>{t("compare.title")}</Text>
       </Pressable>
     </Animated.View>
   );

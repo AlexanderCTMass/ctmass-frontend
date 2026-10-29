@@ -16,11 +16,13 @@ import {
   useTheme,
 } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
+import { useT } from "@/lib/i18n";
 import { useAppStore } from "@/store/use-app-store";
 import { useTradeDraftStore } from "@/store/use-trade-draft-store";
 
 export default function ContractorReadyScreen() {
   const { colors } = useTheme();
+  const { t, tx } = useT();
   const styles = useStyles();
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
   const title = useTradeDraftStore((state) => state.title);
@@ -68,20 +70,19 @@ export default function ContractorReadyScreen() {
             entering={FadeInDown.delay(120).duration(520)}
             style={styles.eyebrow}
           >
-            Almost there
+            {t("tradeSetup.ready.eyebrow")}
           </Animated.Text>
           <Animated.Text
             entering={FadeInDown.delay(180).duration(520)}
             style={styles.title}
           >
-            Sign in to publish your trade
+            {t("tradeSetup.ready.title")}
           </Animated.Text>
           <Animated.Text
             entering={FadeInDown.delay(240).duration(520)}
             style={styles.subtitle}
           >
-            We&apos;ve saved everything you entered. Create your free account
-            and your trade goes live for nearby homeowners.
+            {t("tradeSetup.ready.subtitle")}
           </Animated.Text>
 
           <Animated.View
@@ -91,11 +92,11 @@ export default function ContractorReadyScreen() {
             <View style={styles.cardRow}>
               <ToolsIcon size={17} color={colors.accent} />
               <Text style={styles.cardTitle} numberOfLines={1}>
-                {title || "Your trade"}
+                {title || t("tradeSetup.yourTrade")}
               </Text>
             </View>
             {specialty ? (
-              <Text style={styles.cardMeta}>{specialty}</Text>
+              <Text style={styles.cardMeta}>{tx(specialty)}</Text>
             ) : null}
             {location?.place_name ? (
               <View style={styles.cardPlaceRow}>
@@ -109,7 +110,10 @@ export default function ContractorReadyScreen() {
         </View>
 
         <View style={styles.footer}>
-          <PrimaryButton label="Sign in to publish" onPress={handleContinue} />
+          <PrimaryButton
+            label={t("tradeSetup.ready.cta")}
+            onPress={handleContinue}
+          />
         </View>
       </SafeAreaView>
     </ScreenBackground>

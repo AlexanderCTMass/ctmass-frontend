@@ -14,7 +14,7 @@ import {
 } from 'firebase/auth';
 import { Notifications } from "src/enums/notifications";
 import { firebaseApp, firestore } from 'src/libs/firebase';
-import { collection, doc, onSnapshot, serverTimestamp, getDocs, query, where, updateDoc, runTransaction } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot, serverTimestamp, getDocs, query, where, updateDoc, runTransaction } from "firebase/firestore";
 import { Issuer } from 'src/utils/auth';
 import { roles } from "../../roles";
 import { profileApi } from "../../api/profile";
@@ -71,6 +71,22 @@ const buildRegistrationLocationInfo = async (resolvedLocation) => {
     }
 
     return { placeName: '', zip: '', approximate: false, ip };
+};
+
+const describeRegistrationChannel = async (tempProfileData, referralCode) => {
+    if (tempProfileData?.invitedBy) {
+        try {
+            const inviterSnap = await getDoc(doc(firestore, 'profiles', tempProfileData.invitedBy));
+            const inviter = inviterSnap.exists() ? inviterSnap.data() : null;
+            const inviterName = inviter?.businessName || inviter?.name || inviter?.email;
+            if (inviterName) return `Invite link from ${inviterName}`;
+        } catch (e) {
+            ERROR('describeRegistrationChannel', e);
+        }
+        return 'Invite link';
+    }
+    if (referralCode) return `Referral link (code ${referralCode})`;
+    return 'Opened the website directly (no invite)';
 };
 
 var ActionType;
@@ -258,6 +274,7 @@ export const AuthProvider = (props) => {
                     registrationAt: serverTimestamp(),
                     notifications: [Notifications.EVENTS_NOTIFICATIONS],
                     notificationList: [],
+                    source: 'web',
                     ...(referralCode && { referredBy: referralCode }),
                     ...(resolvedLocation && { address: { location: resolvedLocation } })
                 };
@@ -311,7 +328,8 @@ export const AuthProvider = (props) => {
                         await emailSender.sendHello(profileData);
                         INFO("Send hello email");
                         const locationInfo = await buildRegistrationLocationInfo(resolvedLocation);
-                        await emailSender.sendAdmin_newRegistration(profileData, locationInfo);
+                        const channel = await describeRegistrationChannel(tempProfileData, referralCode);
+                        await emailSender.sendAdmin_newRegistration(profileData, { ...locationInfo, channel });
                         INFO("send admin new registration email");
                     } catch (e) {
                         ERROR(e);

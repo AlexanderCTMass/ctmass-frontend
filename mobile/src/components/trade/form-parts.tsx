@@ -10,8 +10,15 @@ import {
 
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { Toggle } from "@/components/ui/toggle";
-import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
 import { selectFeedback } from "@/lib/haptics";
+import { translateKey, useT } from "@/lib/i18n";
 
 export function FormSection({
   label,
@@ -27,15 +34,20 @@ export function FormSection({
   children: ReactNode;
 }) {
   const styles = useStyles();
+  const { t } = useT();
   return (
     <View style={styles.section}>
       <View style={styles.labelRow}>
         <Text style={styles.label}>{label}</Text>
-        {optional ? <Text style={styles.optional}>Optional</Text> : null}
+        {optional ? (
+          <Text style={styles.optional}>{t("form.optional")}</Text>
+        ) : null}
       </View>
       {hint ? <Text style={styles.hint}>{hint}</Text> : null}
       {children}
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <Text style={styles.error}>{translateKey(t, error)}</Text>
+      ) : null}
     </View>
   );
 }
@@ -50,9 +62,10 @@ export function Chip({
   onPress: () => void;
 }) {
   const styles = useStyles();
+  const { tx } = useT();
   return (
     <PressableScale
-      accessibilityLabel={label}
+      accessibilityLabel={tx(label)}
       onPress={() => {
         selectFeedback();
         onPress();
@@ -60,7 +73,7 @@ export function Chip({
     >
       <View style={[styles.chip, selected && styles.chipSelected]}>
         <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-          {label}
+          {tx(label)}
         </Text>
       </View>
     </PressableScale>
@@ -142,7 +155,13 @@ export function FormInput({
   const { colors } = useTheme();
   const styles = useStyles();
   return (
-    <View style={[styles.inputWrap, multiline && styles.inputWrapMultiline, containerStyle]}>
+    <View
+      style={[
+        styles.inputWrap,
+        multiline && styles.inputWrapMultiline,
+        containerStyle,
+      ]}
+    >
       {prefix ? <Text style={styles.affix}>{prefix}</Text> : null}
       <TextInput
         placeholderTextColor={colors.textMuted}
@@ -173,7 +192,11 @@ export function ToggleRow({
         <Text style={styles.toggleLabel}>{label}</Text>
         {hint ? <Text style={styles.hint}>{hint}</Text> : null}
       </View>
-      <Toggle value={value} onValueChange={onChange} accessibilityLabel={label} />
+      <Toggle
+        value={value}
+        onValueChange={onChange}
+        accessibilityLabel={label}
+      />
     </View>
   );
 }

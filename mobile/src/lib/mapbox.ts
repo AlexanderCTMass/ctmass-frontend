@@ -17,8 +17,7 @@ export const US_MAP_MAX_BOUNDS: [[number, number], [number, number]] = [
   [-63.0, 72.0],
 ];
 
-export const US_ONLY_LOCATION_MESSAGE =
-  "CTMASS is available in the United States only. Please pick a US address.";
+export const US_ONLY_LOCATION_MESSAGE = "location.usOnly" as const;
 
 function getToken(): string {
   const raw: unknown = Constants.expoConfig?.extra?.mapboxToken;

@@ -5,6 +5,7 @@ import Edit02Icon from '@untitled-ui/icons-react/build/esm/Edit02';
 import {
   Avatar,
   Box,
+  Checkbox,
   Chip,
   CircularProgress,
   Divider,
@@ -76,7 +77,7 @@ const TesterChip = () => (
   />
 );
 
-const MobileList = ({ items, onItemOpen }) => (
+const MobileList = ({ items, onItemOpen, selectedIds, onToggle }) => (
   <Box>
     {items.map((customer, index) => {
       const registration = getRegistration(customer);
@@ -85,238 +86,274 @@ const MobileList = ({ items, onItemOpen }) => (
       return (
         <Fragment key={customer.id}>
           {index > 0 && <Divider />}
-          <ListItemButton
-            component={RouterLink}
-            href={paths.dashboard.customers.details.replace(':customerId', customer.id)}
-            onClick={onItemOpen}
+          <Box
             sx={(theme) => ({
-              alignItems: 'flex-start',
-              gap: 1.5,
-              px: 2,
-              py: 1.5,
+              display: 'flex',
+              alignItems: 'center',
               ...(customer.isTester ? testerRowSx(theme) : {})
             })}
           >
-            <Avatar
-              src={customer.avatar}
-              sx={{ height: 44, width: 44, mt: 0.25 }}
+            <Checkbox
+              checked={selectedIds.has(customer.id)}
+              inputProps={{ 'aria-label': `Select ${customer.name || customer.email}` }}
+              onChange={() => onToggle(customer)}
+              sx={{ ml: 0.5 }}
+            />
+            <ListItemButton
+              component={RouterLink}
+              href={paths.dashboard.customers.details.replace(':customerId', customer.id)}
+              onClick={onItemOpen}
+              sx={{
+                alignItems: 'flex-start',
+                gap: 1.5,
+                pl: 0.5,
+                pr: 2,
+                py: 1.5,
+                minWidth: 0
+              }}
             >
-              {getInitials(customer.name)}
-            </Avatar>
-            <Box sx={{ minWidth: 0, flex: 1 }}>
-              <Stack
-                alignItems="center"
-                direction="row"
-                spacing={1}
-                sx={{ minWidth: 0 }}
+              <Avatar
+                src={customer.avatar}
+                sx={{ height: 44, width: 44, mt: 0.25 }}
               >
-                <Typography
-                  noWrap
-                  variant="subtitle2"
-                  sx={{ minWidth: 0 }}
-                >
-                  {customer.name || '—'}
-                </Typography>
-                {customer.isTester && <TesterChip />}
-              </Stack>
-              <Typography
-                color="text.secondary"
-                noWrap
-                variant="body2"
-              >
-                {customer.email}
-              </Typography>
-              <Stack
-                alignItems="center"
-                direction="row"
-                flexWrap="wrap"
-                columnGap={1}
-                sx={{ mt: 0.5 }}
-              >
+                {getInitials(customer.name)}
+              </Avatar>
+              <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Stack
                   alignItems="center"
                   direction="row"
-                  spacing={0.5}
+                  spacing={1}
+                  sx={{ minWidth: 0 }}
                 >
-                  <RoleIcon role={customer.role} />
                   <Typography
-                    color="text.secondary"
-                    variant="caption"
+                    noWrap
+                    variant="subtitle2"
+                    sx={{ minWidth: 0 }}
                   >
-                    {ROLE_LABELS[customer.role] || customer.role}
+                    {customer.name || '—'}
                   </Typography>
+                  {customer.isTester && <TesterChip />}
                 </Stack>
-                {registration && (
-                  <Typography
-                    color="text.secondary"
-                    variant="caption"
-                  >
-                    · Joined {registration.date} ({registration.relative})
-                  </Typography>
-                )}
-              </Stack>
-              {location && (
                 <Typography
                   color="text.secondary"
                   noWrap
-                  variant="caption"
-                  component="div"
+                  variant="body2"
                 >
-                  {location}
+                  {customer.email}
                 </Typography>
-              )}
-            </Box>
-            <SvgIcon
-              color="action"
-              fontSize="small"
-              sx={{ alignSelf: 'center' }}
-            >
-              <ArrowRightIcon />
-            </SvgIcon>
-          </ListItemButton>
+                <Stack
+                  alignItems="center"
+                  direction="row"
+                  flexWrap="wrap"
+                  columnGap={1}
+                  sx={{ mt: 0.5 }}
+                >
+                  <Stack
+                    alignItems="center"
+                    direction="row"
+                    spacing={0.5}
+                  >
+                    <RoleIcon role={customer.role} />
+                    <Typography
+                      color="text.secondary"
+                      variant="caption"
+                    >
+                      {ROLE_LABELS[customer.role] || customer.role}
+                    </Typography>
+                  </Stack>
+                  {registration && (
+                    <Typography
+                      color="text.secondary"
+                      variant="caption"
+                    >
+                      · Joined {registration.date} ({registration.relative})
+                    </Typography>
+                  )}
+                </Stack>
+                {location && (
+                  <Typography
+                    color="text.secondary"
+                    noWrap
+                    variant="caption"
+                    component="div"
+                  >
+                    {location}
+                  </Typography>
+                )}
+              </Box>
+              <SvgIcon
+                color="action"
+                fontSize="small"
+                sx={{ alignSelf: 'center' }}
+              >
+                <ArrowRightIcon />
+              </SvgIcon>
+            </ListItemButton>
+          </Box>
         </Fragment>
       );
     })}
   </Box>
 );
 
-const DesktopTable = ({ items, onItemOpen }) => (
-  <Scrollbar>
-    <Table sx={{ minWidth: 900 }}>
-      <TableHead>
-        <TableRow>
-          <TableCell padding="checkbox">
-            Role
-          </TableCell>
-          <TableCell>
-            Name
-          </TableCell>
-          <TableCell>
-            Registered
-          </TableCell>
-          <TableCell>
-            Location
-          </TableCell>
-          <TableCell>
-            Phone
-          </TableCell>
-          <TableCell align="right">
-            Actions
-          </TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {items.map((customer) => {
-          const registration = getRegistration(customer);
-          const replaceWithId = (path) => path.replace(':customerId', customer.id);
+const DesktopTable = ({ items, onItemOpen, selectedIds, onToggle, onTogglePage }) => {
+  const selectedOnPage = items.filter((customer) => selectedIds.has(customer.id)).length;
+  const allOnPage = items.length > 0 && selectedOnPage === items.length;
 
-          return (
-            <TableRow
-              hover
-              key={customer.id}
-              sx={customer.isTester ? testerRowSx : undefined}
-            >
-              <TableCell padding="checkbox">
-                <Tooltip title={ROLE_LABELS[customer.role] || customer.role || ''}>
-                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                    <RoleIcon role={customer.role} />
-                  </Box>
-                </Tooltip>
-              </TableCell>
-              <TableCell>
-                <Stack
-                  alignItems="center"
-                  direction="row"
-                  spacing={1}
-                >
-                  <Avatar
-                    src={customer.avatar}
-                    sx={{
-                      height: 42,
-                      width: 42
-                    }}
-                  >
-                    {getInitials(customer.name)}
-                  </Avatar>
-                  <div>
-                    <Stack
-                      alignItems="center"
-                      direction="row"
-                      spacing={1}
-                    >
-                      <Link
-                        color="inherit"
-                        component={RouterLink}
-                        href={replaceWithId(paths.dashboard.customers.details)}
-                        onClick={onItemOpen}
-                        variant="subtitle2"
-                      >
-                        {customer.name}
-                      </Link>
-                      {customer.isTester && <TesterChip />}
-                    </Stack>
-                    <Typography
-                      color="text.secondary"
-                      variant="body2"
-                    >
-                      {customer.email}
-                    </Typography>
-                  </div>
-                </Stack>
-              </TableCell>
-              <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                {registration ? (
-                  <>
-                    <Typography variant="body2">
-                      {registration.date}
-                    </Typography>
-                    <Typography
-                      color="text.secondary"
-                      variant="caption"
-                    >
-                      {registration.relative}
-                    </Typography>
-                  </>
-                ) : '—'}
-              </TableCell>
-              <TableCell>
-                {getLocation(customer) || '—'}
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2">
-                  {customer.phone || '—'}
-                </Typography>
-              </TableCell>
-              <TableCell
-                align="right"
-                sx={{ whiteSpace: 'nowrap' }}
+  return (
+    <Scrollbar>
+      <Table sx={{ minWidth: 900 }}>
+        <TableHead>
+          <TableRow>
+            <TableCell padding="checkbox">
+              <Checkbox
+                checked={allOnPage}
+                indeterminate={selectedOnPage > 0 && !allOnPage}
+                inputProps={{ 'aria-label': 'Select all on this page' }}
+                onChange={(event) => onTogglePage(items, event.target.checked)}
+              />
+            </TableCell>
+            <TableCell padding="checkbox">
+              Role
+            </TableCell>
+            <TableCell>
+              Name
+            </TableCell>
+            <TableCell>
+              Registered
+            </TableCell>
+            <TableCell>
+              Location
+            </TableCell>
+            <TableCell>
+              Phone
+            </TableCell>
+            <TableCell align="right">
+              Actions
+            </TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {items.map((customer) => {
+            const registration = getRegistration(customer);
+            const replaceWithId = (path) => path.replace(':customerId', customer.id);
+
+            return (
+              <TableRow
+                hover
+                key={customer.id}
+                selected={selectedIds.has(customer.id)}
+                sx={customer.isTester ? testerRowSx : undefined}
               >
-                <IconButton
-                  component={RouterLink}
-                  href={replaceWithId(paths.dashboard.customers.edit)}
-                  onClick={onItemOpen}
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    checked={selectedIds.has(customer.id)}
+                    inputProps={{ 'aria-label': `Select ${customer.name || customer.email}` }}
+                    onChange={() => onToggle(customer)}
+                  />
+                </TableCell>
+                <TableCell padding="checkbox">
+                  <Tooltip title={ROLE_LABELS[customer.role] || customer.role || ''}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                      <RoleIcon role={customer.role} />
+                    </Box>
+                  </Tooltip>
+                </TableCell>
+                <TableCell>
+                  <Stack
+                    alignItems="center"
+                    direction="row"
+                    spacing={1}
+                  >
+                    <Avatar
+                      src={customer.avatar}
+                      sx={{
+                        height: 42,
+                        width: 42
+                      }}
+                    >
+                      {getInitials(customer.name)}
+                    </Avatar>
+                    <div>
+                      <Stack
+                        alignItems="center"
+                        direction="row"
+                        spacing={1}
+                      >
+                        <Link
+                          color="inherit"
+                          component={RouterLink}
+                          href={replaceWithId(paths.dashboard.customers.details)}
+                          onClick={onItemOpen}
+                          variant="subtitle2"
+                        >
+                          {customer.name}
+                        </Link>
+                        {customer.isTester && <TesterChip />}
+                      </Stack>
+                      <Typography
+                        color="text.secondary"
+                        variant="body2"
+                      >
+                        {customer.email}
+                      </Typography>
+                    </div>
+                  </Stack>
+                </TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                  {registration ? (
+                    <>
+                      <Typography variant="body2">
+                        {registration.date}
+                      </Typography>
+                      <Typography
+                        color="text.secondary"
+                        variant="caption"
+                      >
+                        {registration.relative}
+                      </Typography>
+                    </>
+                  ) : '—'}
+                </TableCell>
+                <TableCell>
+                  {getLocation(customer) || '—'}
+                </TableCell>
+                <TableCell>
+                  <Typography variant="subtitle2">
+                    {customer.phone || '—'}
+                  </Typography>
+                </TableCell>
+                <TableCell
+                  align="right"
+                  sx={{ whiteSpace: 'nowrap' }}
                 >
-                  <SvgIcon>
-                    <Edit02Icon />
-                  </SvgIcon>
-                </IconButton>
-                <IconButton
-                  component={RouterLink}
-                  href={replaceWithId(paths.dashboard.customers.details)}
-                  onClick={onItemOpen}
-                >
-                  <SvgIcon>
-                    <ArrowRightIcon />
-                  </SvgIcon>
-                </IconButton>
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
-  </Scrollbar>
-);
+                  <IconButton
+                    component={RouterLink}
+                    href={replaceWithId(paths.dashboard.customers.edit)}
+                    onClick={onItemOpen}
+                  >
+                    <SvgIcon>
+                      <Edit02Icon />
+                    </SvgIcon>
+                  </IconButton>
+                  <IconButton
+                    component={RouterLink}
+                    href={replaceWithId(paths.dashboard.customers.details)}
+                    onClick={onItemOpen}
+                  >
+                    <SvgIcon>
+                      <ArrowRightIcon />
+                    </SvgIcon>
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </Scrollbar>
+  );
+};
 
 export const CustomerListTable = (props) => {
   const {
@@ -327,7 +364,10 @@ export const CustomerListTable = (props) => {
     onPageChange = () => { },
     onRowsPerPageChange,
     page = 0,
-    rowsPerPage = 0
+    rowsPerPage = 0,
+    selectedIds = new Set(),
+    onToggle = () => { },
+    onTogglePage = () => { }
   } = props;
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
@@ -350,8 +390,8 @@ export const CustomerListTable = (props) => {
         </Typography>
       )}
       {loaded && items.length > 0 && (isMobile
-        ? <MobileList items={items} onItemOpen={onItemOpen} />
-        : <DesktopTable items={items} onItemOpen={onItemOpen} />)}
+        ? <MobileList items={items} onItemOpen={onItemOpen} onToggle={onToggle} selectedIds={selectedIds} />
+        : <DesktopTable items={items} onItemOpen={onItemOpen} onToggle={onToggle} onTogglePage={onTogglePage} selectedIds={selectedIds} />)}
       <TablePagination
         component="div"
         count={count}
@@ -378,5 +418,8 @@ CustomerListTable.propTypes = {
   onPageChange: PropTypes.func,
   onRowsPerPageChange: PropTypes.func,
   page: PropTypes.number,
-  rowsPerPage: PropTypes.number
+  rowsPerPage: PropTypes.number,
+  selectedIds: PropTypes.instanceOf(Set),
+  onToggle: PropTypes.func,
+  onTogglePage: PropTypes.func
 };

@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import { CheckIcon } from "@/components/icons";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { translateKey, useT } from "@/lib/i18n";
 import { tradeCompleteness } from "@/lib/trade-details";
 import type { TradeProfile } from "@/lib/trades";
 
@@ -15,9 +16,11 @@ export function TradeCompleteness({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const items = tradeCompleteness(trade.details, {
     about: trade.about,
     portfolioCount,
+    hasCertificates: trade.owner?.hasCertificates ?? false,
   });
   const done = items.filter((item) => item.done).length;
   const missing = items.filter((item) => !item.done);
@@ -25,22 +28,22 @@ export function TradeCompleteness({
   return (
     <View style={styles.card}>
       <View style={styles.headRow}>
-        <Text style={styles.title}>Profile completeness</Text>
+        <Text style={styles.title}>{t("trade.completeness.title")}</Text>
         <Text style={styles.percent}>
           {Math.round((done / items.length) * 100)}%
         </Text>
       </View>
       <ProgressBar progress={done / items.length} />
-      <Text style={styles.hint}>
-        Only you see this. Complete trades get more requests.
-      </Text>
+      <Text style={styles.hint}>{t("trade.completeness.hint")}</Text>
       <View style={styles.list}>
         {missing.map((item) => (
           <View key={item.key} style={styles.item}>
             <View style={styles.dot}>
               <CheckIcon size={10} color={colors.textMuted} strokeWidth={3} />
             </View>
-            <Text style={styles.itemText}>Add {item.label.toLowerCase()}</Text>
+            <Text style={styles.itemText}>
+              {translateKey(t, `trade.completeness.items.${item.key}`)}
+            </Text>
           </View>
         ))}
       </View>

@@ -22,24 +22,26 @@ import { toHref } from "@/lib/navigation";
 import { requestNotificationPermission } from "@/lib/notifications";
 import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
+import { useT } from "@/lib/i18n";
 
-type Perk = { label: string; Icon: ComponentType<IconProps> };
+type Perk = { id: "perk1" | "perk2" | "perk3"; Icon: ComponentType<IconProps> };
 
 const homeownerPerks: Perk[] = [
-  { label: "Free to post — always", Icon: TagIcon },
-  { label: "Trusted local specialists", Icon: ShieldCheckIcon },
-  { label: "Matched near your address", Icon: MapPinIcon },
+  { id: "perk1", Icon: TagIcon },
+  { id: "perk2", Icon: ShieldCheckIcon },
+  { id: "perk3", Icon: MapPinIcon },
 ];
 
 const contractorPerks: Perk[] = [
-  { label: "Free to list your trade", Icon: TagIcon },
-  { label: "Get matched with local jobs", Icon: BrowseJobsIcon },
-  { label: "Build your reputation with reviews", Icon: ReviewIcon },
+  { id: "perk1", Icon: TagIcon },
+  { id: "perk2", Icon: BrowseJobsIcon },
+  { id: "perk3", Icon: ReviewIcon },
 ];
 
 export default function GetStartedScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const role = useAppStore((state) => state.role);
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
   const isContractor = role === "contractor";
@@ -47,14 +49,11 @@ export default function GetStartedScreen() {
   const loginStartedRef = useRef(false);
 
   const perks = isContractor ? contractorPerks : homeownerPerks;
+  const audience = isContractor ? "contractor" : "homeowner";
 
-  const eyebrow = "You're all set";
-  const title = isContractor
-    ? "Start getting local jobs"
-    : "Find your specialist in about a minute";
-  const body = isContractor
-    ? "Create your trade so nearby homeowners can find and message you. It only takes about a minute."
-    : "Tell us what you need and where you are — we'll match you with trusted pros nearby. No calls, no pressure.";
+  const eyebrow = t("onboarding.getStarted.eyebrow");
+  const title = t(`onboarding.getStarted.${audience}.title`);
+  const body = t(`onboarding.getStarted.${audience}.body`);
 
   useEffect(() => {
     analyticsEvents.onboardingGetStartedViewed({ role });
@@ -85,7 +84,7 @@ export default function GetStartedScreen() {
     });
   };
 
-  const primaryLabel = isContractor ? "Create my trade" : "Create my project";
+  const primaryLabel = t(`onboarding.getStarted.${audience}.cta`);
   const goPrimary = () => {
     analyticsEvents.onboardingPrimaryActionTapped({
       role,
@@ -120,13 +119,15 @@ export default function GetStartedScreen() {
         isAuthenticated ? null : (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Log in to an existing account"
+            accessibilityLabel={t("onboarding.getStarted.loginA11y")}
             hitSlop={10}
             onPress={logIn}
           >
             <Text style={styles.loginHint}>
-              Have an account?{" "}
-              <Text style={styles.loginLink}>Log in</Text>
+              {t("onboarding.getStarted.haveAccount")}{" "}
+              <Text style={styles.loginLink}>
+                {t("onboarding.getStarted.logIn")}
+              </Text>
             </Text>
           </Pressable>
         )
@@ -140,7 +141,7 @@ export default function GetStartedScreen() {
             onPress={exploreLater}
           >
             <Text style={styles.secondary}>
-              I&apos;m just exploring — maybe later
+              {t("onboarding.getStarted.later")}
             </Text>
           </Pressable>
         </>
@@ -159,14 +160,16 @@ export default function GetStartedScreen() {
         <View style={styles.perks}>
           {perks.map((perk, index) => (
             <Animated.View
-              key={perk.label}
+              key={perk.id}
               entering={FadeInDown.delay(420 + index * 110).duration(520)}
               style={styles.perkRow}
             >
               <View style={styles.perkIcon}>
                 <perk.Icon size={18} color={colors.accent} />
               </View>
-              <Text style={styles.perkLabel}>{perk.label}</Text>
+              <Text style={styles.perkLabel}>
+                {t(`onboarding.getStarted.${audience}.${perk.id}`)}
+              </Text>
             </Animated.View>
           ))}
         </View>

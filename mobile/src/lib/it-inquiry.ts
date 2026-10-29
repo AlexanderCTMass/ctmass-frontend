@@ -4,6 +4,7 @@ import * as Device from "expo-device";
 import { Platform } from "react-native";
 
 import { getFirebaseAuth } from "@/lib/firebase";
+import i18n from "@/lib/i18n";
 
 const FUNCTIONS_REGION = "us-central1";
 
@@ -95,15 +96,15 @@ export function buildCalendlyUrl(input: {
   return `${CALENDLY_URL}?${query}`;
 }
 
-type CallableError = { error?: { message?: string } };
-
 export async function sendServiceInquiry(input: ServiceInquiry): Promise<void> {
   const projectId = getApp().options.projectId;
   if (!projectId) throw new Error("Missing Firebase project configuration.");
 
   const url = `https://${FUNCTIONS_REGION}-${projectId}.cloudfunctions.net/sendServiceInquiry`;
 
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
   const user = getFirebaseAuth().currentUser;
   if (user) {
     try {
@@ -130,13 +131,6 @@ export async function sendServiceInquiry(input: ServiceInquiry): Promise<void> {
   });
 
   if (!response.ok) {
-    let message = "We couldn't send your message. Please try again.";
-    try {
-      const body = (await response.json()) as CallableError;
-      if (body.error?.message) message = body.error.message;
-    } catch {
-      // response had no JSON body — keep the default message
-    }
-    throw new Error(message);
+    throw new Error(i18n.t("itInquiry.sendFailed"));
   }
 }

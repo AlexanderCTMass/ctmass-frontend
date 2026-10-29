@@ -26,6 +26,7 @@ import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { distanceBetweenCenters } from "@/lib/geo";
 import { successFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { chatHref, toHref } from "@/lib/navigation";
 import { respondToProject } from "@/lib/projects";
 import { useProject } from "@/queries/use-project";
@@ -34,7 +35,7 @@ import { useAuthStore } from "@/store/use-auth-store";
 import { useTradeDraftStore } from "@/store/use-trade-draft-store";
 
 const schema = z.object({
-  message: z.string().trim().min(2, "Write a short message."),
+  message: z.string().trim().min(2, "requestDetail.messageRequired"),
   price: z.string(),
 });
 
@@ -43,6 +44,7 @@ type FormValues = z.infer<typeof schema>;
 export default function RequestDetailScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, tx } = useT();
   const params = useLocalSearchParams<{ id?: string }>();
   const id = typeof params.id === "string" ? params.id : undefined;
   const uid = useAuthStore((state) => state.user?.uid);
@@ -149,12 +151,11 @@ export default function RequestDetailScreen() {
         project_id: project.id,
         error_message: errorMessage(error),
       });
-      setNotice("Couldn't send your response. Please try again.");
+      setNotice(t("requestDetail.sendFailed"));
     } finally {
       setSending(false);
     }
   };
-
 
   return (
     <ScreenBackground>
@@ -169,9 +170,7 @@ export default function RequestDetailScreen() {
           </View>
         ) : !project ? (
           <View style={styles.center}>
-            <Text style={styles.missing}>
-              This request is no longer available.
-            </Text>
+            <Text style={styles.missing}>{t("myRequest.unavailable")}</Text>
           </View>
         ) : (
           <KeyboardAvoidingView
@@ -187,13 +186,15 @@ export default function RequestDetailScreen() {
             >
               {project.requestId ? (
                 <Text style={styles.requestId}>
-                  Request #{project.requestId}
+                  {t("specialists.requestNumber", { id: project.requestId })}
                 </Text>
               ) : null}
-              <Text style={styles.title}>{project.title}</Text>
+              <Text style={styles.title}>{tx(project.title)}</Text>
               {project.specialtyLabel &&
               project.specialtyLabel !== project.title ? (
-                <Text style={styles.specialty}>{project.specialtyLabel}</Text>
+                <Text style={styles.specialty}>
+                  {tx(project.specialtyLabel)}
+                </Text>
               ) : null}
 
               <ProjectDetails
@@ -208,15 +209,18 @@ export default function RequestDetailScreen() {
 
               {needsAuth ? (
                 <View style={styles.needsTrade}>
-                  <Text style={styles.needsTradeTitle}>Sign in to respond</Text>
+                  <Text style={styles.needsTradeTitle}>
+                    {t("requestDetail.signIn")}
+                  </Text>
                   <Text style={styles.needsTradeText}>
-                    Create a free account to send your response and message the
-                    homeowner.
+                    {t("requestDetail.signInText")}
                   </Text>
                 </View>
               ) : canRespond ? (
                 <View style={styles.form}>
-                  <Text style={styles.formLabel}>Your response</Text>
+                  <Text style={styles.formLabel}>
+                    {t("requestDetail.yourResponse")}
+                  </Text>
                   <Controller
                     control={control}
                     name="message"
@@ -225,7 +229,7 @@ export default function RequestDetailScreen() {
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
-                        placeholder="Message to the homeowner"
+                        placeholder={t("requestDetail.messagePlaceholder")}
                         placeholderTextColor={colors.textMuted}
                         style={[styles.input, styles.textArea]}
                         multiline
@@ -240,7 +244,7 @@ export default function RequestDetailScreen() {
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
-                        placeholder="Estimated price, $"
+                        placeholder={t("requestDetail.pricePlaceholder")}
                         placeholderTextColor={colors.textMuted}
                         keyboardType="number-pad"
                         style={styles.input}
@@ -251,15 +255,16 @@ export default function RequestDetailScreen() {
               ) : needsTrade ? (
                 <View style={styles.needsTrade}>
                   <Text style={styles.needsTradeTitle}>
-                    Create a trade to respond
+                    {t("requestDetail.createTradeTitle")}
                   </Text>
                   <Text style={styles.needsTradeText}>
-                    Set up your trade so homeowners can see who they&apos;re
-                    hiring. It only takes a minute — then you can respond.
+                    {t("requestDetail.createTradeText")}
                   </Text>
                 </View>
               ) : isOwnProject ? (
-                <Text style={styles.ownNote}>This is your own request.</Text>
+                <Text style={styles.ownNote}>
+                  {t("requestDetail.ownRequest")}
+                </Text>
               ) : null}
 
               {notice ? <Text style={styles.notice}>{notice}</Text> : null}
@@ -268,7 +273,7 @@ export default function RequestDetailScreen() {
             {needsAuth ? (
               <View style={styles.footer}>
                 <PrimaryButton
-                  label="Sign in to respond"
+                  label={t("requestDetail.signIn")}
                   onPress={() => {
                     analyticsEvents.requestSignInTapped({
                       project_id: project.id,
@@ -280,7 +285,7 @@ export default function RequestDetailScreen() {
             ) : canRespond ? (
               <View style={styles.footer}>
                 <PrimaryButton
-                  label="Send response"
+                  label={t("requestDetail.send")}
                   onPress={() => void handleSubmit(onSubmit)()}
                   disabled={!isValid}
                   loading={sending}
@@ -289,7 +294,7 @@ export default function RequestDetailScreen() {
             ) : needsTrade ? (
               <View style={styles.footer}>
                 <PrimaryButton
-                  label="Create my trade"
+                  label={t("onboarding.getStarted.contractor.cta")}
                   onPress={goCreateTrade}
                 />
               </View>

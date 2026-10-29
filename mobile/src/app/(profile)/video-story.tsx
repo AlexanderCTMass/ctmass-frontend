@@ -26,6 +26,7 @@ import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { choosePhoto, chooseVideo } from "@/lib/media";
 import { addVideo } from "@/lib/videos";
 import { userVideosKey } from "@/queries/use-videos";
@@ -45,6 +46,7 @@ const MAX_CONTENT = 3;
 export default function AddVideoStoryScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const uid = useAuthStore((state) => state.user?.uid);
   const queryClient = useQueryClient();
 
@@ -89,7 +91,7 @@ export default function AddVideoStoryScreen() {
       picked.durationMs !== null &&
       (picked.durationMs < 1000 || picked.durationMs > 90000)
     ) {
-      Alert.alert("Video too long", "Videos must be between 1 and 90 seconds.");
+      Alert.alert(t("videoStory.tooLongTitle"), t("videoStory.tooLongText"));
       return;
     }
     setContent((prev) => {
@@ -105,10 +107,10 @@ export default function AddVideoStoryScreen() {
   const handleAddContent = () => {
     if (content.length >= MAX_CONTENT) return;
     tapFeedback();
-    Alert.alert("Add to your story", undefined, [
-      { text: "Photo", onPress: () => void addImageItem() },
-      { text: "Video", onPress: () => void addVideoItem() },
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("videoStory.addTitle"), undefined, [
+      { text: t("chats.photo"), onPress: () => void addImageItem() },
+      { text: t("setup.video"), onPress: () => void addVideoItem() },
+      { text: t("common.cancel"), style: "cancel" },
     ]);
   };
 
@@ -120,12 +122,12 @@ export default function AddVideoStoryScreen() {
     if (!uid) return;
     if (!preview) {
       analyticsEvents.videoValidationFailed({ fields: ["preview"] });
-      setTopError("Add a cover image for your story.");
+      setTopError(t("videoStory.needCover"));
       return;
     }
     if (content.length === 0) {
       analyticsEvents.videoValidationFailed({ fields: ["content"] });
-      setTopError("Add at least one photo or video.");
+      setTopError(t("videoStory.needContent"));
       return;
     }
     setSaving(true);
@@ -146,7 +148,7 @@ export default function AddVideoStoryScreen() {
     } catch (error) {
       analyticsEvents.videoSaveFailed({ error_message: errorMessage(error) });
       setSaving(false);
-      setTopError("Couldn't publish your story. Please try again.");
+      setTopError(t("videoStory.failed"));
     }
   };
 
@@ -155,7 +157,7 @@ export default function AddVideoStoryScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>New video story</Text>
+          <Text style={styles.headerTitle}>{t("videoStory.title")}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -179,7 +181,7 @@ export default function AddVideoStoryScreen() {
             <View style={styles.hero}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Choose cover image"
+                accessibilityLabel={t("videoStory.chooseCover")}
                 onPress={() => void handleSetPreview()}
                 style={[styles.cover, !preview && styles.coverDashed]}
               >
@@ -193,7 +195,9 @@ export default function AddVideoStoryScreen() {
                     />
                     <View style={styles.coverOverlay} pointerEvents="none">
                       <View style={styles.changeChip}>
-                        <Text style={styles.changeChipText}>Change cover</Text>
+                        <Text style={styles.changeChipText}>
+                          {t("videoStory.changeCover")}
+                        </Text>
                       </View>
                     </View>
                   </>
@@ -202,9 +206,11 @@ export default function AddVideoStoryScreen() {
                     <View style={styles.coverIconCircle}>
                       <ImageIcon size={26} color={colors.accent} />
                     </View>
-                    <Text style={styles.coverEmptyTitle}>Add a cover</Text>
+                    <Text style={styles.coverEmptyTitle}>
+                      {t("videoStory.addCover")}
+                    </Text>
                     <Text style={styles.coverEmptyHint}>
-                      The thumbnail people tap to play
+                      {t("videoStory.coverHint")}
                     </Text>
                   </View>
                 )}
@@ -212,10 +218,9 @@ export default function AddVideoStoryScreen() {
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Story clips</Text>
+              <Text style={styles.sectionTitle}>{t("videoStory.clips")}</Text>
               <Text style={styles.sectionHint}>
-                Add up to 3 photos or videos (up to 90s). Anyone can watch, like
-                and report them.
+                {t("videoStory.clipsHint")}
               </Text>
               <ScrollView
                 horizontal
@@ -234,12 +239,14 @@ export default function AddVideoStoryScreen() {
                     ) : (
                       <View style={styles.tileVideo}>
                         <PlayIcon size={22} color="#FFFFFF" filled />
-                        <Text style={styles.tileVideoText}>Video</Text>
+                        <Text style={styles.tileVideoText}>
+                          {t("setup.video")}
+                        </Text>
                       </View>
                     )}
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Remove"
+                      accessibilityLabel={t("videoStory.remove")}
                       hitSlop={8}
                       onPress={() => removeContent(index)}
                       style={styles.tileRemove}
@@ -250,13 +257,15 @@ export default function AddVideoStoryScreen() {
                 ))}
                 {content.length < MAX_CONTENT ? (
                   <PressableScale
-                    accessibilityLabel="Add content"
+                    accessibilityLabel={t("videoStory.addContent")}
                     onPress={handleAddContent}
                     scaleTo={0.97}
                   >
                     <View style={styles.tileAdd}>
                       <Text style={styles.tileAddPlus}>+</Text>
-                      <Text style={styles.tileAddText}>Photo or video</Text>
+                      <Text style={styles.tileAddText}>
+                        {t("videoStory.photoOrVideo")}
+                      </Text>
                     </View>
                   </PressableScale>
                 ) : null}
@@ -264,21 +273,21 @@ export default function AddVideoStoryScreen() {
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Details</Text>
+              <Text style={styles.sectionTitle}>{t("videoStory.details")}</Text>
               <Text style={styles.sectionHint}>
-                Optional — a title and note help people find your story.
+                {t("videoStory.detailsHint")}
               </Text>
               <Controller
                 control={control}
                 name="title"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextField
-                    label="Title"
+                    label={t("videoStory.titleLabel")}
                     value={value ?? ""}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     error={errors.title?.message}
-                    placeholder="e.g. Kitchen remodel"
+                    placeholder={t("videoStory.titlePlaceholder")}
                     autoCapitalize="sentences"
                   />
                 )}
@@ -288,12 +297,12 @@ export default function AddVideoStoryScreen() {
                 name="description"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextField
-                    label="Description"
+                    label={t("videoStory.description")}
                     value={value ?? ""}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     error={errors.description?.message}
-                    placeholder="Tell people about it"
+                    placeholder={t("videoStory.descriptionPlaceholder")}
                     multiline
                   />
                 )}
@@ -303,7 +312,9 @@ export default function AddVideoStoryScreen() {
 
           <View style={styles.footer}>
             <PrimaryButton
-              label={saving ? "Publishing…" : "Publish story"}
+              label={
+                saving ? t("videoStory.publishing") : t("videoStory.publish")
+              }
               withArrow={false}
               loading={saving}
               disabled={saving}

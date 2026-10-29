@@ -22,12 +22,19 @@ import { BackButton } from "@/components/ui/back-button";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { UndoToast, useUndoToast } from "@/components/ui/undo-toast";
-import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
 import { specialistSubject, useSwipeActions } from "@/hooks/use-swipe-actions";
 import { useTradeContact } from "@/hooks/use-trade-contact";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { DETAIL_ROWS, rankAll } from "@/lib/compare-metrics";
 import { distanceMiles } from "@/lib/geo";
+import { useT } from "@/lib/i18n";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
 import type { Specialist } from "@/lib/trades";
@@ -44,11 +51,18 @@ const CARD_BODY_HEIGHT = 372;
 const COMPACT_BODY_HEIGHT = 324;
 const COMPACT_DECK_HEIGHT = 470;
 
-function ModeSwitch({ mode, onChange }: { mode: Mode; onChange: (next: Mode) => void }) {
+function ModeSwitch({
+  mode,
+  onChange,
+}: {
+  mode: Mode;
+  onChange: (next: Mode) => void;
+}) {
   const styles = useStyles();
+  const { t } = useT();
   const options: { value: Mode; label: string }[] = [
-    { value: "cards", label: "Cards" },
-    { value: "side_by_side", label: "Side by side" },
+    { value: "cards", label: t("compare.modeCards") },
+    { value: "side_by_side", label: t("compare.modeSideBySide") },
   ];
   return (
     <View style={styles.switch} accessibilityRole="tablist">
@@ -62,7 +76,9 @@ function ModeSwitch({ mode, onChange }: { mode: Mode; onChange: (next: Mode) => 
             onPress={() => onChange(option.value)}
             style={[styles.switchItem, active && styles.switchItemActive]}
           >
-            <Text style={[styles.switchText, active && styles.switchTextActive]}>
+            <Text
+              style={[styles.switchText, active && styles.switchTextActive]}
+            >
               {option.label}
             </Text>
           </Pressable>
@@ -75,16 +91,14 @@ function ModeSwitch({ mode, onChange }: { mode: Mode; onChange: (next: Mode) => 
 export default function CompareScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useT();
   const uid = useAuthStore((state) => state.user?.uid);
   const tradeIds = useCompareStore((state) => state.tradeIds);
   const remove = useCompareStore((state) => state.remove);
   const insert = useCompareStore((state) => state.insert);
   const clear = useCompareStore((state) => state.clear);
-  const { data, isLoading, isPlaceholderData, isFetching } = useSpecialistsByIds(
-    tradeIds,
-    undefined,
-    tradeIds.length > 0,
-  );
+  const { data, isLoading, isPlaceholderData, isFetching } =
+    useSpecialistsByIds(tradeIds, undefined, tradeIds.length > 0);
   const profile = useProfile(uid);
   const origin = profile.data?.location?.center ?? null;
   const contact = useTradeContact("compare");
@@ -94,7 +108,10 @@ export default function CompareScreen() {
   const [mode, setMode] = useState<Mode>("cards");
   const [cursor, setCursor] = useState<Cursor>(null);
   const [fly, setFly] = useState<FlyCommand | null>(null);
-  const [pair, setPair] = useState<[string | null, string | null]>([null, null]);
+  const [pair, setPair] = useState<[string | null, string | null]>([
+    null,
+    null,
+  ]);
   const [differencesOnly, setDifferencesOnly] = useState(false);
   const [deckHeight, setDeckHeight] = useState(0);
 
@@ -129,7 +146,12 @@ export default function CompareScreen() {
 
   const activeMode: Mode = trades.length < 2 ? "cards" : mode;
   const cursorIndex =
-    cursor === END ? -1 : Math.max(0, trades.findIndex((trade) => trade.tradeId === cursor));
+    cursor === END
+      ? -1
+      : Math.max(
+          0,
+          trades.findIndex((trade) => trade.tradeId === cursor),
+        );
   const finished = cursor === END && trades.length > 0;
   const current = finished ? null : (trades[cursorIndex] ?? null);
   const nextTrade = finished ? null : (trades[cursorIndex + 1] ?? null);
@@ -137,9 +159,13 @@ export default function CompareScreen() {
   const pairTrades = useMemo(() => {
     if (trades.length < 2) return null;
     const ids = trades.map((trade) => trade.tradeId);
-    const preferred = [...ids.filter((id) => liked.has(id)), ...ids.filter((id) => !liked.has(id))];
+    const preferred = [
+      ...ids.filter((id) => liked.has(id)),
+      ...ids.filter((id) => !liked.has(id)),
+    ];
     let [left, right] = pair;
-    if (!left || !ids.includes(left)) left = preferred.find((id) => id !== right) ?? null;
+    if (!left || !ids.includes(left))
+      left = preferred.find((id) => id !== right) ?? null;
     if (!right || !ids.includes(right) || right === left) {
       right = preferred.find((id) => id !== left) ?? null;
     }
@@ -156,8 +182,10 @@ export default function CompareScreen() {
   const sideRows = useMemo(() => {
     if (!pairTrades || !differencesOnly) return DETAIL_ROWS;
     const [a, b] = pairTrades;
-    return DETAIL_ROWS.filter((row) => row.value(a, null) !== row.value(b, null));
-  }, [pairTrades, differencesOnly]);
+    return DETAIL_ROWS.filter(
+      (row) => row.value(a, null, t) !== row.value(b, null, t),
+    );
+  }, [pairTrades, differencesOnly, t]);
 
   const openTrade = (trade: Specialist) => {
     tapFeedback();
@@ -200,9 +228,12 @@ export default function CompareScreen() {
       const subject = specialistSubject(trade);
       swipe.like(subject, "swipe");
       undo.show(
-        `${trade.name} added to your shortlist`,
+        t("compare.addedToShortlist", { name: trade.name }),
         () => {
-          analyticsEvents.compareUndone({ trade_id: trade.tradeId, action: "keep" });
+          analyticsEvents.compareUndone({
+            trade_id: trade.tradeId,
+            action: "keep",
+          });
           swipe.unlike(subject, "undo");
           setCursor(trade.tradeId);
         },
@@ -213,9 +244,15 @@ export default function CompareScreen() {
     const storeIndex = tradeIds.indexOf(trade.tradeId);
     setCursor(after ?? (trades.length > 1 ? END : null));
     remove(trade.tradeId);
-    analyticsEvents.compareRemoved({ trade_id: trade.tradeId, count: tradeIds.length - 1 });
-    undo.show(`${trade.name} removed from compare`, () => {
-      analyticsEvents.compareUndone({ trade_id: trade.tradeId, action: "drop" });
+    analyticsEvents.compareRemoved({
+      trade_id: trade.tradeId,
+      count: tradeIds.length - 1,
+    });
+    undo.show(t("compare.removedFromCompare", { name: trade.name }), () => {
+      analyticsEvents.compareUndone({
+        trade_id: trade.tradeId,
+        action: "drop",
+      });
       insert(trade.tradeId, storeIndex);
       setCursor(trade.tradeId);
     });
@@ -258,7 +295,10 @@ export default function CompareScreen() {
   const compact = deckHeight > 0 && deckHeight < COMPACT_DECK_HEIGHT;
   const photoHeight = Math.max(
     64,
-    Math.min(180, deckHeight - (compact ? COMPACT_BODY_HEIGHT : CARD_BODY_HEIGHT)),
+    Math.min(
+      180,
+      deckHeight - (compact ? COMPACT_BODY_HEIGHT : CARD_BODY_HEIGHT),
+    ),
   );
   const empty = !isLoading && trades.length === 0;
   const shortlisted = trades.filter((trade) => liked.has(trade.tradeId)).length;
@@ -281,8 +321,10 @@ export default function CompareScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>Compare</Text>
-          {trades.length > 1 ? <ModeSwitch mode={activeMode} onChange={changeMode} /> : null}
+          <Text style={styles.headerTitle}>{t("compare.title")}</Text>
+          {trades.length > 1 ? (
+            <ModeSwitch mode={activeMode} onChange={changeMode} />
+          ) : null}
         </View>
 
         {isLoading && tradeIds.length > 0 ? (
@@ -295,14 +337,12 @@ export default function CompareScreen() {
               <ScaleIcon size={28} color={colors.accent} />
             </View>
             <Text style={styles.emptyTitle}>
-              Choose up to {MAX_COMPARE} contractors to compare
+              {t("compare.emptyTitle", { count: MAX_COMPARE })}
             </Text>
-            <Text style={styles.emptyText}>
-              Tap the scale icon on any trade card to add it here.
-            </Text>
+            <Text style={styles.emptyText}>{t("compare.emptyText")}</Text>
             <View style={styles.emptyButton}>
               <PrimaryButton
-                label="Find specialists"
+                label={t("compare.findSpecialists")}
                 onPress={() => router.replace(toHref("/search"))}
               />
             </View>
@@ -336,13 +376,21 @@ export default function CompareScreen() {
                   <Pressable
                     key={trade.tradeId}
                     accessibilityRole="button"
-                    accessibilityLabel={`Show ${trade.name}`}
+                    accessibilityLabel={t("compare.showA11y", {
+                      name: trade.name,
+                    })}
                     accessibilityState={{ selected: active }}
                     onPress={() => jumpTo(trade)}
                     style={styles.face}
                   >
-                    <View style={[styles.faceRing, active && styles.faceRingActive]}>
-                      <Avatar name={trade.name} url={trade.avatarUrl || null} size={42} />
+                    <View
+                      style={[styles.faceRing, active && styles.faceRingActive]}
+                    >
+                      <Avatar
+                        name={trade.name}
+                        url={trade.avatarUrl || null}
+                        size={42}
+                      />
                     </View>
                     {liked.has(trade.tradeId) ? (
                       <View style={styles.faceBadge}>
@@ -361,7 +409,7 @@ export default function CompareScreen() {
               {trades.length < MAX_COMPARE ? (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Add a contractor to compare"
+                  accessibilityLabel={t("compare.addA11y")}
                   onPress={() => {
                     tapFeedback();
                     router.push(toHref("/search"));
@@ -370,10 +418,14 @@ export default function CompareScreen() {
                 >
                   <View style={styles.addRing}>
                     <View style={styles.plus}>
-                      <CloseIcon size={18} color={colors.textMuted} strokeWidth={2.2} />
+                      <CloseIcon
+                        size={18}
+                        color={colors.textMuted}
+                        strokeWidth={2.2}
+                      />
                     </View>
                   </View>
-                  <Text style={styles.faceName}>Add</Text>
+                  <Text style={styles.faceName}>{t("compare.add")}</Text>
                 </Pressable>
               ) : null}
             </View>
@@ -385,17 +437,17 @@ export default function CompareScreen() {
                     <HeartIcon size={28} color={colors.accent} filled />
                   </View>
                   <Text style={styles.emptyTitle}>
-                    You&apos;ve seen all {trades.length}
+                    {t("compare.seenAll", { count: trades.length })}
                   </Text>
                   <Text style={styles.emptyText}>
                     {shortlisted > 0
-                      ? `${shortlisted} in your shortlist. Compare two of them side by side or request quotes.`
-                      : "Swipe right on the ones you like to build a shortlist."}
+                      ? t("compare.shortlisted", { count: shortlisted })
+                      : t("compare.swipeToShortlist")}
                   </Text>
                   <View style={styles.endActions}>
                     {trades.length > 1 ? (
                       <PrimaryButton
-                        label="Compare side by side"
+                        label={t("compare.compareSideBySide")}
                         onPress={() => changeMode("side_by_side")}
                       />
                     ) : null}
@@ -407,14 +459,18 @@ export default function CompareScreen() {
                       }}
                       style={styles.textButton}
                     >
-                      <Text style={styles.textButtonLabel}>Start over</Text>
+                      <Text style={styles.textButtonLabel}>
+                        {t("compare.startOver")}
+                      </Text>
                     </Pressable>
                     <Pressable
                       accessibilityRole="button"
                       onPress={clearAll}
                       style={styles.textButton}
                     >
-                      <Text style={styles.clearLabel}>Clear all</Text>
+                      <Text style={styles.clearLabel}>
+                        {t("compare.clearAll")}
+                      </Text>
                     </Pressable>
                   </View>
                 </View>
@@ -438,24 +494,45 @@ export default function CompareScreen() {
                 <View style={styles.actions}>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`Remove ${current.name} from compare`}
+                    accessibilityLabel={t("compare.removeA11y", {
+                      name: current.name,
+                    })}
                     onPress={() => press(-1)}
-                    style={({ pressed }) => [styles.round, styles.drop, pressed && styles.pressed]}
+                    style={({ pressed }) => [
+                      styles.round,
+                      styles.drop,
+                      pressed && styles.pressed,
+                    ]}
                   >
-                    <CloseIcon size={24} color={colors.danger} strokeWidth={2.6} />
+                    <CloseIcon
+                      size={24}
+                      color={colors.danger}
+                      strokeWidth={2.6}
+                    />
                   </Pressable>
                   <Pressable
                     accessibilityRole="button"
                     onPress={() => contact.requestQuote(current)}
-                    style={({ pressed }) => [styles.quote, pressed && styles.pressed]}
+                    style={({ pressed }) => [
+                      styles.quote,
+                      pressed && styles.pressed,
+                    ]}
                   >
-                    <Text style={styles.quoteText}>Request quote</Text>
+                    <Text style={styles.quoteText}>
+                      {t("compare.requestQuote")}
+                    </Text>
                   </Pressable>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`Keep ${current.name} in your shortlist`}
+                    accessibilityLabel={t("compare.keepA11y", {
+                      name: current.name,
+                    })}
                     onPress={() => press(1)}
-                    style={({ pressed }) => [styles.round, styles.keep, pressed && styles.pressed]}
+                    style={({ pressed }) => [
+                      styles.round,
+                      styles.keep,
+                      pressed && styles.pressed,
+                    ]}
                   >
                     <HeartIcon
                       size={24}
@@ -465,7 +542,7 @@ export default function CompareScreen() {
                     />
                   </Pressable>
                 </View>
-                <Text style={styles.hint}>Swipe right to keep, left to drop</Text>
+                <Text style={styles.hint}>{t("compare.swipeHint")}</Text>
               </>
             ) : null}
           </>
@@ -533,7 +610,9 @@ const useStyles = makeStyles((t) => ({
     borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: t.isDark ? "rgba(63,199,154,0.16)" : "rgba(22,179,100,0.12)",
+    backgroundColor: t.isDark
+      ? "rgba(63,199,154,0.16)"
+      : "rgba(22,179,100,0.12)",
   },
   emptyTitle: {
     color: t.colors.text,

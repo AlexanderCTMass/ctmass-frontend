@@ -318,7 +318,7 @@ export type CompletenessItem = { key: string; label: string; done: boolean };
 
 export function tradeCompleteness(
   details: TradeDetails,
-  extras: { about: string; portfolioCount?: number },
+  extras: { about: string; portfolioCount?: number; hasCertificates?: boolean },
 ): CompletenessItem[] {
   const items: CompletenessItem[] = [
     { key: "experience", label: "Years in this trade", done: details.experienceYears !== null },
@@ -327,7 +327,7 @@ export function tradeCompleteness(
     { key: "availability", label: "Working days", done: Boolean(details.availability?.days.length) },
     { key: "response", label: "Response time", done: Boolean(details.responseTime) },
     { key: "area", label: "Service radius", done: details.radiusMiles !== null },
-    { key: "credentials", label: "License or insurance", done: Boolean(details.license || details.insurance) },
+    { key: "credentials", label: "License or insurance", done: Boolean(details.license || details.insurance || extras.hasCertificates) },
     { key: "about", label: "About your work", done: extras.about.trim().length > 0 },
   ];
   if (extras.portfolioCount !== undefined) {

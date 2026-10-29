@@ -7,6 +7,7 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { Spacing, makeStyles } from "@/constants/theme";
 import { reportError } from "@/lib/analytics";
 import { analyticsEvents, currentScreen } from "@/lib/analytics-events";
+import { useT } from "@/lib/i18n";
 import { resolveScheme, useThemeStore } from "@/store/use-theme-store";
 
 const MAX_AUTO_RETRIES = 3;
@@ -109,14 +110,17 @@ export class AppErrorBoundary extends Component<Props, State> {
 
 function ErrorFallback({ onRetry }: { onRetry: () => void }) {
   const styles = useStyles();
+  const { t } = useT();
   return (
     <View style={styles.root}>
-      <Text style={styles.title}>Something went wrong</Text>
-      <Text style={styles.text}>
-        We couldn&apos;t load the app this time. Please try again.
-      </Text>
+      <Text style={styles.title}>{t("ui.errorTitle")}</Text>
+      <Text style={styles.text}>{t("ui.errorText")}</Text>
       <View style={styles.action}>
-        <PrimaryButton label="Try again" withArrow={false} onPress={onRetry} />
+        <PrimaryButton
+          label={t("common.tryAgainButton")}
+          withArrow={false}
+          onPress={onRetry}
+        />
       </View>
     </View>
   );

@@ -24,10 +24,12 @@ import {
 import { OTHER_TRADE_LABEL, TRADE_ITEMS } from "@/constants/trade-taxonomy";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { selectFeedback } from "@/lib/haptics";
+import { useT } from "@/lib/i18n";
 import { useProjectDraftStore } from "@/store/use-project-draft-store";
 
 export default function ChooseSpecialtyScreen() {
   const { colors } = useTheme();
+  const { t } = useT();
   const styles = useStyles();
   const setSpecialty = useProjectDraftStore((state) => state.setSpecialty);
   const [selected, setSelected] = useState<string | null>(null);
@@ -85,19 +87,19 @@ export default function ChooseSpecialtyScreen() {
               entering={FadeIn.duration(460)}
               style={styles.eyebrow}
             >
-              New project
+              {t("chooseSpecialty.eyebrow")}
             </Animated.Text>
             <Animated.Text
               entering={FadeIn.delay(80).duration(500)}
               style={styles.title}
             >
-              What&apos;s your project?
+              {t("chooseSpecialty.title")}
             </Animated.Text>
             <Animated.Text
               entering={FadeIn.delay(150).duration(500)}
               style={styles.subtitle}
             >
-              Pick the type of specialist you&apos;re looking for.
+              {t("chooseSpecialty.subtitle")}
             </Animated.Text>
 
             <View style={styles.picker}>
@@ -111,7 +113,7 @@ export default function ChooseSpecialtyScreen() {
                 <TextInput
                   value={custom}
                   onChangeText={setCustom}
-                  placeholder="Describe the specialist you need"
+                  placeholder={t("chooseSpecialty.otherPlaceholder")}
                   placeholderTextColor={colors.textMuted}
                   autoFocus
                   returnKeyType="done"
@@ -120,7 +122,7 @@ export default function ChooseSpecialtyScreen() {
               </Animated.View>
             ) : null}
             <PrimaryButton
-              label="Continue"
+              label={t("common.continue")}
               onPress={handleContinue}
               disabled={!canContinue}
             />

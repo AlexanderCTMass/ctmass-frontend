@@ -25,6 +25,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { deleteUserApi } from 'src/api/delete-user';
+import { customersApi } from 'src/api/customers';
 import { getInitials } from 'src/utils/get-initials';
 
 const DELETION_REASONS = [
@@ -201,6 +202,7 @@ const DeleteAccountDialog = ({ open, onClose, customer, onDeleted }) => {
       );
       setResult(data);
       setStep(STEP.DONE);
+      customersApi.invalidateCache();
       if (data.cleanupStatus === 'success') {
         setTimeout(() => {
           onDeleted?.();
@@ -215,6 +217,10 @@ const DeleteAccountDialog = ({ open, onClose, customer, onDeleted }) => {
 
   const handleClose = useCallback(() => {
     if (step === STEP.DELETING) return;
+    if (step === STEP.DONE && result) {
+      onDeleted?.();
+      return;
+    }
     setStep(STEP.CONFIRM);
     setReason('');
     setReasonDetails('');
@@ -222,7 +228,7 @@ const DeleteAccountDialog = ({ open, onClose, customer, onDeleted }) => {
     setResult(null);
     setApiError('');
     onClose();
-  }, [step, onClose]);
+  }, [step, result, onClose, onDeleted]);
 
   if (!customer) return null;
 

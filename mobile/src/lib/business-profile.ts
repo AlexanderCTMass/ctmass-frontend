@@ -1,12 +1,10 @@
-import { doc, getDoc } from "@react-native-firebase/firestore";
-
 import {
   BUSINESS_ROLES,
   BUSINESS_STRUCTURES,
   CREW_SIZES,
   type PreferredContact,
 } from "@/constants/trade-options";
-import { getDb } from "@/lib/firebase";
+import type { ContactMethod } from "@/constants/project-request";
 
 export type BusinessDetails = {
   structure: string;
@@ -23,6 +21,7 @@ export type ContactSettings = {
   showPhone: boolean;
   showEmail: boolean;
   preferred: PreferredContact;
+  methods: ContactMethod[];
 };
 
 export type OwnerPublic = {
@@ -34,6 +33,7 @@ export type OwnerPublic = {
   contact: ContactSettings;
   phone: string;
   email: string;
+  hasCertificates: boolean;
 };
 
 type Raw = Record<string, unknown>;
@@ -83,19 +83,67 @@ export function readBusiness(data: Raw): BusinessDetails {
   };
 }
 
+const CONTACT_METHOD_VALUES: ContactMethod[] = ["app", "phone", "sms", "email"];
+
+export function preferredFromMethods(methods: ContactMethod[]): PreferredContact {
+  const first = methods[0];
+  if (first === "phone" || first === "sms") return "phone";
+  if (first === "email") return "email";
+  return "message";
+}
+
+function methodsFromPreferred(preferred: PreferredContact): ContactMethod[] {
+  if (preferred === "phone") return ["phone"];
+  if (preferred === "email") return ["email"];
+  return ["app"];
+}
+
 export function readContactSettings(data: Raw): ContactSettings {
   const raw = data.contactSettings;
   if (!raw || typeof raw !== "object") {
-    return { showPhone: true, showEmail: false, preferred: "message" };
+    return {
+      showPhone: true,
+      showEmail: false,
+      preferred: "message",
+      methods: ["app"],
+    };
   }
   const settings = record(raw);
-  const preferred = str(settings.preferred);
+  const rawPreferred = str(settings.preferred);
+  const preferred: PreferredContact =
+    rawPreferred === "phone" || rawPreferred === "email"
+      ? rawPreferred
+      : "message";
+  const methods = strings(settings.methods).filter(
+    (item): item is ContactMethod =>
+      CONTACT_METHOD_VALUES.includes(item as ContactMethod),
+  );
   return {
     showPhone: settings.showPhone === true,
     showEmail: settings.showEmail === true,
-    preferred:
-      preferred === "phone" || preferred === "email" ? preferred : "message",
+    preferred,
+    methods: methods.length > 0 ? methods : methodsFromPreferred(preferred),
   };
+}
+
+export function contactSettingsPayload(
+  methods: ContactMethod[],
+  visibility: { showPhone: boolean; showEmail: boolean },
+): ContactSettings {
+  return {
+    showPhone: visibility.showPhone,
+    showEmail: visibility.showEmail,
+    preferred: preferredFromMethods(methods),
+    methods,
+  };
+}
+
+export function reachableMethods(owner: OwnerPublic): ContactMethod[] {
+  return owner.contact.methods.filter((method) => {
+    if (method === "phone" || method === "sms") return Boolean(owner.phone);
+    if (method === "email") return Boolean(owner.email);
+    return true;
+  });
 }
 
 export function yearsInBusiness(business: BusinessDetails): number | null {
@@ -103,7 +151,11 @@ export function yearsInBusiness(business: BusinessDetails): number | null {
   return Math.max(0, new Date().getFullYear() - business.foundedYear);
 }
 
-export function readOwnerPublic(uid: string, data: Raw): OwnerPublic {
+export function readOwnerPublic(
+  uid: string,
+  data: Raw,
+  hasCertificates = false,
+): OwnerPublic {
   const contact = readContactSettings(data);
   const phone = str(data.phone) || str(data.phoneNumber);
   const email = str(data.email);
@@ -116,14 +168,8 @@ export function readOwnerPublic(uid: string, data: Raw): OwnerPublic {
     contact,
     phone: contact.showPhone ? phone : "",
     email: contact.showEmail ? email : "",
+    hasCertificates,
   };
-}
-
-export async function fetchOwnerPublic(uid: string): Promise<OwnerPublic | null> {
-  if (!uid) return null;
-  const snapshot = await getDoc(doc(getDb(), "profiles", uid));
-  if (!snapshot.exists()) return null;
-  return readOwnerPublic(uid, record(snapshot.data()));
 }
 
 export function normalizeWebsite(value: string): string {
